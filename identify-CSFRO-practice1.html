@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS, F, RO: Identify and Fix Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Space+Grotesk', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .mission-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mission-card:hover {
+            transform: translateY(-5px);
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+
+        .correct-glow { animation: success-pulse 1.5s infinite; }
+        @keyframes success-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-4xl text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
+            MISSION CONTROL: SENTENCE REPAIR
+        </h1>
+        <p class="text-slate-400 text-lg">Identify and neutralize Comma Splices (CS), Fragments (F), and Run-Ons (RO).</p>
+        
+        <div class="mt-6 flex justify-center gap-8 text-sm font-mono">
+            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-red-500 rounded-full"></span> RO: Run-On</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-yellow-500 rounded-full"></span> CS: Comma Splice</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-blue-500 rounded-full"></span> F: Fragment</div>
+        </div>
+    </header>
+
+    <!-- Selection Screen -->
+    <main id="mission-selection" class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Mission 1 Card -->
+        <button onclick="startMission(1)" class="mission-card bg-slate-800 border-2 border-slate-700 p-6 rounded-2xl text-left">
+            <div class="text-blue-400 font-bold mb-2">MISSION #1</div>
+            <h2 class="text-2xl font-bold mb-3">The Lab Report Leak</h2>
+            <p class="text-slate-400 mb-4">A chaotic intern left a trail of broken sentences in the research log. Identify the errors to secure the data.</p>
+            <div class="inline-block bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-sm">Difficulty: Basic</div>
+        </button>
+
+        <!-- Mission 2 Card (Locked for now) -->
+        <div class="bg-slate-800/50 border-2 border-slate-700/50 p-6 rounded-2xl text-left cursor-not-allowed opacity-60">
+            <div class="text-slate-500 font-bold mb-2">MISSION #2</div>
+            <h2 class="text-2xl font-bold mb-3 text-slate-500">Deep Space Transmission</h2>
+            <p class="text-slate-500 mb-4">Static has corrupted the long-range signals. Reconstruct the message using advanced punctuation.</p>
+            <div class="inline-block bg-slate-700 text-slate-500 px-3 py-1 rounded-full text-sm">Locked</div>
+        </div>
+    </main>
+
+    <!-- Game Screen (Hidden by default) -->
+    <div id="game-screen" class="hidden w-full max-w-3xl">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-8">
+                <span id="progress-text" class="font-mono text-blue-400">LOG ENTRY: 1/5</span>
+                <button onclick="exitMission()" class="text-slate-500 hover:text-white transition-colors">Abort Mission</button>
+            </div>
+
+            <div class="mb-10 text-center">
+                <p id="sentence-display" class="text-2xl md:text-3xl font-medium leading-relaxed mb-8">
+                    Loading mission data...
+                </p>
+                
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="checkAnswer('RO')" class="px-8 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold transition-all transform active:scale-95">RUN-ON</button>
+                    <button onclick="checkAnswer('CS')" class="px-8 py-3 bg-yellow-600 hover:bg-yellow-500 rounded-xl font-bold transition-all transform active:scale-95">COMMA SPLICE</button>
+                    <button onclick="checkAnswer('F')" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all transform active:scale-95">FRAGMENT</button>
+                </div>
+            </div>
+
+            <div id="feedback-area" class="h-16 flex items-center justify-center text-lg font-bold transition-opacity duration-300 opacity-0">
+                Correct! The system is stabilizing.
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Score Screen -->
+    <div id="final-screen" class="hidden text-center">
+        <div class="bg-slate-800 p-12 rounded-3xl border-2 border-blue-500/30">
+            <div class="text-6xl mb-4">🚀</div>
+            <h2 class="text-4xl font-bold mb-2">Mission Complete!</h2>
+            <p class="text-slate-400 mb-8">All logs have been identified and secured.</p>
+            <button onclick="exitMission()" class="bg-blue-600 hover:bg-blue-500 px-10 py-4 rounded-full font-bold text-lg shadow-lg shadow-blue-900/40">Return to Mission Control</button>
+        </div>
+    </div>
+
+    <script>
+        const missionData = [
+            { text: "The computer crashed again, I didn't save my work.", type: "CS" },
+            { text: "Because the server was down for maintenance.", type: "F" },
+            { text: "The firewall is active the hackers cannot get through.", type: "RO" },
+            { text: "After the update finished successfully.", type: "F" },
+            { text: "She checked the code, she found a logic error.", type: "CS" },
+            { text: "The database is full we need more storage.", type: "RO" }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        function startMission(id) {
+            document.getElementById('mission-selection').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function exitMission() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('mission-selection').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.add('hidden');
+        }
+
+        function loadQuestion() {
+            const feedback = document.getElementById('feedback-area');
+            feedback.style.opacity = '0';
+            
+            if (currentQuestion >= missionData.length) {
+                showFinalResults();
+                return;
+            }
+
+            document.getElementById('progress-text').innerText = `LOG ENTRY: ${currentQuestion + 1}/${missionData.length}`;
+            document.getElementById('sentence-display').innerText = missionData[currentQuestion].text;
+        }
+
+        function checkAnswer(userChoice) {
+            const correctAnswer = missionData[currentQuestion].type;
+            const feedback = document.getElementById('feedback-area');
+            
+            feedback.style.opacity = '1';
+            
+            if (userChoice === correctAnswer) {
+                feedback.innerText = "✓ ACCESS GRANTED: Error accurately identified.";
+                feedback.className = "h-16 flex items-center justify-center text-lg font-bold text-green-400 transition-opacity";
+                score++;
+            } else {
+                feedback.innerText = `✗ ACCESS DENIED: That was a ${getTypeName(correctAnswer)}.`;
+                feedback.className = "h-16 flex items-center justify-center text-lg font-bold text-red-400 transition-opacity";
+            }
+
+            setTimeout(() => {
+                currentQuestion++;
+                loadQuestion();
+            }, 1800);
+        }
+
+        function getTypeName(type) {
+            if (type === 'CS') return 'Comma Splice';
+            if (type === 'RO') return 'Run-On';
+            return 'Fragment';
+        }
+
+        function showFinalResults() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
