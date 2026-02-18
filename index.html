@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noun Detective: 5th Grade Practice</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --secondary: #50E3C2;
+            --accent: #F5A623;
+            --background: #F4F7F6;
+            --card-bg: #FFFFFF;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Anchor Chart Style */
+        .anchor-chart {
+            background: linear-gradient(135deg, var(--primary), #357ABD);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #2C629C;
+        }
+
+        .anchor-chart h1 {
+            margin-top: 0;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .noun-types {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .noun-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .idea-highlight {
+            background-color: var(--accent);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Activity Section */
+        .instructions {
+            background-color: #fff;
+            padding: 15px;
+            border-left: 5px solid var(--accent);
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .sentence {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .input-area {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            width: 95%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn-check {
+            background-color: var(--secondary);
+            color: #005f4e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .btn-check:hover {
+            background-color: #3dd1b0;
+        }
+
+        .answer-key {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-radius: 5px;
+            border: 1px solid #b6dbf9;
+            display: none; /* Hidden by default */
+            color: #004085;
+        }
+
+        .noun-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .noun-list li {
+            margin-bottom: 5px;
+        }
+
+        .category {
+            font-size: 0.85em;
+            text-transform: uppercase;
+            color: #666;
+            margin-left: 5px;
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #777;
+            font-size: 0.9em;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Review Section -->
+    <div class="anchor-chart">
+        <h1>🔍 The Noun Detective</h1>
+        <p>Remember: A <strong>Noun</strong> is a word that names a Person, Place, Thing, or Idea.</p>
+        <p>⚠️ <strong>Focus on Abstract Nouns!</strong> Unlike a table or a cat, you cannot touch an <span class="idea-highlight">Idea</span>. These are nouns you can think or feel, like <em>happiness, time, freedom,</em> or <em>courage</em>.</p>
+        
+        <div class="noun-types">
+            <span class="noun-badge">👤 Person</span>
+            <span class="noun-badge">🏫 Place</span>
+            <span class="noun-badge">✏️ Thing</span>
+            <span class="noun-badge idea-highlight">💡 Idea</span>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions">
+        <h3>📝 Your Mission:</h3>
+        <p>Read the sentences below. In the box, type the nouns you find and what kind they are (Person, Place, Thing, or Idea). Then, click <strong>"Check Answer"</strong> to see how you did!</p>
+    </div>
+
+    <!-- Questions Container -->
+    <div id="questions-container">
+        <!-- Questions will be injected here by JS -->
+    </div>
+
+    <footer>
+        <p>Great job practicing! Keep up the hard work. 🌟</p>
+    </footer>
+
+</div>
+
+<script>
+    // Data for the activity
+    const questions = [
+        // Level 1: Simple
+        {
+            sentence: "1. The huge dog slept on the soft rug.",
+            answer: [
+                { word: "dog", type: "Thing/Animal" },
+                { word: "rug", type: "Thing" }
+            ]
+        },
+        {
+            sentence: "2. Mrs. Johnson walked quickly to the park.",
+            answer: [
+                { word: "Mrs. Johnson", type: "Person" },
+                { word: "park", type: "Place" }
+            ]
+        },
+        {
+            sentence: "3. My phone fell into the water.",
+            answer: [
+                { word: "phone", type: "Thing" },
+                { word: "water", type: "Thing" }
+            ]
+        },
+        {
+            sentence: "4. The doctor gave me medicine.",
+            answer: [
+                { word: "doctor", type: "Person" },
+                { word: "medicine", type: "Thing" }
+            ]
+        },
+        {
+            sentence: "5. London is a very busy city.",
+            answer: [
+                { word: "London", type: "Place" },
+                { word: "city", type: "Place" }
+            ]
+        },
+        
+        // Level 2: Introducing Ideas/Abstract
+        {
+            sentence: "6. Honesty is the best policy.",
+            answer: [
+                { word: "Honesty", type: "Idea" },
+                { word: "policy", type: "Idea" }
+            ]
+        },
+        {
+            sentence: "7. The team shouted with joy after the game.",
+            answer: [
+                { word: "team", type: "Thing (Group)" },
+                { word: "joy", type: "Idea" },
+                { word: "game", type: "Thing/Event" }
+            ]
+        },
+        {
+            sentence: "8. America is known for its freedom.",
+            answer: [
+                { word: "America", type: "Place" },
+                { word: "freedom", type: "Idea" }
+            ]
+        },
+        {
+            sentence: "9. The students showed great respect to the visitor.",
+            answer: [
+                { word: "students", type: "Person" },
+                { word: "respect", type: "Idea" },
+                { word: "visitor", type: "Person" }
+            ]
+        },
+        {
+            sentence: "10. Love can change the world.",
+            answer: [
+                { word: "Love", type: "Idea" },
+                { word: "world", type: "Place" }
+            ]
+        },
+
+        // Level 3: Complex / Multiple Nouns
+        {
+            sentence: "11. Sarah showed bravery during the thunderstorm.",
+            answer: [
+                { word: "Sarah", type: "Person" },
+                { word: "bravery", type: "Idea" },
+                { word: "thunderstorm", type: "Thing/Event" }
+            ]
+        },
+        {
+            sentence: "12. The library is a place of silence and study.",
+            answer: [
+                { word: "library", type: "Place" },
+                { word: "place", type: "Place" },
+                { word: "silence", type: "Idea" },
+                { word: "study", type: "Idea/Activity" }
+            ]
+        },
+        {
+            sentence: "13. Abraham Lincoln is famous for his leadership.",
+            answer: [
+                { word: "Abraham Lincoln", type: "Person" },
+                { word: "leadership", type: "Idea" }
+            ]
+        },
+        {
+            sentence: "14. Her kindness brought happiness to the neighbors.",
+            answer: [
+                { word: "kindness", type: "Idea" },
+                { word: "happiness", type: "Idea" },
+                { word: "neighbors", type: "Person" }
+            ]
+        },
+        {
+            sentence: "15. The astronauts explored the surface of Mars.",
+            answer: [
+                { word: "astronauts", type: "Person" },
+                { word: "surface", type: "Thing/Place" },
+                { word: "Mars", type: "Place" }
+            ]
+        },
+
+        // Level 4: Challenge
+        {
+            sentence: "16. Creativity and imagination are important for art.",
+            answer: [
+                { word: "Creativity", type: "Idea" },
+                { word: "imagination", type: "Idea" },
+                { word: "art", type: "Thing/Subject" }
+            ]
+        },
+        {
+            sentence: "17. The Constitution guarantees liberty for every citizen.",
+            answer: [
+                { word: "Constitution", type: "Thing (Document)" },
+                { word: "liberty", type: "Idea" },
+                { word: "citizen", type: "Person" }
+            ]
+        },
+        {
+            sentence: "18. Fear stopped the puppy from crossing the bridge.",
+            answer: [
+                { word: "Fear", type: "Idea" },
+                { word: "puppy", type: "Thing/Animal" },
+                { word: "bridge", type: "Thing/Place" }
+            ]
+        },
+        {
+            sentence: "19. The beauty of the sunset amazed the tourists.",
+            answer: [
+                { word: "beauty", type: "Idea" },
+                { word: "sunset", type: "Thing/Event" },
+                { word: "tourists", type: "Person" }
+            ]
+        },
+        {
+            sentence: "20. Knowledge is power, according to the old saying.",
+            answer: [
+                { word: "Knowledge", type: "Idea" },
+                { word: "power", type: "Idea" },
+                { word: "saying", type: "Thing" }
+            ]
+        }
+    ];
+
+    const container = document.getElementById('questions-container');
+
+    questions.forEach((q, index) => {
+        // Create Card
+        const card = document.createElement('div');
+        card.className = 'question-card';
+
+        // Sentence
+        const sentenceEl = document.createElement('div');
+        sentenceEl.className = 'sentence';
+        sentenceEl.innerText = q.sentence;
+
+        // Input
+        const inputDiv = document.createElement('div');
+        inputDiv.className = 'input-area';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Type the nouns here (e.g., Dog - Thing)...';
+        inputDiv.appendChild(input);
+
+        // Button
+        const btn = document.createElement('button');
+        btn.className = 'btn-check';
+        btn.innerText = 'Check Answer';
+        
+        // Answer Area
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer-key';
+        
+        // Build Answer HTML
+        let answerHTML = '<strong>Correct Nouns:</strong><ul class="noun-list">';
+        q.answer.forEach(item => {
+            answerHTML += `<li>${item.word} <span class="category">${item.type}</span></li>`;
+        });
+        answerHTML += '</ul>';
+        answerDiv.innerHTML = answerHTML;
+
+        // Click Event
+        btn.onclick = () => {
+            if (answerDiv.style.display === 'block') {
+                answerDiv.style.display = 'none';
+                btn.innerText = 'Check Answer';
+                btn.style.backgroundColor = 'var(--secondary)';
+            } else {
+                answerDiv.style.display = 'block';
+                btn.innerText = 'Hide Answer';
+                btn.style.backgroundColor = '#ddd';
+            }
+        };
+
+        // Append to Card
+        card.appendChild(sentenceEl);
+        card.appendChild(inputDiv);
+        card.appendChild(btn);
+        card.appendChild(answerDiv);
+
+        // Append Card to Container
+        container.appendChild(card);
+    });
+</script>
+
+</body>
+</html>
