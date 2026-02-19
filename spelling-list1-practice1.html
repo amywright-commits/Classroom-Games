@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contractions Spelling Bee</title>
+    <style>
+        :root {
+            --primary: #4A90E2; /* Bright Blue */
+            --secondary: #FFD166; /* Sunny Yellow */
+            --accent: #06D6A0; /* Mint Green */
+            --danger: #EF476F; /* Raspberry Red */
+            --background: #F0F7FF;
+            --text: #2D3436;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Teacher-friendly fonts */
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 4px solid var(--primary);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 2rem;
+        }
+
+        /* Screens */
+        .screen {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-family: inherit;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background-color: #357ABD;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Game Elements */
+        .progress-container {
+            width: 100%;
+            background-color: #eee;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 2rem;
+            box-sizing: border-box;
+            border: 3px dashed #F4B400;
+        }
+
+        .phrase {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .instruction {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        input[type="text"] {
+            font-size: 1.5rem;
+            padding: 10px;
+            border: 3px solid #ccc;
+            border-radius: 10px;
+            width: 80%;
+            text-align: center;
+            outline: none;
+            font-family: inherit;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .feedback {
+            height: 2rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feedback.correct {
+            color: var(--accent);
+        }
+
+        .feedback.wrong {
+            color: var(--danger);
+        }
+
+        /* End Screen */
+        .confetti {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+        <h1>Contraction Action!</h1>
+        <p>Can you turn these phrases into contractions? Watch out for apostrophes!</p>
+        <div style="font-size: 3rem; margin-bottom: 20px;">📝✨</div>
+        <button class="btn" onclick="startGame()">Start Practice</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        
+        <div class="question-card">
+            <div class="instruction">Type the contraction for:</div>
+            <div id="question-text" class="phrase">I will</div>
+        </div>
+
+        <input type="text" id="answer-input" placeholder="Type answer here..." autocomplete="off">
+        <div id="feedback" class="feedback"></div>
+        
+        <button class="btn" onclick="checkAnswer()">Submit</button>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="screen">
+        <div class="confetti">🎉🏆🎉</div>
+        <h1>Great Job!</h1>
+        <p>You've completed Round #1.</p>
+        <p id="final-score" style="font-weight: bold; color: var(--primary); font-size: 1.5rem;"></p>
+        <button class="btn" onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script>
+    // Data based on your list
+    const questions = [
+        // Will
+        { phrase: "I will", answer: "I'll" },
+        { phrase: "you will", answer: "you'll" },
+        { phrase: "he will", answer: "he'll" },
+        { phrase: "she will", answer: "she'll" },
+        { phrase: "we will", answer: "we'll" },
+        { phrase: "they will", answer: "they'll" },
+        { phrase: "it will", answer: "it'll" },
+        // Would
+        { phrase: "I would", answer: "I'd" },
+        { phrase: "you would", answer: "you'd" },
+        { phrase: "she would", answer: "she'd" },
+        { phrase: "he would", answer: "he'd" },
+        { phrase: "we would", answer: "we'd" },
+        { phrase: "they would", answer: "they'd" },
+        { phrase: "who would", answer: "who'd" },
+        // Have/Has
+        { phrase: "I have", answer: "I've" },
+        { phrase: "you have", answer: "you've" },
+        { phrase: "he has", answer: "he's" },
+        { phrase: "she has", answer: "she's" },
+        { phrase: "we have", answer: "we've" },
+        { phrase: "they have", answer: "they've" },
+        // Should/Would/Could have
+        { phrase: "should have", answer: "should've" },
+        { phrase: "would have", answer: "would've" },
+        { phrase: "could have", answer: "could've" }
+    ];
+
+    let currentQuestionIndex = 0;
+    let shuffledQuestions = [];
+    let attempts = 0; // Track wrong answers
+
+    // Sound effects (using browser speech synthesis for simplicity)
+    const speak = (text) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+    };
+
+    function startGame() {
+        // Shuffle questions
+        shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+        currentQuestionIndex = 0;
+        
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('game-screen').classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        attempts = 0; // Reset attempts for new question
+        const questionData = shuffledQuestions[currentQuestionIndex];
+        document.getElementById('question-text').textContent = questionData.phrase;
+        
+        const input = document.getElementById('answer-input');
+        input.value = "";
+        input.disabled = false; // Make sure input is enabled
+        input.focus();
+        input.style.borderColor = "#ccc";
+        
+        document.getElementById('feedback').textContent = "";
+        
+        // Update Progress Bar
+        const progress = (currentQuestionIndex / shuffledQuestions.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('answer-input');
+        const feedback = document.getElementById('feedback');
+        const currentQ = shuffledQuestions[currentQuestionIndex];
+        
+        // Normalize input: trim spaces
+        const userAnswer = input.value.trim();
+
+        if (userAnswer === currentQ.answer) {
+            // Correct
+            feedback.textContent = "Correct! 🌟";
+            feedback.className = "feedback correct";
+            input.style.borderColor = "var(--accent)";
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500); // Wait 1.5 seconds before moving on
+        } else {
+            // Incorrect
+            attempts++;
+            
+            if (attempts >= 2) {
+                // Limit reached (2 wrong answers)
+                feedback.textContent = `Nice try! The answer is: ${currentQ.answer}`;
+                feedback.className = "feedback wrong";
+                input.style.borderColor = "var(--danger)";
+                input.disabled = true; // Stop typing
+                
+                // Wait longer (2.5s) so they can read the correct answer
+                setTimeout(() => {
+                    nextQuestion();
+                }, 2500);
+                
+            } else {
+                // Just 1 wrong answer so far
+                feedback.textContent = "Try again!";
+                feedback.className = "feedback wrong";
+                input.classList.add('shake');
+                input.style.borderColor = "var(--danger)";
+                
+                // Remove shake class after animation so it can be triggered again
+                setTimeout(() => {
+                    input.classList.remove('shake');
+                }, 500);
+            }
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        const input = document.getElementById('answer-input');
+        input.style.borderColor = "#ccc"; // Reset border color
+
+        if (currentQuestionIndex < shuffledQuestions.length) {
+            loadQuestion();
+        } else {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        document.getElementById('game-screen').classList.remove('active');
+        document.getElementById('end-screen').classList.add('active');
+        document.getElementById('final-score').textContent = `You practiced all ${questions.length} words!`;
+        
+        // Complete the progress bar
+        document.getElementById('progress-bar').style.width = "100%";
+    }
+
+    // Allow pressing "Enter" key to submit
+    document.getElementById("answer-input").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+            checkAnswer();
+        }
+    });
+
+</script>
+
+</body>
+</html>
