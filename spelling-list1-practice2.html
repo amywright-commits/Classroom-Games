@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contractions Memory Match</title>
+    <style>
+        :root {
+            --primary: #9B59B6; /* Purple */
+            --secondary: #F1C40F; /* Yellow */
+            --accent: #2ECC71; /* Green */
+            --background: #F9F0FF;
+            --text: #2C3E50;
+            --card-bg: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            color: #555;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Game Board */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+            perspective: 1000px; /* For 3D flip effect */
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: transparent;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-inner {
+            transform: rotateY(180deg) scale(0.95);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 3px solid transparent;
+        }
+
+        .card-front {
+            background-color: var(--primary);
+            color: white;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.2) 20%, transparent 20%);
+            background-size: 20px 20px;
+            border-color: #8E44AD;
+        }
+
+        /* The question mark on the back of the card */
+        .card-front::after {
+            content: '?';
+            font-size: 3rem;
+            opacity: 0.8;
+        }
+
+        .card-back {
+            background-color: var(--card-bg);
+            color: var(--text);
+            transform: rotateY(180deg);
+            border-color: var(--secondary);
+            word-wrap: break-word;
+            text-align: center;
+        }
+
+        .card.matched .card-back {
+            background-color: #E8F8F5; /* Light green tint */
+            border-color: var(--accent);
+            color: #27AE60;
+        }
+
+        /* End Screen & Buttons */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            border: 5px solid var(--secondary);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-family: inherit;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            background-color: #8E44AD;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive adjustments for phones */
+        @media (max-width: 500px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr); /* 3 columns on very small screens */
+            }
+            .card-back {
+                font-size: 1.1rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Contraction Match-Up!</h1>
+    <p class="subtitle">Flip the cards to match the phrase with its contraction.</p>
+
+    <div class="game-board" id="game-board">
+        <!-- Cards will be generated by JavaScript -->
+    </div>
+
+    <!-- Victory Modal -->
+    <div class="modal" id="victory-modal">
+        <div class="modal-content">
+            <div style="font-size: 4rem; margin-bottom: 10px;">🏆✨</div>
+            <h2 style="color: var(--primary); margin-top: 0;">Awesome Memory!</h2>
+            <p>You matched all the contractions perfectly.</p>
+            <p>Moves: <strong id="move-count">0</strong></p>
+            <button class="btn" onclick="initGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // The master spelling list
+        const allQuestions = [
+            { id: 1, phrase: "I will", answer: "I'll" },
+            { id: 2, phrase: "you will", answer: "you'll" },
+            { id: 3, phrase: "he will", answer: "he'll" },
+            { id: 4, phrase: "she will", answer: "she'll" },
+            { id: 5, phrase: "we will", answer: "we'll" },
+            { id: 6, phrase: "they will", answer: "they'll" },
+            { id: 7, phrase: "it will", answer: "it'll" },
+            { id: 8, phrase: "I would", answer: "I'd" },
+            { id: 9, phrase: "you would", answer: "you'd" },
+            { id: 10, phrase: "she would", answer: "she'd" },
+            { id: 11, phrase: "he would", answer: "he'd" },
+            { id: 12, phrase: "we would", answer: "we'd" },
+            { id: 13, phrase: "they would", answer: "they'd" },
+            { id: 14, phrase: "who would", answer: "who'd" },
+            { id: 15, phrase: "I have", answer: "I've" },
+            { id: 16, phrase: "you have", answer: "you've" },
+            { id: 17, phrase: "he has", answer: "he's" },
+            { id: 18, phrase: "she has", answer: "she's" },
+            { id: 19, phrase: "we have", answer: "we've" },
+            { id: 20, phrase: "they have", answer: "they've" },
+            { id: 21, phrase: "should have", answer: "should've" },
+            { id: 22, phrase: "would have", answer: "would've" },
+            { id: 23, phrase: "could have", answer: "could've" }
+        ];
+
+        let cardsArray = [];
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        let matchesFound = 0;
+        let moves = 0;
+
+        const boardElement = document.getElementById('game-board');
+        const modalElement = document.getElementById('victory-modal');
+        const moveCountElement = document.getElementById('move-count');
+
+        // Number of pairs to play with at a time (8 pairs = 16 cards, fits nicely in a grid)
+        const PAIRS_PER_GAME = 8; 
+
+        function initGame() {
+            // Reset state
+            boardElement.innerHTML = '';
+            modalElement.style.display = 'none';
+            cardsArray = [];
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+            matchesFound = 0;
+            moves = 0;
+
+            // 1. Randomly select 8 pairs from the master list
+            let shuffledQuestions = [...allQuestions].sort(() => 0.5 - Math.random());
+            let selectedPairs = shuffledQuestions.slice(0, PAIRS_PER_GAME);
+
+            // 2. Create two cards for each selected pair
+            selectedPairs.forEach(pair => {
+                // Card 1: The Phrase
+                cardsArray.push({ id: pair.id, text: pair.phrase, type: 'phrase' });
+                // Card 2: The Contraction
+                cardsArray.push({ id: pair.id, text: pair.answer, type: 'contraction' });
+            });
+
+            // 3. Shuffle the 16 cards
+            cardsArray.sort(() => 0.5 - Math.random());
+
+            // 4. Create HTML elements
+            cardsArray.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.classList.add('card');
+                cardEl.dataset.id = card.id;
+                cardEl.dataset.index = index;
+
+                cardEl.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front"></div>
+                        <div class="card-back">${card.text}</div>
+                    </div>
+                `;
+
+                cardEl.addEventListener('click', flipCard);
+                boardElement.appendChild(cardEl);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return; // Prevent double-clicking the same card
+
+            this.classList.add('flipped');
+
+            if (!firstCard) {
+                // First click
+                firstCard = this;
+                return;
+            }
+
+            // Second click
+            secondCard = this;
+            moves++;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.id === secondCard.dataset.id;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            
+            // Add a matched style class for visual feedback
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+
+            resetBoard();
+            matchesFound++;
+
+            // Check if game is won
+            if (matchesFound === PAIRS_PER_GAME) {
+                setTimeout(() => {
+                    moveCountElement.textContent = moves;
+                    modalElement.style.display = 'flex';
+                }, 800);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true; // Lock the board so user can't click more cards
+
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                resetBoard();
+            }, 1200); // 1.2 second delay so they can read the cards before they flip back
+        }
+
+        function resetBoard() {
+            [firstCard, secondCard, lockBoard] = [null, null, false];
+        }
+
+        // Start the game when the page loads
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
