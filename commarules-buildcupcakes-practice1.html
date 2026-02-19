@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cupcake Grammar Kitchen</title>
+<style>
+    :root {
+        --muffin-dark: #6D4C41;
+        --muffin-light: #A1887F;
+        --frosting-pink: #FFCDD2;
+        --frosting-dark: #E57373;
+        --sprinkle-blue: #4FC3F7;
+        --cream: #FFF8E1;
+        --success: #81C784;
+        --error: #E57373;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--cream);
+        color: var(--muffin-dark);
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: 4px solid var(--frosting-pink);
+    }
+
+    header {
+        background-color: var(--frosting-pink);
+        padding: 20px;
+        text-align: center;
+        border-bottom: 4px solid white;
+    }
+
+    h1 {
+        margin: 0;
+        color: var(--muffin-dark);
+        font-size: 2.2rem;
+        text-shadow: 1px 1px 0px white;
+    }
+
+    h2 {
+        color: var(--frosting-dark);
+        border-bottom: 2px dashed var(--muffin-light);
+        padding-bottom: 10px;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--muffin-dark);
+        font-style: italic;
+    }
+
+    .nav-tabs {
+        display: flex;
+        background: #eee;
+    }
+
+    .nav-tab {
+        flex: 1;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+        border: none;
+        outline: none;
+        font-size: 1.1rem;
+        background: #f0f0f0;
+        color: #777;
+    }
+
+    .nav-tab.active {
+        background: white;
+        color: var(--muffin-dark);
+        border-top: 4px solid var(--frosting-dark);
+    }
+
+    .content-section {
+        display: none;
+        padding: 30px;
+        animation: fadeIn 0.5s;
+    }
+
+    .content-section.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Part 1 Styles */
+    .game-area {
+        background: var(--cream);
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .sentence-box {
+        font-size: 1.5rem;
+        margin: 30px 0;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .sentence-part {
+        padding: 5px 8px;
+        margin: 0 2px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+        display: inline-block;
+    }
+
+    .sentence-part:hover {
+        background-color: white;
+        border-color: var(--sprinkle-blue);
+        transform: scale(1.05);
+    }
+
+    .feedback-msg {
+        height: 40px;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--success);
+        width: 0%;
+        transition: width 0.5s;
+    }
+
+    .next-btn {
+        background: var(--muffin-dark);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        cursor: pointer;
+        display: none; /* Hidden until correct */
+        margin-top: 10px;
+    }
+    
+    .next-btn:hover {
+        background: var(--muffin-light);
+    }
+
+    /* Part 2 Styles */
+    .builder-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .ingredient-row {
+        background: #fff;
+        border: 2px solid #eee;
+        padding: 15px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .ingredient-label {
+        font-weight: bold;
+        color: var(--muffin-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ingredient-icon {
+        font-size: 1.5rem;
+    }
+
+    .example-text {
+        font-size: 0.9rem;
+        color: #666;
+        font-style: italic;
+        background: #f9f9f9;
+        padding: 8px;
+        border-radius: 5px;
+    }
+
+    input[type="text"] {
+        padding: 10px;
+        font-size: 1.1rem;
+        border: 2px solid var(--frosting-pink);
+        border-radius: 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .base-muffin-display {
+        text-align: center;
+        font-size: 1.3rem;
+        padding: 15px;
+        background: var(--muffin-light);
+        color: white;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+
+    .bake-btn {
+        background: var(--frosting-dark);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-size: 1.3rem;
+        border-radius: 10px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        box-shadow: 0 4px 0 #b71c1c;
+        transition: transform 0.1s;
+    }
+
+    .bake-btn:active {
+        transform: translateY(4px);
+        box-shadow: none;
+    }
+
+    .result-display {
+        margin-top: 20px;
+        padding: 20px;
+        background: white;
+        border: 4px dashed var(--muffin-dark);
+        border-radius: 15px;
+        text-align: center;
+        font-size: 1.4rem;
+        min-height: 60px;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .highlight-pink {
+        background-color: var(--frosting-pink);
+        padding: 0 5px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: #C62828;
+    }
+
+    .shake {
+        animation: shake 0.5s;
+    }
+
+    .pop-out {
+        animation: popOut 0.5s forwards;
+    }
+
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-5px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes popOut {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.5; }
+        100% { transform: scale(0); opacity: 0; width: 0; padding: 0; margin: 0;}
+    }
+
+    .nav-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .small-btn {
+        background: #eee;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .cupcake-img {
+        margin-top: 15px;
+        animation: fadeIn 1s;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🧁 Cupcakes & Muffins 🧁</h1>
+        <div class="subtitle">Grammar Practice for Grade 5</div>
+    </header>
+
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('eraser')">Part 1: Sprinkle Eraser</button>
+        <button class="nav-tab" onclick="switchTab('builder')">Part 2: Cupcake Builder</button>
+    </div>
+
+    <!-- PART 1: SPRINKLE ERASER -->
+    <div id="eraser" class="content-section active">
+        <h2>Find the Extra Sprinkles!</h2>
+        <p>Click on the part of the sentence that is a "sprinkle" (not needed). <br>If you can remove it and the sentence still makes sense, click it to eat it!</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="game-area">
+            <div id="sentenceContainer" class="sentence-box">
+                <!-- Sentence injected here -->
+            </div>
+            <div id="feedback" class="feedback-msg"></div>
+            <button id="nextBtn" class="next-btn" onclick="nextSentence()">Next Cupcake ➡️</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #777;">
+            Score: <span id="scoreDisplay">0</span> / 30
+        </div>
+    </div>
+
+    <!-- PART 2: CUPCAKE BUILDER -->
+    <div id="builder" class="content-section">
+        <h2>Build Your Own Cupcake</h2>
+        <p>Turn a plain muffin sentence into a fancy cupcake by adding details!</p>
+
+        <div class="nav-buttons">
+            <button class="small-btn" onclick="changeBase(-1)">⬅️ Previous Muffin</button>
+            <button class="small-btn" onclick="changeBase(1)">Next Muffin ➡️</button>
+        </div>
+
+        <div class="base-muffin-display">
+            Plain Muffin: "<span id="baseSentenceDisplay">The robot sneezed.</span>"
+        </div>
+
+        <div class="builder-container">
+            <!-- Frosting Input -->
+            <div class="ingredient-row">
+                <div class="ingredient-label">
+                    <span class="ingredient-icon">🍥</span> 
+                    Step 1: <span id="labelStep1">Add Frosting</span>
+                </div>
+                <div class="example-text" id="exampleStep1">
+                    Examples: "Suddenly", "In the morning"
+                </div>
+                <input type="text" id="frostingInput" placeholder="Type here...">
+            </div>
+
+            <!-- Sprinkles Input -->
+            <div class="ingredient-row">
+                <div class="ingredient-label">
+                    <span class="ingredient-icon">✨</span> 
+                    Step 2: <span id="labelStep2">Add Sprinkles</span>
+                </div>
+                <div class="example-text" id="exampleStep2">
+                    Examples: "my best friend", "the green one"
+                </div>
+                <input type="text" id="sprinklesInput" placeholder="Type here...">
+            </div>
+
+            <button class="bake-btn" onclick="bakeCupcake()">BAKE IT! 🥣🔥</button>
+
+            <div id="resultDisplay" class="result-display">
+                <!-- Result goes here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- PART 1 DATA & LOGIC ---
+    let sentences = [
+        {
+            parts: ["The principal", ", a known lover of stinky cheese,", " tripped over a banana peel."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Suddenly,", " the giant squirrel demanded a refund."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["My grandma", ", a secret ninja,", " did a backflip off the porch."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["The pizza", ", cold and greasy,", " was still delicious."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Zombies", ", according to the movie,", " enjoy eating brains."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Unexpectedly,", " the slime turned purple."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["My brother", ", the one with stinky feet,", " lost his shoes again."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Strangely,", " the cat barked at the mailman."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["The robot", ", beeping loudly,", " bumped into the wall."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Fortunately,", " I finished my broccoli before dessert."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["Yuck,", " this milk tastes like wet socks."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["The hamster", ", oh my gosh,", " knows how to drive!"],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Ouch,", " I sat on a cactus."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["My teacher", ", wow,", " can juggle four apples."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Hey,", " you dropped your invisible cloak."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["The dragon", ", yikes,", " is sneezing fire."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Oops,", " I accidentally ate the homework."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["My dad", ", whew,", " finally fixed the internet."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Ew,", " there is a bug doing the backstroke in my soup."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["The ghost", ", boo,", " just wants a hug."],
+            sprinkleIndex: 1
+        },
+        // Direct Address Additions
+        {
+            parts: ["Mom,", " where did you put my superhero cape?"],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["I told you", ", Steve,", " not to push the red button!"],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Please sit down", ", students,", " before the class begins."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Doctor,", " is my arm supposed to bend that way?"],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["I really need a ride", ", Dad."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Frank,", " stop trying to eat the stapler."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["I am sorry", ", officer,", " for speeding in my go-kart."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Look", ", dude,", " that is my sandwich."],
+            sprinkleIndex: 1
+        },
+        {
+            parts: ["Grandma,", " your cookies are the best."],
+            sprinkleIndex: 0
+        },
+        {
+            parts: ["Please pass the potatoes", ", Sarah."],
+            sprinkleIndex: 1
+        }
+    ];
+
+    let currentSentenceIdx = 0;
+    let score = 0;
+    let sentenceSolved = false;
+
+    // Helper function to shuffle (mix up) the array
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function initGame() {
+        // Shuffle the sentences every time the game starts
+        shuffleArray(sentences);
+        
+        currentSentenceIdx = 0;
+        score = 0;
+        document.getElementById('scoreDisplay').textContent = score;
+        
+        loadSentence();
+    }
+
+    function loadSentence() {
+        const container = document.getElementById('sentenceContainer');
+        const feedback = document.getElementById('feedback');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        container.innerHTML = '';
+        feedback.textContent = '';
+        feedback.style.color = 'black';
+        nextBtn.style.display = 'none';
+        sentenceSolved = false;
+
+        if (currentSentenceIdx >= sentences.length) {
+            container.innerHTML = "🎉 YOU DID IT! Master Baker Status! 🎉";
+            return;
+        }
+
+        const currentData = sentences[currentSentenceIdx];
+
+        currentData.parts.forEach((text, index) => {
+            const span = document.createElement('span');
+            span.textContent = text;
+            span.className = 'sentence-part';
+            span.onclick = () => checkClick(index, span);
+            container.appendChild(span);
+        });
+
+        updateProgress();
+    }
+
+    function checkClick(index, element) {
+        if (sentenceSolved) return;
+
+        const currentData = sentences[currentSentenceIdx];
+        const feedback = document.getElementById('feedback');
+
+        if (index === currentData.sprinkleIndex) {
+            // Correct
+            element.classList.add('pop-out');
+            feedback.textContent = "Yum! Sprinkles removed! 🧁";
+            feedback.style.color = 'var(--success)';
+            sentenceSolved = true;
+            score++;
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        } else {
+            // Incorrect
+            element.classList.add('shake');
+            feedback.textContent = "Oops! That's the muffin! Don't eat the cake yet! 🚫";
+            feedback.style.color = 'var(--error)';
+            setTimeout(() => {
+                element.classList.remove('shake');
+            }, 500);
+        }
+    }
+
+    function nextSentence() {
+        currentSentenceIdx++;
+        loadSentence();
+    }
+
+    function updateProgress() {
+        const percent = (currentSentenceIdx / sentences.length) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    // --- PART 2 DATA & LOGIC ---
+    // Updated with new creative sentences and varied step requirements
+    const baseSentences = [
+        { 
+            subject: "The robot", 
+            predicate: "sneezed.",
+            label1: "Add an Interjection (Emotion)",
+            ex1: "Examples: Oh no, Yikes, Wow",
+            label2: "Add an Adjective Phrase",
+            ex2: "Examples: rusty and old, covered in oil"
+        },
+        { 
+            subject: "My teacher", 
+            predicate: "levitated.",
+            label1: "Add a 'When' Phrase",
+            ex1: "Examples: At noon, During math class, Suddenly",
+            label2: "Add a Direct Address (Who are you telling?)",
+            ex2: "Examples: dude, Mom, class"
+        },
+        { 
+            subject: "The slime", 
+            predicate: "bubbled.",
+            label1: "Add an Intro Phrase",
+            ex1: "Examples: In the bucket, Under the bed",
+            label2: "Add an Interrupter (The 'Which one?')",
+            ex2: "Examples: the green one, the one with eyes"
+        },
+        { 
+            subject: "The zombie", 
+            predicate: "trip-danced.",
+            label1: "Add a Direct Address (Who are you telling?)",
+            ex1: "Examples: Frank, Mr. President, Dad",
+            label2: "Add a 'How' Phrase",
+            ex2: "Examples: clumsily, with great style"
+        },
+        { 
+            subject: "Frankenstein", 
+            predicate: "sang karaoke.",
+            label1: "Add an Interjection",
+            ex1: "Examples: Ouch, Hooray, Oh boy",
+            label2: "Add an Appositive (Rename the subject)",
+            ex2: "Examples: a famous monster, the best singer"
+        },
+        { 
+            subject: "The hamster", 
+            predicate: "planned a heist.",
+            label1: "Add a 'Where' Phrase",
+            ex1: "Examples: Behind the cage, In the kitchen",
+            label2: "Add an Interrupter (Description)",
+            ex2: "Examples: tiny and fierce, wearing a mask"
+        }
+    ];
+    let currentBaseIdx = 0;
+
+    function initBuilder() {
+        updateBuilderUI();
+    }
+
+    function updateBuilderUI() {
+        const base = baseSentences[currentBaseIdx];
+        document.getElementById('baseSentenceDisplay').textContent = base.subject + " " + base.predicate;
+        
+        // Update dynamic labels
+        document.getElementById('labelStep1').textContent = base.label1;
+        document.getElementById('exampleStep1').textContent = base.ex1;
+        
+        document.getElementById('labelStep2').textContent = base.label2;
+        document.getElementById('exampleStep2').textContent = base.ex2;
+
+        // Reset inputs
+        document.getElementById('resultDisplay').style.display = 'none';
+        document.getElementById('frostingInput').value = '';
+        document.getElementById('sprinklesInput').value = '';
+    }
+
+    function changeBase(direction) {
+        currentBaseIdx += direction;
+        if (currentBaseIdx < 0) currentBaseIdx = baseSentences.length - 1;
+        if (currentBaseIdx >= baseSentences.length) currentBaseIdx = 0;
+        updateBuilderUI();
+    }
+
+    function bakeCupcake() {
+        let frosting = document.getElementById('frostingInput').value.trim();
+        let sprinkles = document.getElementById('sprinklesInput').value.trim();
+        const resultBox = document.getElementById('resultDisplay');
+
+        if (!frosting && !sprinkles) {
+            resultBox.innerHTML = "Your cupcake is plain! Add at least one ingredient first.";
+            resultBox.style.display = 'block';
+            resultBox.style.color = '#E57373'; // Error color
+            return;
+        }
+
+        // --- ADD CUTE PICTURE ---
+        // No sentence rewriting, just reward!
+        const cupcakeSvg = `
+            <div class="cupcake-img">
+                <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Wrapper -->
+                    <path d="M20,60 L30,90 L70,90 L80,60 Z" fill="#6D4C41" stroke="#4E342E" stroke-width="2"/>
+                    <!-- Frosting -->
+                    <path d="M15,60 Q25,25 50,25 Q75,25 85,60 Z" fill="#FFCDD2" stroke="#EF9A9A" stroke-width="2"/>
+                    <circle cx="50" cy="25" r="10" fill="#FFCDD2" />
+                    <!-- Cherry -->
+                    <circle cx="50" cy="18" r="6" fill="#E57373" stroke="#D32F2F" stroke-width="1"/>
+                    <!-- Sprinkles -->
+                    <rect x="30" y="45" width="5" height="2" fill="#4FC3F7" transform="rotate(45 30 45)" />
+                    <rect x="60" y="40" width="5" height="2" fill="#81C784" transform="rotate(-30 60 40)" />
+                    <rect x="45" y="50" width="5" height="2" fill="#FFEB3B" />
+                    <rect x="55" y="35" width="5" height="2" fill="#BA68C8" transform="rotate(90 55 35)" />
+                </svg>
+                <div style="font-size: 1.5rem; color: #6D4C41; margin-top:10px; font-weight:bold;">Delicious! Great Baking! 🧁</div>
+            </div>
+        `;
+
+        resultBox.innerHTML = cupcakeSvg;
+        resultBox.style.color = 'inherit';
+        resultBox.style.display = 'flex';
+        resultBox.style.flexDirection = 'column';
+        resultBox.style.alignItems = 'center';
+    }
+
+    // --- TAB LOGIC ---
+    function switchTab(tabId) {
+        document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        
+        if(tabId === 'eraser') {
+            document.querySelector('.nav-tab:nth-child(1)').classList.add('active');
+        } else {
+            document.querySelector('.nav-tab:nth-child(2)').classList.add('active');
+        }
+    }
+
+    // Start
+    initGame();
+    initBuilder();
+
+</script>
+
+</body>
+</html>
