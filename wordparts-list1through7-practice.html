@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professor Word's Morpho-Lab</title>
+    <style>
+        :root {
+            --brass: #d4af37;
+            --brass-dark: #a68828;
+            --copper: #b87333;
+            --iron: #434b4d;
+            --parchment: #f0e68c;
+            --leather: #8b4513;
+            --glow: #00ffcc;
+        }
+
+        body {
+            background-color: #2b2b2b;
+            background-image: radial-gradient(#383838 15%, transparent 16%), radial-gradient(#383838 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--brass);
+            text-shadow: 2px 2px 0px #000;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border-bottom: 4px double var(--brass);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--iron);
+            padding: 20px;
+            border-radius: 15px;
+            border: 8px solid var(--copper);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Instructions Panel */
+        .instructions {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px dashed var(--brass);
+            color: #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .instructions strong {
+            color: var(--brass);
+            text-transform: uppercase;
+        }
+
+        /* The Slot Machine Area */
+        .machine-stage {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 20px #000;
+            flex-wrap: wrap;
+        }
+
+        .column-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 200px;
+            flex: 1;
+        }
+
+        .label-plate {
+            background: var(--brass);
+            color: #222;
+            padding: 5px 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 2px solid var(--brass-dark);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+
+        select {
+            width: 100%;
+            height: 200px; /* Show multiple options */
+            background: var(--parchment);
+            border: 4px solid var(--leather);
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            padding: 5px;
+            outline: none;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(139, 69, 19, 0.3);
+            overflow-y: auto;
+        }
+
+        select option {
+            padding: 10px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        select option:checked {
+            background-color: var(--brass);
+            color: #000;
+        }
+
+        /* The Forge Button */
+        .forge-btn {
+            background: linear-gradient(to bottom, #ff5e5e, #c00);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            border: 6px solid #800;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #600, 0 10px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+            margin: 20px auto;
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            text-shadow: 1px 1px 0 #600;
+        }
+
+        .forge-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #600, inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Results Display */
+        .output-panel {
+            background: #111;
+            border: 4px solid var(--brass);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Screw heads for aesthetic */
+        .screw {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #777;
+            border-radius: 50%;
+            box-shadow: inset 1px 1px 2px #fff, inset -1px -1px 2px #000;
+        }
+        .tl { top: 10px; left: 10px; }
+        .tr { top: 10px; right: 10px; }
+        .bl { bottom: 10px; left: 10px; }
+        .br { bottom: 10px; right: 10px; }
+
+        .forged-word {
+            font-size: 3rem;
+            color: var(--glow);
+            text-shadow: 0 0 10px var(--glow);
+            margin: 10px 0;
+            letter-spacing: 2px;
+            min-height: 3.5rem;
+        }
+
+        .meaning-hint {
+            color: #aaa;
+            font-style: italic;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .decision-buttons {
+            display: flex;
+            gap: 20px;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .decision-buttons.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .btn-decision {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-real {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 0 #2E7D32;
+        }
+
+        .btn-silly {
+            background-color: #9C27B0;
+            color: white;
+            box-shadow: 0 4px 0 #6A1B9A;
+        }
+
+        .btn-decision:active {
+            transform: translateY(4px);
+            box-shadow: none !important;
+        }
+
+        /* Lab Log */
+        .lab-log {
+            background: var(--parchment);
+            border: 4px solid var(--leather);
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .lab-log h2 {
+            margin-top: 0;
+            border-bottom: 2px dashed var(--leather);
+            padding-bottom: 5px;
+            color: var(--leather);
+        }
+
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+            font-size: 1.1rem;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .tag {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .tag.real { background-color: #4CAF50; }
+        .tag.silly { background-color: #9C27B0; }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .machine-stage { flex-direction: column; }
+            .column-wrapper { max-width: 100%; }
+            select { height: 100px; }
+            .forged-word { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Professor Word's Morpho-Lab</h1>
+
+    <div class="container">
+        <!-- Instructions Blurb -->
+        <div class="instructions">
+            <strong>Welcome, Apprentice!</strong><br>
+            1. Select a <strong>Prefix</strong>, <strong>Root</strong>, and <strong>Suffix</strong> from the columns below.<br>
+            2. Click <strong>FORGE WORD</strong> to combine them.<br>
+            3. Decide: Is your creation a <strong>Real Word</strong> or a <strong>Silly Word</strong>?
+        </div>
+
+        <!-- The Input Machine -->
+        <div class="machine-stage">
+            
+            <div class="column-wrapper">
+                <div class="label-plate">Prefix</div>
+                <select id="prefix-select" size="5">
+                    <option value="" data-mean="" selected>--- (None) ---</option>
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+
+            <div class="column-wrapper">
+                <div class="label-plate">Root</div>
+                <select id="root-select" size="5">
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+
+            <div class="column-wrapper">
+                <div class="label-plate">Suffix</div>
+                <select id="suffix-select" size="5">
+                    <option value="" data-mean="" selected>--- (None) ---</option>
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+        </div>
+
+        <button class="forge-btn" onclick="forgeWord()">⚡ Forge Word ⚡</button>
+
+        <!-- The Output -->
+        <div class="output-panel">
+            <div class="screw tl"></div><div class="screw tr"></div>
+            <div class="screw bl"></div><div class="screw br"></div>
+            
+            <div id="word-display" class="forged-word">---</div>
+            <div id="meaning-display" class="meaning-hint">Select parts to begin...</div>
+
+            <div id="decision-panel" class="decision-buttons">
+                <button class="btn-decision btn-real" onclick="logWord('Real')">✅ It's a Real Word!</button>
+                <button class="btn-decision btn-silly" onclick="logWord('Silly')">🤪 It's a Silly Word!</button>
+            </div>
+        </div>
+
+        <!-- The Log -->
+        <div class="lab-log">
+            <h2>🧪 Lab Log: Experiments</h2>
+            <div id="log-container">
+                <div style="text-align: center; color: #888; font-style: italic;">No experiments recorded yet.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data derived from the user's provided lists
+        const prefixes = [
+            { text: "mono-", mean: "one/single" },
+            { text: "oli-", mean: "few" },
+            { text: "an-", mean: "without" },
+            { text: "pan-", mean: "all" },
+            { text: "poly-", mean: "many" },
+            { text: "un-", mean: "not" },
+            { text: "re-", mean: "again" },
+            { text: "dis-", mean: "lack of" },
+            { text: "uni-", mean: "one" },
+            { text: "bi-", mean: "two" },
+            { text: "tri-", mean: "three" },
+            { text: "quad-", mean: "four" },
+            { text: "milli-", mean: "1/1000" },
+            { text: "kilo-", mean: "1000" },
+            { text: "semi-", mean: "half" },
+            { text: "multi-", mean: "many" },
+            { text: "geo-", mean: "earth" },
+            { text: "zo-", mean: "animal" },
+            { text: "bio-", mean: "life" },
+            { text: "eco-", mean: "environment" },
+            { text: "tele-", mean: "far away" },
+            { text: "auto-", mean: "self" },
+            { text: "in-", mean: "not" }
+        ];
+
+        const roots = [
+            { text: "dem", mean: "people" },
+            { text: "theo", mean: "god" },
+            { text: "elect", mean: "to choose" },
+            { text: "hier", mean: "holy" },
+            { text: "civ", mean: "citizen" },
+            { text: "val", mean: "worthy" },
+            { text: "equ", mean: "equal" },
+            { text: "fort", mean: "strength" },
+            { text: "jus", mean: "law" },
+            { text: "jud", mean: "law" },
+            { text: "reg", mean: "rule" },
+            { text: "duc", mean: "lead" },
+            { text: "duct", mean: "lead" },
+            { text: "ord", mean: "order" },
+            { text: "numer", mean: "number" },
+            { text: "cent", mean: "100" },
+            { text: "metr", mean: "measure" },
+            { text: "meter", mean: "measure" },
+            { text: "chrono", mean: "time" },
+            { text: "tech", mean: "skill" },
+            { text: "aqua", mean: "water" },
+            { text: "terr", mean: "land" },
+            { text: "therm", mean: "heat" },
+            { text: "graph", mean: "write" },
+            { text: "scope", mean: "look" },
+            { text: "astr", mean: "star" },
+            { text: "sol", mean: "sun" },
+            { text: "lun", mean: "moon" },
+            { text: "photo", mean: "light" },
+            { text: "cycl", mean: "wheel" },
+            { text: "cosm", mean: "universe" },
+            { text: "circ", mean: "around" },
+            { text: "manu", mean: "hand" },
+            { text: "ped", mean: "foot" },
+            { text: "phon", mean: "sound" },
+            { text: "scrib", mean: "write" },
+            { text: "script", mean: "write" },
+            { text: "spec", mean: "look" },
+            { text: "dict", mean: "say" },
+            { text: "sens", mean: "feel" },
+            { text: "aud", mean: "hear" },
+            { text: "path", mean: "feeling" }
+        ];
+
+        const suffixes = [
+            { text: "-archy", mean: "rule" },
+            { text: "-tion", mean: "action" },
+            { text: "-ly", mean: "in a way" },
+            { text: "-ity", mean: "state of" },
+            { text: "-ple", mean: "times" },
+            { text: "-logy", mean: "study of" },
+            { text: "-er", mean: "person who" },
+            { text: "-or", mean: "person who" },
+            { text: "-ist", mean: "person who" },
+            { text: "-ful", mean: "full of" },
+            { text: "-less", mean: "without" },
+            { text: "-ment", mean: "result of" }
+        ];
+
+        // State variables
+        let currentWord = "";
+        let hasLogged = false;
+
+        // Populate lists
+        function populateSelect(id, data, isRoot = false) {
+            const select = document.getElementById(id);
+            // Sort alphabetically for easier finding
+            data.sort((a, b) => a.text.replace(/-/g, '').localeCompare(b.text.replace(/-/g, '')));
+            
+            data.forEach((item, index) => {
+                const opt = document.createElement("option");
+                opt.value = item.text.replace(/-/g, ''); // Remove hyphens for the value
+                opt.dataset.mean = item.mean;
+                opt.textContent = `${item.text} (${item.mean})`;
+                
+                // Select first root by default so it's not empty
+                if (isRoot && index === 0) opt.selected = true;
+                
+                select.appendChild(opt);
+            });
+        }
+
+        function init() {
+            populateSelect("prefix-select", prefixes);
+            populateSelect("root-select", roots, true);
+            populateSelect("suffix-select", suffixes);
+        }
+
+        function forgeWord() {
+            const pSel = document.getElementById("prefix-select");
+            const rSel = document.getElementById("root-select");
+            const sSel = document.getElementById("suffix-select");
+
+            const pOpt = pSel.options[pSel.selectedIndex];
+            const rOpt = rSel.options[rSel.selectedIndex];
+            const sOpt = sSel.options[sSel.selectedIndex];
+
+            // Construct Word
+            const pText = pOpt.value;
+            const rText = rOpt.value;
+            const sText = sOpt.value;
+
+            // Simple logic: If suffix starts with vowel and root ends with vowel, maybe merge?
+            // For 5th grade, simple concatenation is usually fine, but let's just join them.
+            // Capitalize first letter
+            let rawWord = pText + rText + sText;
+            currentWord = rawWord.charAt(0).toUpperCase() + rawWord.slice(1);
+
+            // Construct Meaning
+            const meanings = [];
+            if (pOpt.dataset.mean) meanings.push(pOpt.dataset.mean);
+            if (rOpt.dataset.mean) meanings.push(rOpt.dataset.mean);
+            if (sOpt.dataset.mean) meanings.push(sOpt.dataset.mean);
+
+            // Update UI
+            const wordDisplay = document.getElementById("word-display");
+            const meanDisplay = document.getElementById("meaning-display");
+            const decisionPanel = document.getElementById("decision-panel");
+
+            // Animation effect
+            wordDisplay.style.transform = "scale(0.8)";
+            wordDisplay.style.opacity = "0";
+            
+            setTimeout(() => {
+                wordDisplay.textContent = currentWord;
+                meanDisplay.textContent = "Equation: " + meanings.join(" + ");
+                wordDisplay.style.transition = "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                wordDisplay.style.transform = "scale(1)";
+                wordDisplay.style.opacity = "1";
+                
+                decisionPanel.classList.add("active");
+                hasLogged = false; // Reset log lock
+            }, 100);
+        }
+
+        function logWord(type) {
+            if (hasLogged) return; // Prevent double logging same word
+
+            const logContainer = document.getElementById("log-container");
+            
+            // Clear "empty" message if it exists
+            if (logContainer.children.length > 0 && logContainer.children[0].style.fontStyle === "italic") {
+                logContainer.innerHTML = "";
+            }
+
+            const entry = document.createElement("div");
+            entry.className = "log-entry";
+            
+            const wordSpan = document.createElement("span");
+            wordSpan.innerHTML = `<strong>${currentWord}</strong>`;
+            
+            const tagSpan = document.createElement("span");
+            tagSpan.className = `tag ${type.toLowerCase()}`;
+            tagSpan.textContent = type;
+
+            entry.appendChild(wordSpan);
+            entry.appendChild(tagSpan);
+            
+            // Add to top
+            logContainer.prepend(entry);
+            
+            // Disable buttons visually
+            document.getElementById("decision-panel").classList.remove("active");
+            hasLogged = true;
+        }
+
+        // Start the engine
+        init();
+
+    </script>
+</body>
+</html>
