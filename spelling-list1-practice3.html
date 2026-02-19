@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contraction Builder</title>
+    <style>
+        :root {
+            --primary: #FF6B6B; /* Coral/Red */
+            --secondary: #4ECDC4; /* Teal */
+            --accent: #FFE66D; /* Yellow */
+            --dark: #292F36; /* Dark Blue/Gray */
+            --bg: #F7FFF7; /* Off-white */
+            --success: #2ECC71;
+            --error: #E74C3C;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: var(--bg);
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            background-image: repeating-linear-gradient(
+                45deg,
+                #f0f8f0,
+                #f0f8f0 20px,
+                #F7FFF7 20px,
+                #F7FFF7 40px
+            );
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 5px solid var(--secondary);
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-top: 0;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+
+        .instructions {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* The Phrase to translate */
+        .target-phrase {
+            background-color: var(--dark);
+            color: white;
+            font-size: 2rem;
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* The drop zone / answer slots */
+        .answer-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            min-height: 60px;
+            flex-wrap: wrap;
+        }
+
+        .slot {
+            width: 50px;
+            height: 60px;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark);
+            background-color: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slot.filled {
+            border: 3px solid var(--secondary);
+            background-color: var(--secondary);
+            color: white;
+            border-style: solid;
+        }
+
+        /* The bank of scrambled letters */
+        .letter-bank {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 15px;
+            min-height: 60px;
+        }
+
+        .letter-tile {
+            width: 50px;
+            height: 60px;
+            background-color: var(--accent);
+            border: none;
+            border-radius: 10px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark);
+            cursor: pointer;
+            box-shadow: 0 5px 0px #D4C04F;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .letter-tile:active {
+            transform: translateY(5px);
+            box-shadow: 0 0px 0px #D4C04F;
+        }
+
+        .letter-tile.hidden {
+            visibility: hidden;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background-color: #e55a5a;
+        }
+
+        .btn-clear {
+            background-color: #95a5a6;
+        }
+
+        .btn-clear:hover {
+            background-color: #7f8c8d;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        .success-anim .slot {
+            background-color: var(--success);
+            border-color: var(--success);
+            transform: scale(1.1);
+            transition: all 0.3s;
+        }
+
+        .error-anim .slot {
+            background-color: var(--error);
+            border-color: var(--error);
+        }
+
+        /* End Screen */
+        #end-screen {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="game-zone">
+        <h1>Word Builder 🏗️</h1>
+        <p class="instructions">Click the blocks to build the correct contraction!</p>
+        
+        <div class="target-phrase" id="target-phrase">I will</div>
+        
+        <div class="answer-slots" id="answer-slots">
+            <!-- Slots generated by JS -->
+        </div>
+
+        <div class="letter-bank" id="letter-bank">
+            <!-- Letters generated by JS -->
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-clear" onclick="clearSlots()">Undo All</button>
+            <button class="btn" onclick="skipWord()">Skip Word</button>
+        </div>
+        
+        <div style="margin-top: 20px; color: #888; font-size: 0.9rem;">
+            Words left: <span id="words-left">0</span>
+        </div>
+    </div>
+
+    <div class="game-container" id="end-screen">
+        <div style="font-size: 5rem; margin-bottom: 1rem;">👷✨🏆</div>
+        <h1>Construction Complete!</h1>
+        <p class="instructions">You built all the contractions perfectly.</p>
+        <button class="btn" onclick="initGame()" style="font-size: 1.5rem; padding: 15px 40px;">Build Again</button>
+    </div>
+
+    <script>
+        const masterList = [
+            { phrase: "I will", answer: "I'll" },
+            { phrase: "you will", answer: "you'll" },
+            { phrase: "he will", answer: "he'll" },
+            { phrase: "she will", answer: "she'll" },
+            { phrase: "we will", answer: "we'll" },
+            { phrase: "they will", answer: "they'll" },
+            { phrase: "it will", answer: "it'll" },
+            { phrase: "I would", answer: "I'd" },
+            { phrase: "you would", answer: "you'd" },
+            { phrase: "she would", answer: "she'd" },
+            { phrase: "he would", answer: "he'd" },
+            { phrase: "we would", answer: "we'd" },
+            { phrase: "they would", answer: "they'd" },
+            { phrase: "who would", answer: "who'd" },
+            { phrase: "I have", answer: "I've" },
+            { phrase: "you have", answer: "you've" },
+            { phrase: "he has", answer: "he's" },
+            { phrase: "she has", answer: "she's" },
+            { phrase: "we have", answer: "we've" },
+            { phrase: "they have", answer: "they've" },
+            { phrase: "should have", answer: "should've" },
+            { phrase: "would have", answer: "would've" },
+            { phrase: "could have", answer: "could've" }
+        ];
+
+        let playList = [];
+        let currentWordIndex = 0;
+        let currentAnswer = "";
+        let guessArray = []; // Tracks what is currently in the slots
+        let tileData = [];   // Tracks the tiles in the bank
+
+        const WORDS_PER_ROUND = 10; // Play 10 random words per round
+
+        function initGame() {
+            document.getElementById('end-screen').style.display = 'none';
+            document.getElementById('game-zone').style.display = 'block';
+            
+            // Shuffle and pick 10 words
+            playList = [...masterList].sort(() => 0.5 - Math.random()).slice(0, WORDS_PER_ROUND);
+            currentWordIndex = 0;
+            
+            loadWord();
+        }
+
+        function loadWord() {
+            document.getElementById('words-left').textContent = WORDS_PER_ROUND - currentWordIndex;
+            
+            const wordObj = playList[currentWordIndex];
+            document.getElementById('target-phrase').textContent = wordObj.phrase;
+            currentAnswer = wordObj.answer;
+            
+            // Reset arrays
+            guessArray = new Array(currentAnswer.length).fill(null);
+            
+            // Split answer into characters and scramble
+            let chars = currentAnswer.split('');
+            chars = chars.sort(() => 0.5 - Math.random());
+            
+            // Store tile data
+            tileData = chars.map((char, index) => ({
+                id: index,
+                char: char,
+                used: false
+            }));
+
+            renderSlots();
+            renderBank();
+        }
+
+        function renderSlots() {
+            const container = document.getElementById('answer-slots');
+            container.innerHTML = '';
+            container.className = 'answer-slots'; // Reset any animation classes
+            
+            guessArray.forEach((guessedItem, index) => {
+                const slot = document.createElement('div');
+                slot.className = `slot ${guessedItem ? 'filled' : ''}`;
+                slot.textContent = guessedItem ? guessedItem.char : '';
+                
+                // If the slot has a letter, clicking it returns it to the bank
+                if (guessedItem) {
+                    slot.onclick = () => returnTile(index);
+                }
+                
+                container.appendChild(slot);
+            });
+        }
+
+        function renderBank() {
+            const bank = document.getElementById('letter-bank');
+            bank.innerHTML = '';
+            
+            tileData.forEach(tile => {
+                const btn = document.createElement('button');
+                btn.className = `letter-tile ${tile.used ? 'hidden' : ''}`;
+                btn.textContent = tile.char;
+                
+                if (!tile.used) {
+                    btn.onclick = () => playTile(tile.id);
+                }
+                
+                bank.appendChild(btn);
+            });
+        }
+
+        function playTile(tileId) {
+            // Find first empty slot
+            const emptySlotIndex = guessArray.findIndex(item => item === null);
+            
+            if (emptySlotIndex !== -1) {
+                // Update arrays
+                const tile = tileData.find(t => t.id === tileId);
+                tile.used = true;
+                guessArray[emptySlotIndex] = tile;
+                
+                renderSlots();
+                renderBank();
+                
+                checkWinCondition();
+            }
+        }
+
+        function returnTile(slotIndex) {
+            const guessedItem = guessArray[slotIndex];
+            if (guessedItem) {
+                // Find it in tileData and set to unused
+                const tile = tileData.find(t => t.id === guessedItem.id);
+                tile.used = false;
+                
+                // Clear the slot
+                guessArray[slotIndex] = null;
+                
+                renderSlots();
+                renderBank();
+            }
+        }
+
+        function clearSlots() {
+            guessArray.forEach((item, index) => {
+                if (item) returnTile(index);
+            });
+        }
+
+        function checkWinCondition() {
+            // Check if slots are full
+            if (!guessArray.includes(null)) {
+                // Build the guessed string
+                const guessedString = guessArray.map(item => item.char).join('');
+                const slotsContainer = document.getElementById('answer-slots');
+                
+                if (guessedString === currentAnswer) {
+                    // Correct!
+                    slotsContainer.classList.add('success-anim');
+                    setTimeout(() => {
+                        nextWord();
+                    }, 1000);
+                } else {
+                    // Wrong!
+                    slotsContainer.classList.add('error-anim', 'shake');
+                    setTimeout(() => {
+                        clearSlots();
+                        slotsContainer.classList.remove('error-anim', 'shake');
+                    }, 800);
+                }
+            }
+        }
+
+        function skipWord() {
+            nextWord();
+        }
+
+        function nextWord() {
+            currentWordIndex++;
+            if (currentWordIndex < playList.length) {
+                loadWord();
+            } else {
+                endRound();
+            }
+        }
+
+        function endRound() {
+            document.getElementById('game-zone').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'block';
+        }
+
+        // Start game on load
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
