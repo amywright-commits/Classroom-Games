@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Wizard: Battle for Meaning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #1e293b;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* --- Animations --- */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes damage-shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes attack-shoot {
+            0% { transform: scale(1); opacity: 1; left: 20%; top: 60%; }
+            100% { transform: scale(3); opacity: 0; left: 80%; top: 20%; }
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-damage { animation: damage-shake 0.4s ease-in-out; }
+        .animate-pop { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Projectile */
+        .projectile {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #FBBF24;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #F59E0B;
+            z-index: 50;
+            display: none;
+            pointer-events: none;
+        }
+        .projectile.fire {
+            display: block;
+            animation: attack-shoot 0.6s ease-in forwards;
+        }
+
+        /* Flashcard Styles */
+        .scene { perspective: 1000px; height: 260px; cursor: pointer; }
+        .card { width: 100%; height: 100%; position: relative; transition: transform 0.6s; transform-style: preserve-3d; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); padding: 2rem; text-align: center; }
+        .card-front { background: white; color: #1e293b; border: 4px solid #3B82F6; }
+        .card-back { background: #FDE047; color: #1e293b; transform: rotateY(180deg); border: 4px solid #EAB308; }
+
+        /* Battle UI */
+        .health-bar-container {
+            width: 100%;
+            height: 20px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #475569;
+        }
+        .health-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- Header -->
+    <header class="text-center mb-6 z-10">
+        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300 drop-shadow-sm">Word Wizard</h1>
+        <p class="text-slate-400 text-sm mt-1">List 7: Body, Mind, Action</p>
+    </header>
+
+    <!-- Main Menu / Mode Selector -->
+    <div class="bg-slate-800/80 backdrop-blur p-2 rounded-full shadow-lg mb-6 flex w-full max-w-md border border-slate-700">
+        <button id="tab-train" onclick="switchMode('train')" class="flex-1 py-2 rounded-full text-lg font-bold transition-all bg-blue-600 text-white shadow-lg">
+            🏰 Training
+        </button>
+        <button id="tab-battle" onclick="switchMode('battle')" class="flex-1 py-2 rounded-full text-lg font-bold text-slate-400 hover:text-white transition-all">
+            ⚔️ Battle
+        </button>
+    </div>
+
+    <!-- TRAINING MODE (Flashcards) -->
+    <div id="mode-train" class="w-full max-w-md animate-pop">
+        
+        <!-- Added Training Blurb -->
+        <div class="bg-slate-700/50 p-4 rounded-xl mb-6 border border-slate-600 text-center shadow-inner">
+            <h3 class="text-blue-300 font-bold mb-1">🎓 Wizard Academy</h3>
+            <p class="text-slate-300 text-sm">Memorize these word parts! You will need to know them to cast the right spells and defeat the monsters in the Battle Arena.</p>
+        </div>
+
+        <div class="scene mb-6" onclick="flipCard()">
+            <div class="card" id="flashcard">
+                <div class="card-face card-front">
+                    <span class="text-slate-400 text-xs font-bold uppercase mb-2 tracking-widest">Word Part</span>
+                    <h2 id="fc-term" class="text-5xl font-bold text-blue-600">auto-</h2>
+                    <p class="text-slate-400 mt-4 text-xs animate-pulse">(Tap to Flip)</p>
+                </div>
+                <div class="card-face card-back">
+                    <span class="text-yellow-800 text-xs font-bold uppercase mb-2 tracking-widest">Definition</span>
+                    <h2 id="fc-def" class="text-3xl font-bold text-yellow-900">self</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center gap-4">
+            <button onclick="prevCard()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-lg border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all">
+                ← Prev
+            </button>
+            <div class="text-slate-400 font-bold text-xl font-mono">
+                <span id="fc-count">1</span>/<span id="fc-total">12</span>
+            </div>
+            <button onclick="nextCard()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-lg border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all">
+                Next →
+            </button>
+        </div>
+        <!-- Removed bottom paragraph -->
+    </div>
+
+    <!-- BATTLE MODE -->
+    <div id="mode-battle" class="w-full max-w-md hidden relative">
+        
+        <!-- Added Battle Blurb -->
+        <div class="bg-slate-700/50 p-4 rounded-xl mb-4 border border-slate-600 text-center shadow-inner">
+            <h3 class="text-purple-300 font-bold mb-1">⚔️ Battle Instructions</h3>
+            <p class="text-slate-300 text-sm">Defeat <strong>3 Monsters</strong> to win! Select the correct meaning to cast a fireball. Watch out—wrong answers let the monster attack you!</p>
+        </div>
+
+        <!-- Projectile Animation Container -->
+        <div id="battle-field" class="w-full relative h-[450px] bg-slate-800 rounded-3xl border-4 border-slate-700 shadow-2xl overflow-hidden mb-4">
+            
+            <!-- Effect Overlay -->
+            <div id="damage-overlay" class="absolute inset-0 bg-red-500 opacity-0 pointer-events-none z-40 transition-opacity duration-200"></div>
+            <div id="projectile" class="projectile"></div>
+
+            <!-- Monster Area (Top) -->
+            <div class="absolute top-0 w-full p-6 flex flex-col items-center z-10">
+                <div class="w-full flex justify-between items-end mb-2 px-2">
+                    <span id="monster-name" class="font-bold text-red-400 text-lg">The Glitch</span>
+                    <span id="monster-hp-text" class="text-xs text-slate-400">HP: 100%</span>
+                </div>
+                <div class="health-bar-container">
+                    <div id="monster-hp-bar" class="health-bar-fill bg-red-500" style="width: 100%;"></div>
+                </div>
+                <div id="monster-sprite" class="text-8xl mt-4 animate-float filter drop-shadow-2xl transition-transform duration-200">👾</div>
+            </div>
+
+            <!-- VS / Challenge Text (Center) -->
+            <div class="absolute top-[45%] left-0 w-full text-center z-20">
+                <div class="inline-block bg-slate-900/90 backdrop-blur px-6 py-3 rounded-2xl border border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+                    <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1">Enemy casts:</p>
+                    <h2 id="battle-term" class="text-4xl font-bold text-white">auto-</h2>
+                </div>
+            </div>
+
+            <!-- Player Area (Bottom) -->
+            <div class="absolute bottom-0 w-full p-6 z-10 bg-gradient-to-t from-slate-900 to-transparent">
+                 <div id="player-sprite" class="absolute bottom-4 left-4 text-5xl filter drop-shadow-lg">🧙</div>
+                 <div class="ml-16">
+                     <div class="flex justify-between items-end mb-1">
+                         <span class="font-bold text-blue-400 text-sm">You</span>
+                         <span id="player-hp-text" class="text-xs text-slate-400">HP: 100%</span>
+                     </div>
+                     <div class="health-bar-container h-3">
+                        <div id="player-hp-bar" class="health-bar-fill bg-blue-500" style="width: 100%;"></div>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- Victory/Defeat Screen Overlay -->
+            <div id="end-screen" class="absolute inset-0 bg-slate-900/95 z-50 flex flex-col items-center justify-center hidden">
+                <div id="end-emoji" class="text-8xl mb-4 animate-bounce">🏆</div>
+                <h2 id="end-title" class="text-4xl font-bold text-yellow-400 mb-2">Victory!</h2>
+                <p id="end-msg" class="text-slate-300 mb-8 text-center px-6">You defeated all the monsters!</p>
+                <button onclick="startBattle()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 transition-all">
+                    Play Again
+                </button>
+            </div>
+        </div>
+
+        <!-- Spell Buttons (Definitions) -->
+        <div id="spell-container" class="grid grid-cols-1 gap-3">
+            <!-- Buttons injected by JS -->
+        </div>
+    </div>
+
+    <script>
+        // --- Game Data ---
+        const vocabData = [
+            { term: "auto-", def: "self" },
+            { term: "manu", def: "hand" },
+            { term: "ped", def: "foot" },
+            { term: "phon", def: "sound" },
+            { term: "in-", def: "not" }, // Simplified for display
+            { term: "scrib/script", def: "to write / draw" },
+            { term: "spec", def: "to look at" },
+            { term: "dict", def: "to say" },
+            { term: "sens", def: "to feel or think" },
+            { term: "-ment", def: "result of action" }, // Shortened for buttons
+            { term: "aud", def: "to hear" },
+            { term: "path", def: "feeling" }
+        ];
+
+        // --- State Variables ---
+        let currentMode = 'train';
+        let cardIndex = 0;
+        
+        // Battle State
+        let playerHP = 100;
+        let monsterHP = 100;
+        let currentMonster = 0;
+        let currentQuestion = null;
+        let isAttacking = false;
+
+        const monsters = [
+            { name: "The Glitch", emoji: "👾", maxHP: 30, color: "text-red-400" }, // Easy
+            { name: "Slime Blob", emoji: "🦠", maxHP: 50, color: "text-green-400" }, // Medium
+            { name: "Drago", emoji: "🐉", maxHP: 80, color: "text-orange-400" }     // Hard
+        ];
+
+        // --- DOM Elements ---
+        const modeTrain = document.getElementById('mode-train');
+        const modeBattle = document.getElementById('mode-battle');
+        const tabTrain = document.getElementById('tab-train');
+        const tabBattle = document.getElementById('tab-battle');
+        
+        // Flashcard DOM
+        const fcTerm = document.getElementById('fc-term');
+        const fcDef = document.getElementById('fc-def');
+        const fcCount = document.getElementById('fc-count');
+        const card = document.getElementById('flashcard');
+
+        // Battle DOM
+        const monsterName = document.getElementById('monster-name');
+        const monsterSprite = document.getElementById('monster-sprite');
+        const monsterBar = document.getElementById('monster-hp-bar');
+        const playerBar = document.getElementById('player-hp-bar');
+        const battleTerm = document.getElementById('battle-term');
+        const spellContainer = document.getElementById('spell-container');
+        const endScreen = document.getElementById('end-screen');
+        const projectile = document.getElementById('projectile');
+        const battleField = document.getElementById('battle-field');
+        const damageOverlay = document.getElementById('damage-overlay');
+
+        // --- Initialization ---
+        window.onload = () => {
+            loadFlashcard(0);
+        };
+
+        // --- Mode Switching ---
+        function switchMode(mode) {
+            currentMode = mode;
+            if (mode === 'train') {
+                modeTrain.classList.remove('hidden');
+                modeBattle.classList.add('hidden');
+                
+                tabTrain.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+                tabTrain.classList.remove('text-slate-400');
+                
+                tabBattle.classList.remove('bg-purple-600', 'text-white', 'shadow-lg'); // Remove battle style
+                tabBattle.classList.add('text-slate-400');
+                tabBattle.style.backgroundColor = "transparent"; // Reset
+            } else {
+                modeTrain.classList.add('hidden');
+                modeBattle.classList.remove('hidden');
+                
+                tabBattle.classList.add('bg-purple-600', 'text-white', 'shadow-lg');
+                tabBattle.classList.remove('text-slate-400');
+                
+                tabTrain.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                tabTrain.classList.add('text-slate-400');
+                
+                startBattle();
+            }
+        }
+
+        // --- Flashcard Logic ---
+        function loadFlashcard(index) {
+            card.classList.remove('is-flipped');
+            setTimeout(() => {
+                fcTerm.textContent = vocabData[index].term;
+                fcDef.textContent = vocabData[index].def;
+                fcCount.textContent = index + 1;
+            }, 200);
+        }
+
+        function flipCard() { card.classList.toggle('is-flipped'); }
+        function nextCard() { cardIndex = (cardIndex + 1) % vocabData.length; loadFlashcard(cardIndex); }
+        function prevCard() { cardIndex = (cardIndex - 1 + vocabData.length) % vocabData.length; loadFlashcard(cardIndex); }
+
+        // --- Battle Logic ---
+        function startBattle() {
+            currentMonster = 0;
+            playerHP = 100;
+            endScreen.classList.add('hidden');
+            updateBars();
+            loadMonster();
+        }
+
+        function loadMonster() {
+            if (currentMonster >= monsters.length) {
+                showVictory();
+                return;
+            }
+            const m = monsters[currentMonster];
+            monsterHP = m.maxHP;
+            monsterName.textContent = m.name;
+            monsterSprite.textContent = m.emoji;
+            monsterName.className = `font-bold text-lg ${m.color}`;
+            updateBars();
+            nextTurn();
+        }
+
+        function nextTurn() {
+            isAttacking = false;
+            // Pick random word
+            const qIndex = Math.floor(Math.random() * vocabData.length);
+            currentQuestion = vocabData[qIndex];
+            battleTerm.textContent = currentQuestion.term;
+
+            // Generate Answers
+            let answers = [currentQuestion.def];
+            let distractors = vocabData.filter(i => i.term !== currentQuestion.term);
+            distractors.sort(() => 0.5 - Math.random());
+            answers.push(distractors[0].def, distractors[1].def, distractors[2].def);
+            answers.sort(() => 0.5 - Math.random());
+
+            // Render Buttons
+            spellContainer.innerHTML = '';
+            answers.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-4 rounded-xl shadow-md border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all text-lg";
+                btn.textContent = ans;
+                btn.onclick = () => castSpell(ans, btn);
+                spellContainer.appendChild(btn);
+            });
+        }
+
+        function castSpell(answer, btn) {
+            if (isAttacking) return;
+            isAttacking = true;
+
+            if (answer === currentQuestion.def) {
+                // Correct: Player attacks Monster
+                btn.classList.remove('bg-slate-700', 'border-slate-900');
+                btn.classList.add('bg-green-600', 'border-green-800', 'text-white');
+                
+                // Fireball Animation
+                projectile.classList.add('fire');
+                
+                setTimeout(() => {
+                    // Hit Monster
+                    projectile.classList.remove('fire');
+                    monsterSprite.classList.add('animate-damage');
+                    
+                    // Damage Logic
+                    let damage = 10;
+                    monsterHP -= damage;
+                    if (monsterHP < 0) monsterHP = 0;
+                    updateBars();
+
+                    setTimeout(() => {
+                        monsterSprite.classList.remove('animate-damage');
+                        if (monsterHP <= 0) {
+                            currentMonster++;
+                            setTimeout(loadMonster, 1000); // Next monster
+                        } else {
+                            nextTurn();
+                        }
+                    }, 500);
+
+                }, 600); // Wait for fireball to travel
+
+            } else {
+                // Incorrect: Monster attacks Player
+                btn.classList.remove('bg-slate-700', 'border-slate-900');
+                btn.classList.add('bg-red-600', 'border-red-800', 'text-white');
+
+                // Shake Screen / Damage effect
+                battleField.classList.add('animate-damage');
+                damageOverlay.classList.remove('opacity-0');
+                damageOverlay.classList.add('opacity-50');
+
+                setTimeout(() => {
+                    battleField.classList.remove('animate-damage');
+                    damageOverlay.classList.remove('opacity-50');
+                    damageOverlay.classList.add('opacity-0');
+                    
+                    let damage = 20;
+                    playerHP -= damage;
+                    if (playerHP < 0) playerHP = 0;
+                    updateBars();
+
+                    if (playerHP <= 0) {
+                        showDefeat();
+                    } else {
+                        nextTurn();
+                    }
+                }, 500);
+            }
+        }
+
+        function updateBars() {
+            const m = monsters[currentMonster] || monsters[monsters.length-1];
+            const mPct = (monsterHP / m.maxHP) * 100;
+            monsterBar.style.width = `${mPct}%`;
+            document.getElementById('monster-hp-text').textContent = `${monsterHP}/${m.maxHP}`;
+
+            const pPct = playerHP; // Max is 100
+            playerBar.style.width = `${pPct}%`;
+            document.getElementById('player-hp-text').textContent = `${playerHP}/100`;
+
+            // Bar colors
+            if (pPct < 30) playerBar.classList.replace('bg-blue-500', 'bg-red-500');
+            else playerBar.classList.replace('bg-red-500', 'bg-blue-500');
+        }
+
+        function showVictory() {
+            endScreen.classList.remove('hidden');
+            document.getElementById('end-emoji').textContent = "🏆";
+            document.getElementById('end-title').textContent = "Victory!";
+            document.getElementById('end-title').className = "text-4xl font-bold text-yellow-400 mb-2";
+            document.getElementById('end-msg').textContent = "You are a true Word Wizard!";
+        }
+
+        function showDefeat() {
+            endScreen.classList.remove('hidden');
+            document.getElementById('end-emoji').textContent = "💀";
+            document.getElementById('end-title').textContent = "Defeated!";
+            document.getElementById('end-title').className = "text-4xl font-bold text-red-500 mb-2";
+            document.getElementById('end-msg').textContent = "The monsters were too strong. Try again!";
+        }
+
+    </script>
+</body>
+</html>
