@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Root Word & Affix Match-Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --text-main: #2d3748;
+            --primary-blue: #4299e1;
+            --primary-orange: #ed8936;
+            --success-green: #48bb78;
+            --error-red: #f56565;
+            --card-bg: #ffffff;
+            --shadow-soft: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+            --shadow-inset: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .score-board {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-orange);
+            background: var(--bg-color);
+            padding: 10px 20px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: var(--shadow-inset);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            background: #e2e8f0;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
+        }
+
+        .example-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .example-icon {
+            font-size: 2.5rem;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 18px 20px;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.2s ease;
+            border: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+            color: var(--text-main);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card:active {
+            box-shadow: var(--shadow-inset);
+            transform: translateY(2px);
+        }
+
+        /* States */
+        .card.selected-left {
+            border-color: var(--primary-blue);
+            background-color: #ebf8ff;
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(66, 153, 225, 0.4);
+        }
+
+        .card.selected-right {
+            border-color: var(--primary-orange);
+            background-color: #fffaf0;
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(237, 137, 54, 0.4);
+        }
+
+        .card.matched {
+            background-color: #f0fff4;
+            border-color: var(--success-green);
+            color: #276749;
+            cursor: default;
+            box-shadow: none;
+            opacity: 0.7;
+            transform: scale(0.98);
+        }
+
+        .card.incorrect {
+            background-color: #fff5f5;
+            border-color: var(--error-red);
+            color: #c53030;
+            animation: shake 0.5s;
+        }
+
+        .prefix-tag {
+            font-size: 0.85rem;
+            color: #718096;
+            display: block;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Confetti Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .overlay h2 {
+            font-size: 4rem;
+            color: var(--success-green);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .reset-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        .reset-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .game-container {
+                flex-direction: row; /* Keep side by side even on small screens */
+                gap: 10px;
+            }
+            .card {
+                font-size: 1rem;
+                padding: 12px 10px;
+                min-height: 70px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .score-board {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧩 Word Part Match-Up</h1>
+        <p class="instructions">Click a word part on the left, then click its meaning on the right!</p>
+        <div class="score-board">Score: <span id="score">0</span> / 12</div>
+        <div class="tabs">
+            <button class="tab active" id="tab-definition" onclick="switchMode('definition')">Match Meanings</button>
+            <button class="tab" id="tab-example" onclick="switchMode('example')">Match Examples</button>
+        </div>
+    </header>
+
+    <div class="game-container">
+        <!-- Left Column: Word Parts -->
+        <div class="column" id="left-column"></div>
+        
+        <!-- Right Column: Meanings -->
+        <div class="column" id="right-column"></div>
+    </div>
+
+    <!-- Victory Overlay -->
+    <div class="overlay" id="victory-screen">
+        <h2>🎉 Great Job! 🎉</h2>
+        <button class="reset-btn" onclick="initGame()">Play Again</button>
+    </div>
+
+    <script>
+        // Data Set
+        const wordData = [
+            { id: 1, term: "auto-", type: "prefix", definition: "self 🤖", example: "autograph", exampleIcon: "✍️" },
+            { id: 2, term: "manu", type: "root", definition: "hand ✋", example: "manual", exampleIcon: "📖" },
+            { id: 3, term: "ped", type: "root", definition: "foot 🦶", example: "pedal", exampleIcon: "🚲" },
+            { id: 4, term: "phon", type: "root", definition: "sound 🔊", example: "headphones", exampleIcon: "🎧" },
+            { id: 5, term: "in- (ig, il, ir, im)", type: "prefix", definition: "not 🚫", example: "invisible", exampleIcon: "🫥" },
+            { id: 6, term: "scrib / script", type: "root", definition: "to write / draw ✍️", example: "scribble", exampleIcon: "🖍️" },
+            { id: 7, term: "spec", type: "root", definition: "to look at 👀", example: "spectacles", exampleIcon: "👓" },
+            { id: 8, term: "dict", type: "root", definition: "to say 🗣️", example: "dictate", exampleIcon: "🎙️" },
+            { id: 9, term: "sens", type: "root", definition: "to feel or think 🤔", example: "sensitive", exampleIcon: "🥺" },
+            { id: 10, term: "-ment", type: "suffix", definition: "result of an action 🎯", example: "excitement", exampleIcon: "🎉" },
+            { id: 11, term: "aud", type: "root", definition: "to hear 👂", example: "audio", exampleIcon: "📻" },
+            { id: 12, term: "path", type: "root", definition: "feeling ❤️", example: "sympathy", exampleIcon: "🫂" }
+        ];
+
+        let selectedLeft = null;
+        let selectedRight = null;
+        let score = 0;
+        let isProcessing = false;
+        let currentMode = 'definition';
+
+        const leftCol = document.getElementById('left-column');
+        const rightCol = document.getElementById('right-column');
+        const scoreDisplay = document.getElementById('score');
+        const victoryScreen = document.getElementById('victory-screen');
+
+        // Shuffle function (Fisher-Yates)
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        // Initialize Game
+        function initGame() {
+            score = 0;
+            scoreDisplay.textContent = score;
+            selectedLeft = null;
+            selectedRight = null;
+            isProcessing = false;
+            victoryScreen.classList.remove('show');
+            
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+
+            // Create arrays and shuffle them independently
+            const leftItems = shuffleArray([...wordData]);
+            const rightItems = shuffleArray([...wordData]);
+
+            // Render Left Column (Terms)
+            leftItems.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.id = item.id;
+                card.dataset.side = 'left';
+                card.innerHTML = `<div>${item.term} <span class="prefix-tag">(${item.type})</span></div>`;
+                card.addEventListener('click', handleCardClick);
+                leftCol.appendChild(card);
+            });
+
+            // Render Right Column (Meanings or Examples)
+            rightItems.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.id = item.id;
+                card.dataset.side = 'right';
+                
+                if (currentMode === 'definition') {
+                    card.textContent = item.definition;
+                } else {
+                    card.innerHTML = `<div class="example-content">
+                        <span class="example-icon">${item.exampleIcon}</span>
+                        <span>${item.example}</span>
+                    </div>`;
+                }
+                
+                card.addEventListener('click', handleCardClick);
+                rightCol.appendChild(card);
+            });
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update Tab UI
+            document.getElementById('tab-definition').classList.toggle('active', mode === 'definition');
+            document.getElementById('tab-example').classList.toggle('active', mode === 'example');
+            
+            // Update Instructions
+            const instructions = document.querySelector('.instructions');
+            if (mode === 'definition') {
+                instructions.textContent = "Click a word part on the left, then click its meaning on the right!";
+            } else {
+                instructions.textContent = "Click a word part on the left, then click an example word on the right!";
+            }
+
+            // Restart Game in new mode
+            initGame();
+        }
+
+        // Handle Clicks
+        function handleCardClick(e) {
+            if (isProcessing) return; // Prevent clicks during animation
+            
+            const card = e.currentTarget;
+            
+            // Ignore if already matched
+            if (card.classList.contains('matched')) return;
+
+            const side = card.dataset.side;
+
+            if (side === 'left') {
+                // Deselect previous left if any
+                if (selectedLeft) selectedLeft.classList.remove('selected-left');
+                // Select new left
+                selectedLeft = card;
+                selectedLeft.classList.add('selected-left');
+            } else {
+                // Deselect previous right if any
+                if (selectedRight) selectedRight.classList.remove('selected-right');
+                // Select new right
+                selectedRight = card;
+                selectedRight.classList.add('selected-right');
+            }
+
+            // Check for match if both are selected
+            if (selectedLeft && selectedRight) {
+                checkMatch();
+            }
+        }
+
+        // Validate Match
+        function checkMatch() {
+            isProcessing = true; // Lock interaction
+
+            const idLeft = selectedLeft.dataset.id;
+            const idRight = selectedRight.dataset.id;
+
+            if (idLeft === idRight) {
+                // Correct Match
+                selectedLeft.classList.remove('selected-left');
+                selectedRight.classList.remove('selected-right');
+                
+                selectedLeft.classList.add('matched');
+                selectedRight.classList.add('matched');
+
+                score++;
+                scoreDisplay.textContent = score;
+                
+                resetSelections();
+
+                // Check win condition
+                if (score === wordData.length) {
+                    setTimeout(() => {
+                        victoryScreen.classList.add('show');
+                    }, 500);
+                }
+            } else {
+                // Incorrect Match
+                selectedLeft.classList.add('incorrect');
+                selectedRight.classList.add('incorrect');
+
+                setTimeout(() => {
+                    selectedLeft.classList.remove('incorrect', 'selected-left');
+                    selectedRight.classList.remove('incorrect', 'selected-right');
+                    resetSelections();
+                }, 600); // Wait for shake animation to finish
+            }
+        }
+
+        function resetSelections() {
+            selectedLeft = null;
+            selectedRight = null;
+            isProcessing = false;
+        }
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
