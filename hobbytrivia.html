@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Hobby Swap: Steve vs. Julie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a202c;
+        }
+
+        h1, h2, h3, .font-title {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Fabric Theme (Steve's side/turn) */
+        .fabric-bg {
+            background-color: #2c7a7b; /* Teal */
+            background-image: radial-gradient(#ffffff33 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+        .fabric-border {
+            border: 4px dashed #e6fffa;
+            border-radius: 12px;
+        }
+
+        /* Wood Theme (Julie's side/turn) */
+        .wood-bg {
+            background-color: #8b5a2b;
+            background-image: 
+                repeating-linear-gradient(
+                    45deg,
+                    rgba(0,0,0,0.05) 0px,
+                    rgba(0,0,0,0.05) 2px,
+                    transparent 2px,
+                    transparent 8px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    rgba(0,0,0,0.02) 0px,
+                    rgba(0,0,0,0.02) 3px,
+                    transparent 3px,
+                    transparent 12px
+                );
+        }
+        .wood-border {
+            border: 6px solid #4a3018;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .anim-shake { animation: shake 0.5s ease-in-out; }
+        .anim-pop { animation: pop 0.4s ease-in-out; }
+
+        /* Transition for layout changes */
+        .transition-all-custom {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Active Player Highlight */
+        .dimmed { opacity: 0.4; filter: grayscale(50%); }
+        .active-side { opacity: 1; filter: grayscale(0%); transform: scale(1.02); z-index: 10; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col text-gray-800">
+
+    <!-- Split Background Layout -->
+    <div class="absolute inset-0 flex flex-col md:flex-row z-0">
+        <!-- Steve's Side (Sewing Theme) -->
+        <div id="steve-side" class="w-full md:w-1/2 h-1/2 md:h-full fabric-bg transition-all-custom flex flex-col items-center justify-start pt-6 md:pt-12 text-white">
+            <h2 class="text-3xl md:text-5xl font-title drop-shadow-md tracking-wider">Steve</h2>
+            <p class="text-sm md:text-lg font-bold uppercase tracking-widest text-teal-100 mt-2">Sewing Challenge</p>
+            <div class="mt-4 md:mt-8 fabric-border p-4 bg-teal-800 bg-opacity-50">
+                <p class="text-4xl md:text-6xl font-bold" id="steve-score">0</p>
+            </div>
+        </div>
+
+        <!-- Julie's Side (Woodworking Theme) -->
+        <div id="julie-side" class="w-full md:w-1/2 h-1/2 md:h-full wood-bg transition-all-custom flex flex-col items-center justify-end md:justify-start pb-6 md:pb-0 md:pt-12 text-white">
+            <h2 class="text-3xl md:text-5xl font-title drop-shadow-md tracking-wider">Julie</h2>
+            <p class="text-sm md:text-lg font-bold uppercase tracking-widest text-orange-200 mt-2">Woodworking Challenge</p>
+            <div class="mt-4 md:mt-8 wood-border p-4 bg-yellow-900 bg-opacity-70">
+                <p class="text-4xl md:text-6xl font-bold" id="julie-score">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game UI (Floating over the split background) -->
+    <div class="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-none">
+        
+        <!-- Intro Screen -->
+        <div id="intro-screen" class="bg-white p-8 md:p-12 rounded-2xl shadow-2xl max-w-2xl w-full text-center pointer-events-auto transition-all-custom">
+            <h1 class="text-4xl md:text-5xl font-title text-gray-800 mb-6 leading-tight">The Great Hobby Swap:<br><span class="text-teal-600">Steve</span> vs. <span class="text-amber-700">Julie</span></h1>
+            <p class="text-lg text-gray-600 mb-8">
+                Welcome to the ultimate test of spousal observation! 
+                <br><br>
+                <b>Steve</b>, you will be answering questions about sewing, quilting, and embroidery.
+                <br>
+                <b>Julie</b>, you will be answering questions about woodworking, joinery, and power tools.
+            </p>
+            <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform transition hover:scale-105">
+                Let's Play!
+            </button>
+        </div>
+
+        <!-- Question Card -->
+        <div id="question-card" class="hidden bg-white p-6 md:p-10 rounded-2xl shadow-2xl max-w-2xl w-full text-center pointer-events-auto transition-all-custom relative overflow-hidden">
+            
+            <!-- Feedback Overlay -->
+            <div id="feedback-overlay" class="absolute inset-0 hidden flex items-center justify-center z-30 bg-opacity-90 transition-opacity">
+                <h2 id="feedback-text" class="text-5xl md:text-7xl font-title font-bold drop-shadow-lg transform scale-0 transition-transform duration-300"></h2>
+            </div>
+
+            <div class="mb-4 inline-block px-4 py-1 rounded-full font-bold text-sm uppercase tracking-wider" id="turn-indicator">
+                Turn Indicator
+            </div>
+            
+            <h2 id="question-text" class="text-2xl md:text-3xl font-title text-gray-800 mb-8 min-h-[5rem] flex items-center justify-center">
+                Question goes here?
+            </h2>
+
+            <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="hidden bg-white p-8 md:p-12 rounded-2xl shadow-2xl max-w-2xl w-full text-center pointer-events-auto transition-all-custom">
+            <h1 class="text-5xl font-title text-gray-800 mb-4">Game Over!</h1>
+            <h2 id="winner-announcement" class="text-3xl font-bold text-indigo-600 mb-8"></h2>
+            
+            <div class="flex justify-center gap-8 mb-8">
+                <div class="text-center">
+                    <p class="text-xl font-bold text-teal-700">Steve</p>
+                    <p class="text-4xl font-title" id="final-steve-score">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xl font-bold text-amber-700">Julie</p>
+                    <p class="text-4xl font-title" id="final-julie-score">0</p>
+                </div>
+            </div>
+
+            <button onclick="resetGame()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transform transition hover:scale-105">
+                Play Again
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Game Logic -->
+    <script>
+        const questions = [
+            // Turn 1: Steve (Sewing)
+            {
+                player: 'Steve',
+                theme: 'fabric',
+                question: "Steve, what exactly is a 'fat quarter' in quilting?",
+                options: [
+                    "A 25-cent coin used for drawing circles",
+                    "A pre-cut piece of fabric measuring 18\" x 22\"",
+                    "A thick padding placed inside a quilt",
+                    "A seam allowance that is slightly too wide"
+                ],
+                answerIndex: 1
+            },
+            // Turn 2: Julie (Woodworking)
+            {
+                player: 'Julie',
+                theme: 'wood',
+                question: "Julie, what is the main difference between a 'miter' cut and a 'bevel' cut?",
+                options: [
+                    "A miter is across the width; a bevel is through the thickness",
+                    "A miter is cut with a hand saw; a bevel with a power saw",
+                    "A miter is used for hardwoods; a bevel for softwoods",
+                    "There is no difference, they are different names for the same cut"
+                ],
+                answerIndex: 0
+            },
+            // Turn 3: Steve (Sewing)
+            {
+                player: 'Steve',
+                theme: 'fabric',
+                question: "Steve, what is the primary purpose of a sewing machine's 'bobbin'?",
+                options: [
+                    "To guide the fabric straight through the machine",
+                    "To supply the bottom thread that interlocks with the top needle",
+                    "To automatically cut the thread when finished",
+                    "To measure the distance of the seam allowance"
+                ],
+                answerIndex: 1
+            },
+            // Turn 4: Julie (Woodworking)
+            {
+                player: 'Julie',
+                theme: 'wood',
+                question: "Julie, visually, what does a 'dovetail joint' look like?",
+                options: [
+                    "Two 45-degree angles glued together",
+                    "A round wooden peg inserted into a round hole",
+                    "Interlocking trapezoidal shapes (pins and tails)",
+                    "A simple flat joint held together with a metal plate"
+                ],
+                answerIndex: 2
+            },
+            // Turn 5: Steve (Sewing)
+            {
+                player: 'Steve',
+                theme: 'fabric',
+                question: "Steve, what specialized job does a 'serger' (or overlock machine) do?",
+                options: [
+                    "Sews buttonholes automatically in one step",
+                    "Irons the seams flat while you are sewing them",
+                    "Sews, trims, and binds the edge of fabric to prevent fraying",
+                    "Creates thick, decorative embroidery patches"
+                ],
+                answerIndex: 2
+            },
+            // Turn 6: Julie (Woodworking)
+            {
+                player: 'Julie',
+                theme: 'wood',
+                question: "Julie, when sanding wood, which of these grit numbers will give you the finest, smoothest finish?",
+                options: [
+                    "60 grit",
+                    "80 grit",
+                    "120 grit",
+                    "220 grit"
+                ],
+                answerIndex: 3
+            },
+            // Turn 7: Steve (Sewing)
+            {
+                player: 'Steve',
+                theme: 'fabric',
+                question: "Steve, what is the standard, holy-grail seam allowance used in quilting?",
+                options: [
+                    "1/4 inch",
+                    "1/2 inch",
+                    "5/8 inch",
+                    "1 inch"
+                ],
+                answerIndex: 0
+            },
+            // Turn 8: Julie (Woodworking)
+            {
+                player: 'Julie',
+                theme: 'wood',
+                question: "Julie, what dangerous phenomenon does 'kickback' refer to on a table saw?",
+                options: [
+                    "The saw's motor short-circuiting and sparking",
+                    "The wood binding and being violently thrown back at the operator",
+                    "The blade shattering into pieces",
+                    "The recoil of the power switch when turned off"
+                ],
+                answerIndex: 1
+            },
+            // Turn 9: Steve (Sewing)
+            {
+                player: 'Steve',
+                theme: 'fabric',
+                question: "Steve, what handy tool is a 'seam ripper' primarily used for?",
+                options: [
+                    "Cutting fabric in perfectly straight lines",
+                    "Punching holes in heavy leather",
+                    "Undoing mistakes by cutting existing stitches",
+                    "Measuring the distance between buttons"
+                ],
+                answerIndex: 2
+            },
+            // Turn 10: Julie (Woodworking)
+            {
+                player: 'Julie',
+                theme: 'wood',
+                question: "Julie, if Steve is hand-cutting a 'mortise', what tool is he definitely holding?",
+                options: [
+                    "A chisel",
+                    "A block plane",
+                    "A coping saw",
+                    "A phillips screwdriver"
+                ],
+                answerIndex: 0
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let steveScore = 0;
+        let julieScore = 0;
+        let isAnswering = false;
+
+        // DOM Elements
+        const introScreen = document.getElementById('intro-screen');
+        const questionCard = document.getElementById('question-card');
+        const endScreen = document.getElementById('end-screen');
+        const steveSide = document.getElementById('steve-side');
+        const julieSide = document.getElementById('julie-side');
+        const turnIndicator = document.getElementById('turn-indicator');
+        const questionText = document.getElementById('question-text');
+        const optionsGrid = document.getElementById('options-grid');
+        const feedbackOverlay = document.getElementById('feedback-overlay');
+        const feedbackText = document.getElementById('feedback-text');
+
+        function startGame() {
+            steveScore = 0;
+            julieScore = 0;
+            currentQuestionIndex = 0;
+            updateScores();
+            
+            introScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            questionCard.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswering = false;
+            const q = questions[currentQuestionIndex];
+            
+            // Update UI for current player
+            if (q.player === 'Steve') {
+                steveSide.classList.add('active-side');
+                steveSide.classList.remove('dimmed');
+                julieSide.classList.add('dimmed');
+                julieSide.classList.remove('active-side');
+                
+                turnIndicator.textContent = "Steve's Turn (Sewing)";
+                turnIndicator.className = "mb-4 inline-block px-4 py-1 rounded-full font-bold text-sm uppercase tracking-wider bg-teal-100 text-teal-800 border-2 border-teal-300 border-dashed";
+                questionCard.className = "bg-white p-6 md:p-10 rounded-2xl shadow-2xl max-w-2xl w-full text-center pointer-events-auto transition-all-custom relative overflow-hidden border-4 border-teal-500 border-dashed";
+            } else {
+                julieSide.classList.add('active-side');
+                julieSide.classList.remove('dimmed');
+                steveSide.classList.add('dimmed');
+                steveSide.classList.remove('active-side');
+
+                turnIndicator.textContent = "Julie's Turn (Woodworking)";
+                turnIndicator.className = "mb-4 inline-block px-4 py-1 rounded-full font-bold text-sm uppercase tracking-wider bg-amber-100 text-amber-900 border-2 border-amber-800";
+                questionCard.className = "bg-white p-6 md:p-10 rounded-2xl shadow-2xl max-w-2xl w-full text-center pointer-events-auto transition-all-custom relative overflow-hidden border-4 border-amber-800";
+            }
+
+            // Populate Question
+            questionText.textContent = q.question;
+            
+            // Populate Options
+            optionsGrid.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = "text-left p-4 rounded-xl border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition font-medium text-gray-700";
+                btn.textContent = option;
+                btn.onclick = () => handleAnswer(index, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            if (isAnswering) return;
+            isAnswering = true;
+
+            const q = questions[currentQuestionIndex];
+            const isCorrect = (selectedIndex === q.answerIndex);
+
+            // Button visual feedback
+            const allBtns = optionsGrid.querySelectorAll('button');
+            allBtns.forEach((b, i) => {
+                b.disabled = true;
+                if (i === q.answerIndex) {
+                    b.classList.remove('border-gray-200', 'hover:bg-gray-50');
+                    b.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                } else if (i === selectedIndex && !isCorrect) {
+                    b.classList.remove('border-gray-200', 'hover:bg-gray-50');
+                    b.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                } else {
+                    b.classList.add('opacity-50');
+                }
+            });
+
+            // Handle Score & Animations
+            if (isCorrect) {
+                if (q.player === 'Steve') steveScore++;
+                else julieScore++;
+                updateScores();
+                
+                showFeedback("Correct!", "bg-green-500", "text-white", "anim-pop");
+            } else {
+                showFeedback("Incorrect!", "bg-red-500", "text-white", "anim-shake");
+            }
+
+            // Next step
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showEndScreen();
+                }
+            }, 2500); // Wait 2.5s before moving on
+        }
+
+        function showFeedback(text, bgClass, textClass, animClass) {
+            feedbackText.textContent = text;
+            feedbackOverlay.className = `absolute inset-0 flex items-center justify-center z-30 bg-opacity-95 ${bgClass} transition-opacity duration-300`;
+            feedbackText.className = `text-5xl md:text-7xl font-title font-bold drop-shadow-lg ${textClass} ${animClass}`;
+            
+            feedbackOverlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                feedbackOverlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    feedbackOverlay.classList.add('hidden');
+                    feedbackOverlay.classList.remove('opacity-0');
+                }, 300);
+            }, 1800);
+        }
+
+        function updateScores() {
+            document.getElementById('steve-score').textContent = steveScore;
+            document.getElementById('julie-score').textContent = julieScore;
+        }
+
+        function showEndScreen() {
+            questionCard.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            // Reset backgrounds to neutral
+            steveSide.classList.remove('dimmed', 'active-side');
+            julieSide.classList.remove('dimmed', 'active-side');
+
+            document.getElementById('final-steve-score').textContent = steveScore;
+            document.getElementById('final-julie-score').textContent = julieScore;
+
+            const winnerText = document.getElementById('winner-announcement');
+            if (steveScore > julieScore) {
+                winnerText.textContent = "🏆 Steve is the Hobby Swap Champion! 🏆";
+            } else if (julieScore > steveScore) {
+                winnerText.textContent = "🏆 Julie is the Hobby Swap Champion! 🏆";
+            } else {
+                winnerText.textContent = "🤝 It's a Tie! Perfect Spousal Harmony! 🤝";
+            }
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
