@@ -1,0 +1,416 @@
+import React, { useState } from 'react';
+import { Trophy, ArrowRight, RotateCcw, Play, CheckCircle2, XCircle, Award } from 'lucide-react';
+
+// --- TRIVIA DATA ---
+// Adjusted to be exactly 10 UM and 10 MSU questions.
+const TRIVIA_QUESTIONS = [
+  // FOOTBALL
+  {
+    id: 1, target: 'Steve', team: 'UM', sport: 'Football',
+    text: "Steve, we'll start with your golden era. In 1969, Bo Schembechler’s first season as head coach culminated in a legendary 24-12 upset over which heavily favored, undefeated rival?",
+    options: ["Michigan State", "Ohio State", "Notre Dame", "Penn State"],
+    answer: "Ohio State",
+    explanation: "Correct! This sparked the famous 'Ten Year War' between Bo and Woody Hayes."
+  },
+  {
+    id: 2, target: 'Julie', team: 'MSU', sport: 'Football',
+    text: "Julie, time to strike back. In 1966, the Spartans played Notre Dame in the legendary 'Game of the Century.' What was the highly controversial final result?",
+    options: ["A 10-10 Tie", "A 1-0 MSU Win", "A double-overtime ND victory", "A forfeit due to weather"],
+    answer: "A 10-10 Tie",
+    explanation: "Spot on! ND ran out the clock instead of trying to win, a move still debated today!"
+  },
+  {
+    id: 3, target: 'Steve', team: 'UM', sport: 'Football',
+    text: "Steve, fast forward to 1997. The Wolverines fielded one of the greatest defenses in history, winning a National Championship. Who did they have to split the title with in the Coaches Poll?",
+    options: ["Tennessee", "Florida State", "Nebraska", "Miami"],
+    answer: "Nebraska",
+    explanation: "You got it! The AP went with Michigan, but the Coaches Poll went with the Huskers. (We all know who the real champs were, right Steve?)"
+  },
+  {
+    id: 4, target: 'Julie', team: 'MSU', sport: 'Football',
+    text: "Julie, let's talk about hardware. Mark Dantonio became MSU's all-time winningest football coach in 2019. Whose legendary record did he finally break?",
+    options: ["Biggie Munn", "Nick Saban", "George Perles", "Duffy Daugherty"],
+    answer: "Duffy Daugherty",
+    explanation: "Yes! Dantonio passed Duffy's iconic 109 wins."
+  },
+  {
+    id: 5, target: 'Steve', team: 'UM', sport: 'Football',
+    text: "Steve, the electrifying wide receiver Anthony Carter wore an iconic jersey number that became legendary for pass catchers in Ann Arbor. What was it?",
+    options: ["No. 2", "No. 21", "No. 1", "No. 9"],
+    answer: "No. 1",
+    explanation: "Correct! The iconic winged helmet combined with the No. 1 jersey was pure magic."
+  },
+  {
+    id: 6, target: 'Julie', team: 'MSU', sport: 'Football',
+    text: "Julie, which bruising MSU running back still holds the record for the most rushing yards in a single season (2,066 yards in 1985)?",
+    options: ["Lorenzo White", "Le'Veon Bell", "Javon Ringer", "Kenneth Walker III"],
+    answer: "Lorenzo White",
+    explanation: "That's right! He was an absolute workhorse for the Spartans."
+  },
+  {
+    id: 7, target: 'Steve', team: 'UM', sport: 'Football',
+    text: "Steve, Charles Woodson made history in 1997 by winning the Heisman Trophy. What unique distinction did his win hold?",
+    options: ["First sophomore to win", "First primarily defensive player to win", "First to win unanimously", "First wide receiver to win"],
+    answer: "First primarily defensive player to win",
+    explanation: "Nailed it! He edged out Peyton Manning in one of the most famous Heisman votes ever."
+  },
+  {
+    id: 8, target: 'Julie', team: 'MSU', sport: 'Football',
+    text: "Julie, I hope Steve isn't too triggered. In the miraculous 2015 'Trouble with the Snap' game, which Spartan picked up the fumble and scored the game-winning touchdown?",
+    options: ["Connor Cook", "LJ Scott", "Aaron Burbridge", "Jalen Watts-Jackson"],
+    answer: "Jalen Watts-Jackson",
+    explanation: "Correct! 'Whoa, he has trouble with the snap!' Still gives Michigan fans nightmares."
+  },
+  {
+    id: 9, target: 'Steve', team: 'UM', sport: 'Football',
+    text: "Steve, who returned to his alma mater to finally lead Michigan to the 2023-2024 College Football National Championship?",
+    options: ["Lloyd Carr", "Jim Harbaugh", "Brady Hoke", "Gary Moeller"],
+    answer: "Jim Harbaugh",
+    explanation: "Who's got it better than us? Nobody! Harbaugh finally delivered the big one."
+  },
+  {
+    id: 10, target: 'Julie', team: 'MSU', sport: 'Football',
+    text: "Julie, back in the 1960s, a massive defensive lineman terrified opposing quarterbacks, inspiring the chant 'Kill, _____, Kill!' Who was this legendary Spartan?",
+    options: ["Bubba Smith", "George Webster", "Carl Banks", "Percy Snow"],
+    answer: "Bubba Smith",
+    explanation: "Absolutely! Bubba Smith was an absolute terror on the defensive line."
+  },
+  
+  // BASKETBALL
+  {
+    id: 11, target: 'Julie', team: 'MSU', sport: 'Basketball',
+    text: "Julie, jumping to 1979. Magic Johnson led MSU to the NCAA Championship against Larry Bird. What was the name of the Spartans' famously animated head coach?",
+    options: ["Bobby Knight", "Tom Izzo", "Jud Heathcote", "Johnny Orr"],
+    answer: "Jud Heathcote",
+    explanation: "Right on! The legendary Jud Heathcote, who paved the way for Izzo."
+  },
+  {
+    id: 12, target: 'Steve', team: 'UM', sport: 'Basketball',
+    text: "Steve, the 1989 NCAA Tournament was pure chaos. Who stepped in as interim head coach right before the tournament and miraculously led the Wolverines to the National Title?",
+    options: ["Steve Fisher", "Bill Frieder", "John Beilein", "Brian Ellerbe"],
+    answer: "Steve Fisher",
+    explanation: "Correct! 'A Michigan man will coach Michigan,' as Bo famously said."
+  },
+  {
+    id: 13, target: 'Julie', team: 'MSU', sport: 'Basketball',
+    text: "Julie, Tom Izzo secured his first National Championship in 2000 with a rugged group known as the 'Flintstones.' Who was named the Most Outstanding Player of that Final Four?",
+    options: ["Morris Peterson", "Charlie Bell", "Jason Richardson", "Mateen Cleaves"],
+    answer: "Mateen Cleaves",
+    explanation: "Yes! Mateen Cleaves was the heart, soul, and smile of that 2000 team."
+  },
+  {
+    id: 14, target: 'Steve', team: 'UM', sport: 'Basketball',
+    text: "Steve, in the early 1990s, the 'Fab Five' changed basketball culture forever. Which of these Wolverine legends was NOT a member of the Fab Five?",
+    options: ["Jalen Rose", "Glen Rice", "Chris Webber", "Juwan Howard"],
+    answer: "Glen Rice",
+    explanation: "You got it! Glen Rice won the title in '89, right before the Fab Five arrived."
+  },
+  {
+    id: 15, target: 'Julie', team: 'MSU', sport: 'Basketball',
+    text: "Julie, Scott Skiles was a machine. He still holds the MSU record for the most points scored in a single game (against Ohio State in 1986). How many points did he drop?",
+    options: ["41", "45", "50", "55"],
+    answer: "45",
+    explanation: "Correct! Skiles was completely unstoppable that night with 45 points."
+  },
+  {
+    id: 16, target: 'Steve', team: 'UM', sport: 'Basketball',
+    text: "Steve, Cazzie Russell was so dominant in the 60s that when Michigan built their new arena (Crisler Center), it was given what famous nickname?",
+    options: ["The House that Cazzie Built", "The Russell Dome", "The Ann Arbor Asylum", "Cazzie's Court"],
+    answer: "The House that Cazzie Built",
+    explanation: "Spot on! He put Michigan basketball on the national map."
+  },
+  {
+    id: 17, target: 'Julie', team: 'MSU', sport: 'Basketball',
+    text: "Julie, you know the Breslin Center gets incredibly loud. What is the official name of the wildly passionate student section that terrorizes visiting teams?",
+    options: ["The Spartan Legion", "The Green Wall", "The Izzone", "The Breslin Brawlers"],
+    answer: "The Izzone",
+    explanation: "Yes! The Izzone remains one of the greatest student sections in college hoops."
+  },
+  {
+    id: 18, target: 'Steve', team: 'UM', sport: 'Basketball',
+    text: "Steve, in the 2013 Sweet Sixteen, Trey Burke hit a legendary, impossibly deep three-pointer to send the game into overtime. Whose hearts did he break?",
+    options: ["Syracuse", "Louisville", "Kansas", "Florida"],
+    answer: "Kansas",
+    explanation: "Correct! A shot from the parking lot that will live in March Madness lore forever."
+  },
+  {
+    id: 19, target: 'Julie', team: 'MSU', sport: 'Basketball',
+    text: "Julie, Cassius Winston is undeniably one of the greatest point guards in Spartan history. He currently holds the all-time Big Ten Conference record for what?",
+    options: ["Three-pointers made", "Free throw percentage", "Steals", "Assists"],
+    answer: "Assists",
+    explanation: "Nailed it! 890 career assists, an incredible record for a legendary floor general."
+  },
+  {
+    id: 20, target: 'Steve', team: 'UM', sport: 'Basketball',
+    text: "Steve, closing it out with a big one. Who is the all-time leading scorer in Michigan men's basketball history?",
+    options: ["Glen Rice", "Cazzie Russell", "Jalen Rose", "Mike McGee"],
+    answer: "Glen Rice",
+    explanation: "That's it! Glen Rice scored an incredible 2,442 points in his illustrious career."
+  }
+];
+
+export default function App() {
+  const [gameState, setGameState] = useState('start'); // start, playing, end
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [steveScore, setSteveScore] = useState(0);
+  const [julieScore, setJulieScore] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isCorrect, setIsCorrect] = useState(false);
+
+  const startGame = () => {
+    setGameState('playing');
+    setCurrentQuestionIndex(0);
+    setSteveScore(0);
+    setJulieScore(0);
+    setShowAnswer(false);
+    setSelectedOption(null);
+  };
+
+  const handleAnswerClick = (option) => {
+    if (showAnswer) return; // Prevent clicking after answering
+
+    const currentQ = TRIVIA_QUESTIONS[currentQuestionIndex];
+    const correct = option === currentQ.answer;
+    
+    setSelectedOption(option);
+    setIsCorrect(correct);
+    setShowAnswer(true);
+
+    if (correct) {
+      if (currentQ.target === 'Steve') {
+        setSteveScore(prev => prev + 1);
+      } else {
+        setJulieScore(prev => prev + 1);
+      }
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestionIndex < TRIVIA_QUESTIONS.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowAnswer(false);
+      setSelectedOption(null);
+    } else {
+      setGameState('end');
+    }
+  };
+
+  const getThemeColors = (team) => {
+    if (team === 'UM') return { bg: 'bg-[#00274C]', text: 'text-[#FFCB05]', border: 'border-[#FFCB05]' };
+    return { bg: 'bg-[#18453B]', text: 'text-white', border: 'border-white' };
+  };
+
+  // --- SCREENS ---
+
+  const renderStartScreen = () => (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-stone-100 p-6 text-center">
+      <div className="max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-stone-800">
+        <div className="flex w-full h-32">
+          <div className="w-1/2 bg-[#00274C] flex items-center justify-center border-r-4 border-stone-800">
+            <h2 className="text-4xl font-black text-[#FFCB05] tracking-wider">MICHIGAN</h2>
+          </div>
+          <div className="w-1/2 bg-[#18453B] flex items-center justify-center">
+            <h2 className="text-4xl font-black text-white tracking-wider">STATE</h2>
+          </div>
+        </div>
+        
+        <div className="p-10">
+          <Trophy className="w-20 h-20 mx-auto text-yellow-500 mb-6" />
+          <h1 className="text-4xl md:text-5xl font-black text-stone-900 mb-4">
+            The Battle for the Mitten
+          </h1>
+          <h3 className="text-2xl font-bold text-stone-600 mb-8">
+            Steve vs. Julie
+          </h3>
+          <p className="text-lg text-stone-700 mb-10 max-w-lg mx-auto">
+            Welcome to the ultimate house divided trivia challenge! 20 questions. 10 for Steve (Wolverines), 10 for Julie (Spartans). No crying in college sports.
+          </p>
+          <button 
+            onClick={startGame}
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-2xl font-bold text-white bg-blue-600 rounded-full overflow-hidden transition-all hover:bg-blue-700 hover:scale-105 shadow-xl"
+          >
+            <Play className="w-6 h-6 mr-3 fill-current" />
+            Let the Games Begin!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPlayingScreen = () => {
+    const q = TRIVIA_QUESTIONS[currentQuestionIndex];
+    const theme = getThemeColors(q.team);
+    const isSteve = q.target === 'Steve';
+
+    return (
+      <div className="min-h-screen bg-stone-100 flex flex-col md:flex-row">
+        
+        {/* Scoreboard Sidebar */}
+        <div className="w-full md:w-64 bg-stone-900 text-white flex md:flex-col justify-around md:justify-start p-4 md:p-6 shadow-xl z-10">
+          <div className="text-center md:mb-10">
+            <h3 className="text-stone-400 text-sm font-bold uppercase tracking-wider mb-2">Question</h3>
+            <div className="text-2xl font-black bg-stone-800 rounded-lg py-2 px-4 inline-block">
+              {currentQuestionIndex + 1} / 20
+            </div>
+          </div>
+          
+          <div className={`p-4 rounded-2xl mb-4 md:mb-8 transition-all ${isSteve ? 'ring-4 ring-yellow-400 scale-105' : 'opacity-70'}`}>
+            <h3 className="text-xl font-bold text-blue-300">Steve (UM)</h3>
+            <p className="text-4xl font-black text-[#FFCB05]">{steveScore}</p>
+          </div>
+
+          <div className={`p-4 rounded-2xl transition-all ${!isSteve ? 'ring-4 ring-white scale-105' : 'opacity-70'}`}>
+            <h3 className="text-xl font-bold text-green-300">Julie (MSU)</h3>
+            <p className="text-4xl font-black text-white">{julieScore}</p>
+          </div>
+        </div>
+
+        {/* Main Game Area */}
+        <div className="flex-1 p-4 md:p-8 flex flex-col items-center justify-center relative">
+          
+          <div className="w-full max-w-3xl">
+            {/* Header / Target indicator */}
+            <div className={`rounded-t-3xl p-6 text-center ${theme.bg} ${theme.text} border-b-4 border-stone-900 shadow-lg relative overflow-hidden`}>
+               <div className="absolute top-0 right-0 p-4 opacity-20">
+                  {q.sport === 'Football' ? <span className="text-8xl">🏈</span> : <span className="text-8xl">🏀</span>}
+               </div>
+              <h2 className="text-3xl md:text-4xl font-black mb-2 relative z-10">
+                {q.target}'s Turn!
+              </h2>
+              <span className="inline-block bg-black/20 px-4 py-1 rounded-full text-lg font-bold uppercase tracking-wider relative z-10">
+                {q.sport} History
+              </span>
+            </div>
+
+            {/* Question Box */}
+            <div className="bg-white p-6 md:p-10 rounded-b-3xl shadow-xl mb-6">
+              <p className="text-2xl md:text-3xl font-medium text-stone-800 mb-8 leading-snug">
+                {q.text}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {q.options.map((option, idx) => {
+                  let btnClass = "p-4 md:p-6 text-xl md:text-2xl font-bold rounded-2xl border-4 text-left transition-all ";
+                  
+                  if (!showAnswer) {
+                    btnClass += "border-stone-200 bg-stone-50 hover:border-stone-400 hover:bg-stone-100 text-stone-700";
+                  } else {
+                    if (option === q.answer) {
+                      btnClass += "border-green-500 bg-green-100 text-green-800"; // Correct answer styling
+                    } else if (option === selectedOption) {
+                      btnClass += "border-red-500 bg-red-100 text-red-800"; // Wrong answer styling
+                    } else {
+                      btnClass += "border-stone-200 bg-stone-50 text-stone-400 opacity-50"; // Unselected styling
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleAnswerClick(option)}
+                      disabled={showAnswer}
+                      className={btnClass}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Answer Feedback Box */}
+            {showAnswer && (
+              <div className={`p-6 rounded-3xl shadow-xl animate-fade-in-up flex flex-col md:flex-row items-center justify-between ${isCorrect ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                <div className="flex items-center mb-4 md:mb-0">
+                  {isCorrect ? <CheckCircle2 className="w-12 h-12 mr-4" /> : <XCircle className="w-12 h-12 mr-4" />}
+                  <div>
+                    <h3 className="text-2xl font-black">{isCorrect ? 'Correct!' : 'Not Quite!'}</h3>
+                    <p className="text-lg opacity-90 font-medium mt-1">{q.explanation}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={nextQuestion}
+                  className="px-8 py-4 bg-white text-stone-900 rounded-full font-bold text-xl hover:bg-stone-200 transition-colors flex items-center shrink-0"
+                >
+                  Next <ArrowRight className="w-6 h-6 ml-2" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderEndScreen = () => {
+    let winnerText = "";
+    let subText = "";
+    let headerColor = "";
+
+    if (steveScore > julieScore) {
+      winnerText = "Steve Wins!";
+      subText = "Ann Arbor reigns supreme. Sorry Julie, the Victors have it today!";
+      headerColor = "bg-[#00274C] text-[#FFCB05]";
+    } else if (julieScore > steveScore) {
+      winnerText = "Julie Wins!";
+      subText = "East Lansing takes the crown! Steve, it's a rough day to be a Wolverine.";
+      headerColor = "bg-[#18453B] text-white";
+    } else {
+      winnerText = "It's a Tie!";
+      subText = "A true house divided! You two might have to take this out to the driveway for some 1-on-1.";
+      headerColor = "bg-stone-800 text-white";
+    }
+
+    return (
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center p-6">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-stone-800 text-center">
+          <div className={`p-12 ${headerColor}`}>
+            <Award className="w-24 h-24 mx-auto mb-6" />
+            <h1 className="text-5xl md:text-6xl font-black mb-4">{winnerText}</h1>
+            <p className="text-2xl font-medium opacity-90">{subText}</p>
+          </div>
+          
+          <div className="p-10 flex justify-center space-x-12">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-stone-500 mb-2">Steve (UM)</h3>
+              <p className="text-6xl font-black text-[#00274C]">{steveScore}</p>
+            </div>
+            <div className="w-1 bg-stone-200 rounded-full"></div>
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-stone-500 mb-2">Julie (MSU)</h3>
+              <p className="text-6xl font-black text-[#18453B]">{julieScore}</p>
+            </div>
+          </div>
+
+          <div className="p-8 bg-stone-50 border-t-2 border-stone-100">
+             <button 
+              onClick={startGame}
+              className="inline-flex items-center justify-center px-8 py-4 text-xl font-bold text-white bg-stone-800 rounded-full hover:bg-stone-700 transition-colors shadow-lg"
+            >
+              <RotateCcw className="w-6 h-6 mr-3" />
+              Play Again / Rematch!
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="font-sans antialiased selection:bg-blue-200">
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.4s ease-out forwards;
+        }
+      `}</style>
+      {gameState === 'start' && renderStartScreen()}
+      {gameState === 'playing' && renderPlayingScreen()}
+      {gameState === 'end' && renderEndScreen()}
+    </div>
+  );
+}
