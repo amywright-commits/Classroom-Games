@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contraction Match-Up</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap');
+
+        :root {
+            --bg-color: #8EC5FC;
+            --bg-gradient: linear-gradient(135deg, #8EC5FC 0%, #E0C3FC 100%);
+            --card-back: #FF9A9E;
+            --card-back-grad: linear-gradient(to top, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            --card-front: #FFFFFF;
+            --text-color: #2C3E50;
+            --accent: #6C5CE7;
+            --success: #00B894;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            backdrop-filter: blur(4px);
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            color: var(--accent);
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.7);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 800px;
+            width: 100%;
+            perspective: 1000px; /* Required for 3D flip effect */
+        }
+
+        /* Card Container */
+        .card {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* The flipping mechanism */
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            border-radius: 15px;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-inner {
+            transform: rotateY(180deg) scale(0.95);
+            box-shadow: 0 0 20px rgba(0, 184, 148, 0.6);
+        }
+
+        /* Front and Back styling */
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        /* Card Back (What you see initially - the pattern) */
+        .card-back {
+            background: var(--card-back-grad);
+            color: white;
+            font-size: 2.5rem;
+            border: 3px solid white;
+        }
+
+        /* Card Front (The word) */
+        .card-front {
+            background-color: var(--card-front);
+            transform: rotateY(180deg);
+            font-size: 1.4rem;
+            font-weight: 800;
+            border: 3px solid var(--accent);
+            word-wrap: break-word;
+            flex-direction: column;
+        }
+
+        .card.matched .card-front {
+            background-color: #e8f8f5;
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .phrase-hint {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-family: 'Fredoka One', cursive;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+            transition: transform 0.2s, background 0.2s;
+            display: none; /* Hidden until round ends */
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            background: #5a4bcf;
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            .card-front {
+                font-size: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Memory Match!</h1>
+        <div class="stats">
+            <span id="movesDisplay">Moves: 0</span>
+            <span id="matchesDisplay">Matches: 0 / 8</span>
+        </div>
+    </header>
+
+    <div class="game-board" id="gameBoard">
+        <!-- Cards will be generated by JavaScript -->
+    </div>
+
+    <button id="nextRoundBtn" onclick="initGame()">Play Next Round! 🔄</button>
+
+    <script>
+        // --- Full Word List ---
+        const masterWordList = [
+            { id: 1, phrase: "I am", contraction: "I'm" },
+            { id: 2, phrase: "you are", contraction: "you're" },
+            { id: 3, phrase: "he is", contraction: "he's" },
+            { id: 4, phrase: "she is", contraction: "she's" },
+            { id: 5, phrase: "we are", contraction: "we're" },
+            { id: 6, phrase: "they are", contraction: "they're" },
+            { id: 7, phrase: "that is", contraction: "that's" },
+            { id: 8, phrase: "who is", contraction: "who's" },
+            { id: 9, phrase: "how is", contraction: "how's" },
+            { id: 10, phrase: "what is", contraction: "what's" },
+            { id: 11, phrase: "when is", contraction: "when's" },
+            { id: 12, phrase: "is not", contraction: "isn't" },
+            { id: 13, phrase: "are not", contraction: "aren't" },
+            { id: 14, phrase: "was not", contraction: "wasn't" },
+            { id: 15, phrase: "were not", contraction: "weren't" },
+            { id: 16, phrase: "have not", contraction: "haven't" },
+            { id: 17, phrase: "has not", contraction: "hasn't" },
+            { id: 18, phrase: "had not", contraction: "hadn't" },
+            { id: 19, phrase: "will not", contraction: "won't" },
+            { id: 20, phrase: "would not", contraction: "wouldn't" },
+            { id: 21, phrase: "could not", contraction: "couldn't" },
+            { id: 22, phrase: "should not", contraction: "shouldn't" },
+            { id: 23, phrase: "do not", contraction: "don't" },
+            { id: 24, phrase: "does not", contraction: "doesn't" },
+            { id: 25, phrase: "did not", contraction: "didn't" },
+            { id: 26, phrase: "can not", contraction: "can't" }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let isLocked = false;
+
+        const PAIRS_PER_ROUND = 8; // 16 cards total on the board
+
+        // DOM Elements
+        const boardElement = document.getElementById('gameBoard');
+        const movesDisplay = document.getElementById('movesDisplay');
+        const matchesDisplay = document.getElementById('matchesDisplay');
+        const nextRoundBtn = document.getElementById('nextRoundBtn');
+
+        // Audio setup
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'flip') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'match') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.6);
+            }
+        }
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Reset state
+            boardElement.innerHTML = '';
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            isLocked = false;
+            nextRoundBtn.style.display = 'none';
+            updateStats();
+
+            // 1. Pick 8 random pairs from the master list
+            let shuffledMaster = shuffle([...masterWordList]);
+            let selectedPairs = shuffledMaster.slice(0, PAIRS_PER_ROUND);
+
+            // 2. Create the cards array (2 for each pair)
+            let deck = [];
+            selectedPairs.forEach(pair => {
+                deck.push({ id: pair.id, text: pair.phrase, type: "phrase" });
+                deck.push({ id: pair.id, text: pair.contraction, type: "contraction" });
+            });
+
+            // 3. Shuffle the deck
+            deck = shuffle(deck);
+
+            // 4. Render to DOM
+            deck.forEach((cardData, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.id = cardData.id;
+                card.dataset.index = index;
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-back">❓</div>
+                        <div class="card-front">
+                            ${cardData.type === 'phrase' ? '<div class="phrase-hint">Phrase</div>' : '<div class="phrase-hint">Contraction</div>'}
+                            ${cardData.text}
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => flipCard(card));
+                boardElement.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            initAudio(); // Required to unlock audio context on first click
+            
+            if (isLocked) return;
+            if (card === flippedCards[0]) return; // Don't allow double clicking same card
+            if (card.classList.contains('matched')) return;
+
+            playSound('flip');
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            moves++;
+            updateStats();
+            
+            let card1 = flippedCards[0];
+            let card2 = flippedCards[1];
+
+            let isMatch = card1.dataset.id === card2.dataset.id;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            setTimeout(() => playSound('match'), 300);
+            flippedCards[0].classList.add('matched');
+            flippedCards[1].classList.add('matched');
+            
+            matchedPairs++;
+            updateStats();
+            flippedCards = [];
+
+            if (matchedPairs === PAIRS_PER_ROUND) {
+                setTimeout(() => {
+                    playSound('win');
+                    nextRoundBtn.style.display = 'block';
+                }, 500);
+            }
+        }
+
+        function unflipCards() {
+            isLocked = true;
+            setTimeout(() => {
+                flippedCards[0].classList.remove('flipped');
+                flippedCards[1].classList.remove('flipped');
+                flippedCards = [];
+                isLocked = false;
+            }, 1200); // Leave them face up for 1.2 seconds so student can read them
+        }
+
+        function updateStats() {
+            movesDisplay.textContent = `Moves: ${moves}`;
+            matchesDisplay.textContent = `Matches: ${matchedPairs} / ${PAIRS_PER_ROUND}`;
+        }
+
+        // Start first game on load
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
