@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contraction Jumble</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap');
+
+        :root {
+            --bg-grad: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+            --panel-bg: rgba(255, 255, 255, 0.9);
+            --text-dark: #2d3436;
+            --primary: #0984e3;
+            --accent: #fd79a8;
+            --success: #00b894;
+            --danger: #d63031;
+            --tile-bg: #ffeaa7;
+            --tile-border: #fdcb6e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Baloo 2', cursive, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg-grad);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text-dark);
+        }
+
+        .game-container {
+            background: var(--panel-bg);
+            width: 100%;
+            max-width: 700px;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 15px;
+            background: #dfe6e9;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #636e72;
+        }
+
+        .hint-box {
+            background: #74b9ff;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 0 #0984e3;
+            display: inline-block;
+        }
+
+        /* Tile Areas */
+        .area-label {
+            font-size: 1.1rem;
+            color: #b2bec3;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .answer-area {
+            min-height: 80px;
+            background: rgba(0, 0, 0, 0.03);
+            border: 3px dashed #b2bec3;
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .answer-area.shake {
+            animation: shake 0.5s;
+            border-color: var(--danger);
+            background: rgba(214, 48, 49, 0.1);
+        }
+
+        .answer-area.success {
+            border-color: var(--success);
+            background: rgba(0, 184, 148, 0.1);
+            border-style: solid;
+        }
+
+        .scramble-area {
+            min-height: 80px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Letter Tiles */
+        .tile {
+            width: 60px;
+            height: 60px;
+            background: var(--tile-bg);
+            border: 3px solid var(--tile-border);
+            border-radius: 12px;
+            font-size: 2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--tile-border);
+            color: #d35400;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .tile:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--tile-border);
+        }
+
+        .tile.anim-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Screens */
+        #gameScreen, #endScreen { display: none; }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #e84393;
+            transition: transform 0.1s, box-shadow 0.1s;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #e84393;
+        }
+
+        .btn-secondary {
+            background: #b2bec3;
+            box-shadow: 0 6px 0 #636e72;
+            font-size: 1.2rem;
+            padding: 10px 20px;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 500px) {
+            .tile {
+                width: 50px;
+                height: 50px;
+                font-size: 1.6rem;
+            }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        
+        <!-- Start Screen -->
+        <div id="startScreen">
+            <h1>Contraction Jumble! 🧩</h1>
+            <p style="font-size: 1.3rem; margin-bottom: 20px; color: #636e72;">
+                Put the letters back together to form the correct contraction! Watch out for the apostrophe!
+            </p>
+            <button class="btn" onclick="startGame()">Play Now!</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen">
+            <h1>Jumble Puzzle</h1>
+            <div class="progress-bar-container">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            
+            <div class="stats">
+                <span id="progressText">Word 1 of 26</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+
+            <div class="area-label">Phrase to Shrink</div>
+            <div class="hint-box" id="phraseHint">Loading...</div>
+
+            <div class="area-label">Your Answer</div>
+            <div class="answer-area" id="answerArea">
+                <!-- Tiles clicked go here -->
+            </div>
+
+            <div class="area-label">Scrambled Letters</div>
+            <div class="scramble-area" id="scrambleArea">
+                <!-- Unused tiles go here -->
+            </div>
+
+            <button class="btn btn-secondary" onclick="resetCurrentWord()">🔄 Reset Letters</button>
+        </div>
+
+        <!-- End Screen -->
+        <div id="endScreen">
+            <h1 style="font-size: 3rem; margin-bottom: 20px;">🎉 Puzzle Master! 🎉</h1>
+            <p style="font-size: 1.5rem; color: #636e72; margin-bottom: 30px;">
+                You unscrambled every single contraction perfectly!
+            </p>
+            <div id="finalScore" style="font-size: 2rem; color: var(--success); font-weight: 800; margin-bottom: 30px;">
+                Final Score: 0
+            </div>
+            <button class="btn" onclick="startGame()">Play Again!</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Word List
+        const masterWordList = [
+            { phrase: "I am", contraction: "I'm" },
+            { phrase: "you are", contraction: "you're" },
+            { phrase: "he is", contraction: "he's" },
+            { phrase: "she is", contraction: "she's" },
+            { phrase: "we are", contraction: "we're" },
+            { phrase: "they are", contraction: "they're" },
+            { phrase: "that is", contraction: "that's" },
+            { phrase: "who is", contraction: "who's" },
+            { phrase: "how is", contraction: "how's" },
+            { phrase: "what is", contraction: "what's" },
+            { phrase: "when is", contraction: "when's" },
+            { phrase: "is not", contraction: "isn't" },
+            { phrase: "are not", contraction: "aren't" },
+            { phrase: "was not", contraction: "wasn't" },
+            { phrase: "were not", contraction: "weren't" },
+            { phrase: "have not", contraction: "haven't" },
+            { phrase: "has not", contraction: "hasn't" },
+            { phrase: "had not", contraction: "hadn't" },
+            { phrase: "will not", contraction: "won't" },
+            { phrase: "would not", contraction: "wouldn't" },
+            { phrase: "could not", contraction: "couldn't" },
+            { phrase: "should not", contraction: "shouldn't" },
+            { phrase: "do not", contraction: "don't" },
+            { phrase: "does not", contraction: "doesn't" },
+            { phrase: "did not", contraction: "didn't" },
+            { phrase: "can not", contraction: "can't" }
+        ];
+
+        let gameWords = [];
+        let currentIndex = 0;
+        let score = 0;
+        const POINTS_PER_WORD = 50;
+
+        // Tile State
+        let scrambledPool = [];
+        let answerPool = [];
+        let isChecking = false;
+
+        // DOM Elements
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const endScreen = document.getElementById('endScreen');
+        const phraseHint = document.getElementById('phraseHint');
+        const answerArea = document.getElementById('answerArea');
+        const scrambleArea = document.getElementById('scrambleArea');
+        const progressText = document.getElementById('progressText');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const finalScore = document.getElementById('finalScore');
+
+        // Audio
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        function shuffle(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function startGame() {
+            initAudio();
+            gameWords = shuffle([...masterWordList]);
+            currentIndex = 0;
+            score = 0;
+            
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            
+            loadWord();
+        }
+
+        function loadWord() {
+            if (currentIndex >= gameWords.length) {
+                endGame();
+                return;
+            }
+
+            isChecking = false;
+            answerArea.className = 'answer-area'; // reset colors
+            
+            let targetWord = gameWords[currentIndex].contraction;
+            phraseHint.textContent = gameWords[currentIndex].phrase;
+            
+            updateStats();
+
+            // Create scrambled characters
+            let chars = targetWord.split('');
+            let shuffledChars;
+            // Prevent it from accidentally being pre-solved if longer than 3 chars
+            do {
+                shuffledChars = shuffle([...chars]);
+            } while (shuffledChars.join('') === targetWord && targetWord.length > 3);
+
+            scrambledPool = shuffledChars.map((char, index) => ({ id: index, char: char }));
+            answerPool = [];
+
+            renderTiles();
+        }
+
+        function renderTiles() {
+            answerArea.innerHTML = '';
+            scrambleArea.innerHTML = '';
+
+            answerPool.forEach(tileData => {
+                let tile = createTileElement(tileData, 'answer');
+                answerArea.appendChild(tile);
+            });
+
+            scrambledPool.forEach(tileData => {
+                let tile = createTileElement(tileData, 'scramble');
+                scrambleArea.appendChild(tile);
+            });
+        }
+
+        function createTileElement(tileData, poolType) {
+            let tile = document.createElement('div');
+            tile.className = 'tile anim-in';
+            tile.textContent = tileData.char;
+            
+            tile.onclick = () => {
+                if (isChecking) return;
+                playSound('click');
+                
+                if (poolType === 'scramble') {
+                    // Move from scramble to answer
+                    scrambledPool = scrambledPool.filter(t => t.id !== tileData.id);
+                    answerPool.push(tileData);
+                } else {
+                    // Move from answer to scramble
+                    answerPool = answerPool.filter(t => t.id !== tileData.id);
+                    scrambledPool.push(tileData);
+                }
+                
+                renderTiles();
+                checkCompletion();
+            };
+            return tile;
+        }
+
+        function checkCompletion() {
+            let targetWord = gameWords[currentIndex].contraction;
+            
+            // If they placed all tiles
+            if (answerPool.length === targetWord.length) {
+                isChecking = true;
+                let currentAttempt = answerPool.map(t => t.char).join('');
+                
+                if (currentAttempt === targetWord) {
+                    // Correct!
+                    playSound('success');
+                    answerArea.classList.add('success');
+                    score += POINTS_PER_WORD;
+                    updateStats();
+                    
+                    setTimeout(() => {
+                        currentIndex++;
+                        loadWord();
+                    }, 1200);
+                } else {
+                    // Wrong order
+                    playSound('error');
+                    answerArea.classList.add('shake');
+                    
+                    setTimeout(() => {
+                        answerArea.classList.remove('shake');
+                        resetCurrentWord(); // Pop them all back to scramble area
+                    }, 800);
+                }
+            }
+        }
+
+        function resetCurrentWord() {
+            if (isChecking && answerArea.classList.contains('success')) return; // Prevent reset if they just won
+            
+            // Move everything back to scramble pool
+            scrambledPool = scrambledPool.concat(answerPool);
+            answerPool = [];
+            isChecking = false;
+            renderTiles();
+        }
+
+        function updateStats() {
+            progressText.textContent = `Word: ${currentIndex + 1} / ${gameWords.length}`;
+            scoreDisplay.textContent = `Score: ${score}`;
+            let percent = (currentIndex / gameWords.length) * 100;
+            progressBar.style.width = `${percent}%`;
+        }
+
+        function endGame() {
+            gameScreen.style.display = 'none';
+            endScreen.style.display = 'block';
+            finalScore.textContent = `Final Score: ${score}`;
+        }
+    </script>
+</body>
+</html>
