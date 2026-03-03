@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Reactor Meltdown: Element Pop</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --bg-color: #0a0a0a;
+            --panel-bg: #1a1a1a;
+            --neon-green: #39ff14;
+            --neon-red: #ff003c;
+            --neon-yellow: #ffe600;
+            --neon-cyan: #00f3ff;
+            --hole-bg: #050505;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Top UI Dashboard */
+        .dashboard {
+            width: 100%;
+            max-width: 600px;
+            background: var(--panel-bg);
+            border-bottom: 4px solid var(--neon-cyan);
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            z-index: 10;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-family: 'Black Ops One', cursive;
+            color: var(--neon-yellow);
+        }
+
+        .target-display {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 10px;
+            padding: 10px 30px;
+            width: 100%;
+        }
+
+        .target-label {
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .target-name {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        /* Time Bar */
+        .time-container {
+            width: 100%;
+            height: 15px;
+            background: #222;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        .time-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-yellow), var(--neon-red));
+            transform-origin: left;
+            transition: transform 1s linear;
+        }
+
+        /* The Grid */
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+        }
+
+        /* The "Moles" (Vents/Symbols) */
+        .vent {
+            background: var(--hole-bg);
+            border-radius: 20px;
+            border: 3px solid #333;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .symbol-node {
+            position: absolute;
+            bottom: -100%; /* Hidden by default */
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background: radial-gradient(circle at 30% 30%, #444, #111);
+            border: 4px solid var(--neon-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 10px var(--neon-cyan);
+            transition: bottom 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+
+        .vent.active .symbol-node {
+            bottom: 5%; /* Pop up! */
+        }
+
+        .vent.correct-hit .symbol-node {
+            background: var(--neon-green);
+            border-color: #fff;
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 30px var(--neon-green);
+        }
+
+        .vent.wrong-hit .symbol-node {
+            background: var(--neon-red);
+            border-color: #fff;
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 30px var(--neon-red);
+        }
+
+        /* Screens */
+        .screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .screen h1 {
+            font-family: 'Black Ops One', cursive;
+            font-size: 4rem;
+            color: var(--neon-red);
+            text-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .screen p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            max-width: 400px;
+            color: #ccc;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-family: 'Black Ops One', cursive;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-cyan);
+            transform: scale(1.05);
+        }
+
+        #end-screen { display: none; }
+
+        .score-highlight {
+            font-size: 3rem;
+            color: var(--neon-green);
+            font-weight: 900;
+            margin: 10px 0 30px 0;
+            display: block;
+        }
+
+        @media (max-width: 500px) {
+            .target-name { font-size: 2rem; }
+            .symbol-node { font-size: 2.2rem; }
+            .grid { gap: 10px; }
+            .screen h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="stats-row">
+            <div>SCORE: <span id="score-display">0</span></div>
+            <div>TIME: <span id="time-display">60</span>s</div>
+        </div>
+        <div class="target-display">
+            <div class="target-label">Stabilize the reactor with</div>
+            <div class="target-name" id="target-name">LOADING...</div>
+        </div>
+        <div class="time-container">
+            <div class="time-bar" id="time-bar"></div>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <div class="grid" id="grid">
+            <!-- 9 Vents Generated by JS -->
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1>Reactor Meltdown</h1>
+        <p>The reactor is unstable! Read the element name at the top of the screen and <strong>TAP THE CORRECT SYMBOL</strong> when it pops out of the vents.</p>
+        <button class="btn" onclick="startGame()">Initiate Sequence</button>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="screen">
+        <h1 style="color: var(--neon-cyan);">Sequence Complete</h1>
+        <p>Total Reactor Stability Score:</p>
+        <span class="score-highlight" id="final-score">0</span>
+        <button class="btn" onclick="startGame()">Reboot System</button>
+    </div>
+
+    <script>
+        const elements = [
+            { name: "Hydrogen", symbol: "H" }, { name: "Helium", symbol: "He" },
+            { name: "Lithium", symbol: "Li" }, { name: "Beryllium", symbol: "Be" },
+            { name: "Boron", symbol: "B" }, { name: "Carbon", symbol: "C" },
+            { name: "Nitrogen", symbol: "N" }, { name: "Oxygen", symbol: "O" },
+            { name: "Fluorine", symbol: "F" }, { name: "Neon", symbol: "Ne" },
+            { name: "Sodium", symbol: "Na" }, { name: "Magnesium", symbol: "Mg" },
+            { name: "Aluminum", symbol: "Al" }, { name: "Silicon", symbol: "Si" },
+            { name: "Phosphorus", symbol: "P" }, { name: "Sulfur", symbol: "S" },
+            { name: "Chlorine", symbol: "Cl" }, { name: "Argon", symbol: "Ar" },
+            { name: "Potassium", symbol: "K" }, { name: "Calcium", symbol: "Ca" },
+            { name: "Nickel", symbol: "Ni" }, { name: "Copper", symbol: "Cu" },
+            { name: "Silver", symbol: "Ag" }, { name: "Platinum", symbol: "Pt" },
+            { name: "Gold", symbol: "Au" }
+        ];
+
+        // DOM Elements
+        const grid = document.getElementById('grid');
+        const scoreDisplay = document.getElementById('score-display');
+        const timeDisplay = document.getElementById('time-display');
+        const targetNameDisplay = document.getElementById('target-name');
+        const timeBar = document.getElementById('time-bar');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const finalScore = document.getElementById('final-score');
+
+        // Game State
+        let score = 0;
+        let timeLeft = 60;
+        let currentTarget = null;
+        let gameInterval;
+        let popInterval;
+        let isPlaying = false;
+        let vents = []; // Array of DOM elements
+
+        // Initialize Grid
+        function initGrid() {
+            grid.innerHTML = '';
+            vents = [];
+            for (let i = 0; i < 9; i++) {
+                const vent = document.createElement('div');
+                vent.className = 'vent';
+                
+                const symbolNode = document.createElement('div');
+                symbolNode.className = 'symbol-node';
+                
+                vent.appendChild(symbolNode);
+                vent.addEventListener('mousedown', handleTap); // Desktop
+                vent.addEventListener('touchstart', handleTap, {passive: false}); // Mobile
+                
+                grid.appendChild(vent);
+                vents.push({ element: vent, node: symbolNode, isActive: false, symbol: '' });
+            }
+        }
+
+        // Start Game
+        function startGame() {
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+            
+            score = 0;
+            timeLeft = 60;
+            isPlaying = true;
+            
+            updateScore(0);
+            timeBar.style.transform = 'scaleX(1)';
+            
+            initGrid();
+            pickNewTarget();
+
+            // Main Timers
+            gameInterval = setInterval(updateTimer, 1000);
+            popInterval = setInterval(popRandomVents, 1200);
+            popRandomVents(); // First pop immediately
+        }
+
+        // Timer Logic
+        function updateTimer() {
+            timeLeft--;
+            timeDisplay.textContent = timeLeft;
+            
+            // Update visual bar
+            const percentage = timeLeft / 60;
+            timeBar.style.transform = `scaleX(${percentage})`;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        // Select what the player is looking for
+        function pickNewTarget() {
+            currentTarget = elements[Math.floor(Math.random() * elements.length)];
+            targetNameDisplay.textContent = currentTarget.name;
+        }
+
+        // The "Whack-a-Mole" popping mechanic
+        function popRandomVents() {
+            if (!isPlaying) return;
+
+            // 1. Hide all current vents
+            vents.forEach(v => {
+                v.element.classList.remove('active', 'correct-hit', 'wrong-hit');
+                v.isActive = false;
+                v.symbol = '';
+            });
+
+            // 2. Pick 3-4 random vents to pop up
+            const numToPop = Math.floor(Math.random() * 2) + 3; // 3 or 4 vents
+            let availableIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+            availableIndices = availableIndices.sort(() => 0.5 - Math.random()).slice(0, numToPop);
+
+            // 3. Assign the correct symbol to one of them
+            const correctVentIndex = availableIndices.pop();
+            vents[correctVentIndex].symbol = currentTarget.symbol;
+            vents[correctVentIndex].node.textContent = currentTarget.symbol;
+            vents[correctVentIndex].element.classList.add('active');
+            vents[correctVentIndex].isActive = true;
+
+            // 4. Assign random distracting symbols to the others
+            availableIndices.forEach(idx => {
+                let distractor;
+                do {
+                    distractor = elements[Math.floor(Math.random() * elements.length)];
+                } while (distractor.symbol === currentTarget.symbol); // Ensure it's not the correct answer
+
+                vents[idx].symbol = distractor.symbol;
+                vents[idx].node.textContent = distractor.symbol;
+                vents[idx].element.classList.add('active');
+                vents[idx].isActive = true;
+            });
+        }
+
+        // Handle Player Click/Tap
+        function handleTap(e) {
+            e.preventDefault(); // Prevent double-firing on touch devices
+            if (!isPlaying) return;
+
+            // Find which vent data object matches the clicked element
+            const ventData = vents.find(v => v.element === this || v.node === this.target);
+            if (!ventData || !ventData.isActive) return;
+
+            // Check Answer
+            if (ventData.symbol === currentTarget.symbol) {
+                // Correct!
+                updateScore(10);
+                ventData.element.classList.add('correct-hit');
+                ventData.isActive = false; // Prevent double clicking
+                
+                // Immediately pick a new target and force a fast re-pop to keep pace high
+                clearInterval(popInterval);
+                setTimeout(() => {
+                    pickNewTarget();
+                    popRandomVents();
+                    popInterval = setInterval(popRandomVents, 1200);
+                }, 300);
+
+            } else {
+                // Wrong!
+                updateScore(-5);
+                ventData.element.classList.add('wrong-hit');
+                ventData.isActive = false;
+                
+                // Screen shake effect for penalty
+                document.body.style.transform = 'translate(5px, 5px)';
+                setTimeout(() => document.body.style.transform = 'none', 50);
+            }
+        }
+
+        function updateScore(points) {
+            score += points;
+            // Don't let score go below 0
+            if (score < 0) score = 0; 
+            scoreDisplay.textContent = score;
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(gameInterval);
+            clearInterval(popInterval);
+            
+            // Hide all vents
+            vents.forEach(v => v.element.classList.remove('active'));
+
+            finalScore.textContent = score;
+            endScreen.style.display = 'flex';
+        }
+
+    </script>
+</body>
+</html>
