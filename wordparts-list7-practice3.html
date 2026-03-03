@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Root Word Whack-a-Mole</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --bg-color: #87CEEB; /* Sky blue */
+            --dirt-color: #5C4033;
+            --grass-color: #4CAF50;
+            --text-dark: #333;
+            --mole-color: #8B5A2B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* UI Layer */
+        .header {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 4px solid #ddd;
+            z-index: 10;
+        }
+
+        .stats {
+            font-family: 'Chewy', cursive;
+            font-size: 1.8rem;
+            color: #FF5722;
+            text-shadow: 1px 1px 0px #fff;
+        }
+
+        .lives {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .prompt-container {
+            text-align: center;
+            padding: 15px;
+            background: #FFC107;
+            border-bottom: 4px solid #FF9800;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .prompt-label {
+            font-size: 1rem;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .prompt-text {
+            font-family: 'Chewy', cursive;
+            font-size: 2.2rem;
+            color: #2b1d0e;
+            margin-top: 5px;
+        }
+
+        /* Game Board */
+        .game-area {
+            flex-grow: 1;
+            background: linear-gradient(180deg, var(--grass-color) 0%, #388E3C 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+            width: 95%;
+            max-width: 600px;
+            height: 95%;
+            max-height: 600px;
+            padding: 10px;
+        }
+
+        .hole-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        /* The dirt hole */
+        .hole {
+            position: absolute;
+            bottom: 10px;
+            width: 80%;
+            height: 40px;
+            background: #2a1c11;
+            border-radius: 50%;
+            box-shadow: inset 0 -5px 15px rgba(0,0,0,0.8);
+            z-index: 1;
+        }
+
+        /* The Mole */
+        .mole {
+            position: absolute;
+            bottom: 25px; /* Sits just inside the hole */
+            width: 85%;
+            height: 85%;
+            background: var(--mole-color);
+            border-radius: 40px 40px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 15px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateY(120%); /* Hidden by default */
+            z-index: 2;
+            cursor: pointer;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3);
+        }
+
+        .mole.up {
+            transform: translateY(0);
+        }
+
+        /* Mole Face */
+        .eyes {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+        .eye {
+            width: 12px;
+            height: 12px;
+            background: #000;
+            border-radius: 50%;
+        }
+        .nose {
+            width: 20px;
+            height: 12px;
+            background: #ffb6c1;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        /* Mole Sign */
+        .sign {
+            background: white;
+            border: 3px solid #d4a373;
+            border-radius: 8px;
+            width: 90%;
+            height: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            text-align: center;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            pointer-events: none; /* Let clicks pass to the mole */
+        }
+
+        .sign-text {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--text-dark);
+            line-height: 1.1;
+        }
+
+        /* Visual Feedback */
+        .mole.hit-correct {
+            background: #4CAF50;
+            transform: translateY(10%) scale(0.9);
+        }
+        .mole.hit-wrong {
+            background: #F44336;
+            transform: translateY(10%) scale(0.9);
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            color: white;
+        }
+
+        .screen h1 {
+            font-family: 'Chewy', cursive;
+            font-size: 4rem;
+            color: #FFC107;
+            text-shadow: 0 4px 0px #FF9800;
+            margin-bottom: 20px;
+        }
+
+        .screen p {
+            font-size: 1.3rem;
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: #4CAF50;
+            border: none;
+            border-bottom: 5px solid #2E7D32;
+            color: white;
+            font-family: 'Chewy', cursive;
+            font-size: 2rem;
+            padding: 15px 40px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translateY(5px);
+            border-bottom: 0px solid #2E7D32;
+            margin-bottom: 5px;
+        }
+
+        #game-over-screen { display: none; }
+
+        @media (max-width: 600px) {
+            .screen h1 { font-size: 3rem; }
+            .prompt-text { font-size: 1.6rem; }
+            .sign-text { font-size: 0.9rem; }
+            .mole { bottom: 15px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="stats">SCORE: <span id="score">0</span></div>
+        <div class="lives" id="lives">❤️❤️❤️</div>
+    </div>
+    
+    <div class="prompt-container">
+        <div class="prompt-label" id="prompt-label">Find the meaning for:</div>
+        <div class="prompt-text" id="prompt-text">LOADING...</div>
+    </div>
+
+    <div class="game-area" id="game-area">
+        <div class="grid" id="grid">
+            <!-- JavaScript will inject holes here -->
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1>Vocab Whack-a-Mole</h1>
+        <p>The moles have stolen your vocabulary words! <br><br>Read the clue at the top of the screen. When three moles pop up, <strong>whack the mole holding the correct sign</strong> before they hide again!</p>
+        <button class="btn" onclick="startGame()">Play Now!</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: #F44336; text-shadow: 0 4px 0px #b71c1c;">Game Over</h1>
+        <p>You missed too many words!</p>
+        <div style="font-size: 3rem; font-family: 'Chewy', cursive; margin-bottom: 30px; color: #FFC107;">Score: <span id="final-score">0</span></div>
+        <button class="btn" onclick="startGame()">Play Again</button>
+    </div>
+
+    <script>
+        // Vocab List Data
+        const vocabList = [
+            { term: "auto-", meaning: "self", type: "prefix" },
+            { term: "manu", meaning: "hand", type: "root" },
+            { term: "ped", meaning: "foot", type: "root" },
+            { term: "phon", meaning: "sound", type: "root" },
+            { term: "in- (ig, il, ir, im)", meaning: "not", type: "prefix" },
+            { term: "scrib / script", meaning: "to write / draw", type: "root" },
+            { term: "spec", meaning: "to look at", type: "root" },
+            { term: "dict", meaning: "to say", type: "root" },
+            { term: "sens", meaning: "to feel or think", type: "root" },
+            { term: "-ment", meaning: "result of an action", type: "suffix" },
+            { term: "aud", meaning: "to hear", type: "root" },
+            { term: "path", meaning: "feeling", type: "root" }
+        ];
+
+        // DOM Elements
+        const grid = document.getElementById('grid');
+        const scoreUI = document.getElementById('score');
+        const livesUI = document.getElementById('lives');
+        const promptLabel = document.getElementById('prompt-label');
+        const promptText = document.getElementById('prompt-text');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreUI = document.getElementById('final-score');
+        const gameArea = document.getElementById('game-area');
+
+        // Game Variables
+        let score = 0;
+        let lives = 3;
+        let isPlaying = false;
+        let activeMoles = [];
+        let currentTarget = null;
+        let moleTimeout;
+        let displayDuration = 3500; // How long moles stay up (gets faster)
+        let canClick = false; // Prevent double clicking
+
+        // Initialize Board (Create 9 holes)
+        function createBoard() {
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const holeContainer = document.createElement('div');
+                holeContainer.className = 'hole-container';
+                
+                const hole = document.createElement('div');
+                hole.className = 'hole';
+
+                const mole = document.createElement('div');
+                mole.className = 'mole';
+                mole.dataset.index = i;
+                
+                // Add face and sign to mole
+                mole.innerHTML = `
+                    <div class="eyes">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                    </div>
+                    <div class="nose"></div>
+                    <div class="sign">
+                        <span class="sign-text"></span>
+                    </div>
+                `;
+
+                // Event listener for whacking
+                mole.addEventListener('mousedown', () => whackMole(mole));
+                mole.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Prevent double firing with mouse events
+                    whackMole(mole);
+                });
+
+                holeContainer.appendChild(hole);
+                holeContainer.appendChild(mole);
+                grid.appendChild(holeContainer);
+            }
+        }
+
+        // Shuffle array helper function
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            displayDuration = 3500;
+            isPlaying = true;
+            
+            updateUI();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            
+            createBoard();
+            
+            // Give a short delay before first wave
+            setTimeout(nextWave, 1000);
+        }
+
+        function nextWave() {
+            if (!isPlaying) return;
+
+            // Reset any active moles from previous round
+            document.querySelectorAll('.mole').forEach(m => {
+                m.classList.remove('up', 'hit-correct', 'hit-wrong');
+                m.style.pointerEvents = 'auto'; // Re-enable clicking
+            });
+            activeMoles = [];
+            canClick = true;
+
+            // 1. Pick the target item
+            const targetItem = vocabList[Math.floor(Math.random() * vocabList.length)];
+            
+            // 2. Decide randomly: Are we asking for the Term or the Meaning?
+            const askForTerm = Math.random() > 0.5;
+
+            if (askForTerm) {
+                promptLabel.textContent = `Find the ${targetItem.type} for:`;
+                promptText.textContent = targetItem.meaning;
+                currentTarget = targetItem.term;
+            } else {
+                promptLabel.textContent = `Find the meaning of:`;
+                promptText.textContent = targetItem.term;
+                currentTarget = targetItem.meaning;
+            }
+
+            // 3. Select 2 wrong answers (distractors)
+            let distractors = [];
+            let pool = vocabList.filter(item => item !== targetItem);
+            pool = shuffle(pool);
+            
+            if (askForTerm) {
+                distractors.push(pool[0].term);
+                distractors.push(pool[1].term);
+            } else {
+                distractors.push(pool[0].meaning);
+                distractors.push(pool[1].meaning);
+            }
+
+            // 4. Combine target and distractors and shuffle
+            let signs = [currentTarget, distractors[0], distractors[1]];
+            signs = shuffle(signs);
+
+            // 5. Pick 3 random holes out of the 9
+            let holeIndices = [0,1,2,3,4,5,6,7,8];
+            holeIndices = shuffle(holeIndices).slice(0, 3);
+
+            // 6. Assign text and pop them up!
+            const allMoles = document.querySelectorAll('.mole');
+            
+            for (let i = 0; i < 3; i++) {
+                let mole = allMoles[holeIndices[i]];
+                let signTextSpan = mole.querySelector('.sign-text');
+                
+                signTextSpan.textContent = signs[i];
+                mole.dataset.answer = signs[i]; // Store answer on the element
+                
+                mole.classList.add('up');
+                activeMoles.push(mole);
+            }
+
+            // 7. Set timer for them to hide if not clicked
+            moleTimeout = setTimeout(() => {
+                if(canClick) { // If they haven't clicked yet
+                    canClick = false;
+                    loseLife(); // They missed the window
+                    hideMolesAndContinue();
+                }
+            }, displayDuration);
+        }
+
+        function whackMole(moleElement) {
+            if (!isPlaying || !canClick || !moleElement.classList.contains('up')) return;
+            
+            canClick = false; // Prevent multiple clicks
+            clearTimeout(moleTimeout);
+
+            const clickedAnswer = moleElement.dataset.answer;
+
+            if (clickedAnswer === currentTarget) {
+                // CORRECT!
+                moleElement.classList.add('hit-correct');
+                score += 10;
+                
+                // Increase speed slightly up to a limit
+                if (displayDuration > 1500) displayDuration -= 50; 
+                
+                updateUI();
+                setTimeout(hideMolesAndContinue, 600);
+            } else {
+                // WRONG!
+                moleElement.classList.add('hit-wrong');
+                loseLife();
+                setTimeout(hideMolesAndContinue, 600);
+            }
+        }
+
+        function hideMolesAndContinue() {
+            activeMoles.forEach(m => m.classList.remove('up'));
+            
+            if (isPlaying) {
+                // Wait a moment before next wave pops up
+                setTimeout(nextWave, 800);
+            }
+        }
+
+        function loseLife() {
+            lives--;
+            updateUI();
+            
+            // Flash screen red
+            gameArea.style.backgroundColor = '#F44336';
+            setTimeout(() => { 
+                gameArea.style.background = 'linear-gradient(180deg, var(--grass-color) 0%, #388E3C 100%)'; 
+            }, 150);
+
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateUI() {
+            scoreUI.textContent = score;
+            let hearts = '';
+            for(let i=0; i<lives; i++) hearts += '❤️';
+            livesUI.textContent = hearts || '💀';
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearTimeout(moleTimeout);
+            finalScoreUI.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Initialize empty board purely for visuals before start
+        createBoard();
+
+    </script>
+</body>
+</html>
