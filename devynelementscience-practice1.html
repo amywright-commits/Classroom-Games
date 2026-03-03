@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Quest: Master Chemist</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(20, 30, 48, 0.85);
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #00ff66;
+            --neon-red: #ff003c;
+            --text-main: #ffffff;
+            --text-muted: #a0aec0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(188, 19, 254, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(0, 243, 255, 0.15) 0%, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Starry background effect */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--panel-bg);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(188, 19, 254, 0.05);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            box-shadow: 0 0 10px var(--neon-blue);
+            transition: width 0.4s ease-out;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-display { color: var(--neon-blue); }
+        .streak-display { color: #ffae00; }
+
+        /* Question Area */
+        h1 {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .element-name {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            min-height: 80px;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #symbol-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            padding: 15px;
+            text-align: center;
+            width: 80%;
+            max-width: 250px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        #symbol-input:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        #symbol-input:disabled {
+            opacity: 0.8;
+            color: var(--text-main);
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 10px 40px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 10px rgba(188, 19, 254, 0.3);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.6);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .submit-btn:disabled {
+            filter: grayscale(100%);
+            cursor: default;
+        }
+
+        /* Feedback Animation */
+        .feedback-msg {
+            font-size: 1.5rem;
+            font-weight: 700;
+            height: 35px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .feedback-msg.show {
+            opacity: 1;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* End Screen */
+        #end-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trophy-icon {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .final-score {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            margin: 10px 0 30px 0;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 15px 40px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.5);
+        }
+
+        .play-again-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(188, 19, 254, 0.8);
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 500px) {
+            .element-name { font-size: 2.5rem; }
+            #symbol-input { font-size: 2.5rem; padding: 10px; }
+            .submit-btn { font-size: 1.2rem; padding: 10px 30px; }
+            .header-stats { font-size: 1rem; }
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Simple CSS Stars -->
+    <div class="stars" id="stars"></div>
+
+    <div class="container">
+        
+        <!-- Game Screen -->
+        <div id="game-screen">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="header-stats">
+                <div class="score-display">Score: <span id="score">0</span></div>
+                <div class="streak-display">Streak: <span id="streak">0</span> 🔥</div>
+            </div>
+
+            <h1>Identify the Element</h1>
+            <div class="element-name" id="element-display">Loading...</div>
+
+            <div class="input-area" id="input-area">
+                <input type="text" id="symbol-input" placeholder="Symbol?" autocomplete="off" spellcheck="false" maxlength="2">
+                <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">Submit</button>
+            </div>
+
+            <div class="feedback-msg" id="feedback-msg"></div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen">
+            <!-- Inline SVG Trophy -->
+            <svg class="trophy-icon" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 21h8" stroke="#ffd700" fill="#ffd700" />
+                <path d="M12 17v4" stroke="#ffd700" fill="#ffd700" />
+                <path d="M7 4h10" />
+                <path d="M17 4v8a5 5 0 0 1-10 0V4" fill="rgba(255, 215, 0, 0.2)"/>
+                <path d="M4 4h3v8H4z" fill="rgba(255, 215, 0, 0.2)"/>
+                <path d="M20 4h-3v8h3z" fill="rgba(255, 215, 0, 0.2)"/>
+            </svg>
+            <h2>Master Chemist!</h2>
+            <p>Mission Complete. Here is your final score:</p>
+            <div class="final-score" id="final-score-display">0</div>
+            <button class="play-again-btn" onclick="initGame()">Play Again</button>
+        </div>
+
+    </div>
+
+    <script>
+        // The 25 Elements Required
+        const elementData = [
+            { name: "Hydrogen", symbol: "H" }, { name: "Helium", symbol: "He" },
+            { name: "Lithium", symbol: "Li" }, { name: "Beryllium", symbol: "Be" },
+            { name: "Boron", symbol: "B" }, { name: "Carbon", symbol: "C" },
+            { name: "Nitrogen", symbol: "N" }, { name: "Oxygen", symbol: "O" },
+            { name: "Fluorine", symbol: "F" }, { name: "Neon", symbol: "Ne" },
+            { name: "Sodium", symbol: "Na" }, { name: "Magnesium", symbol: "Mg" },
+            { name: "Aluminum", symbol: "Al" }, { name: "Silicon", symbol: "Si" },
+            { name: "Phosphorus", symbol: "P" }, { name: "Sulfur", symbol: "S" },
+            { name: "Chlorine", symbol: "Cl" }, { name: "Argon", symbol: "Ar" },
+            { name: "Potassium", symbol: "K" }, { name: "Calcium", symbol: "Ca" },
+            { name: "Nickel", symbol: "Ni" }, { name: "Copper", symbol: "Cu" },
+            { name: "Silver", symbol: "Ag" }, { name: "Platinum", symbol: "Pt" },
+            { name: "Gold", symbol: "Au" }
+        ];
+
+        // Game State Variables
+        let remainingElements = [];
+        let currentElement = null;
+        let score = 0;
+        let streak = 0;
+        let questionsAnswered = 0;
+        let currentAttempts = 0;
+        const totalQuestions = elementData.length;
+
+        // DOM Elements
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const elementDisplay = document.getElementById('element-display');
+        const symbolInput = document.getElementById('symbol-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const scoreDisplay = document.getElementById('score');
+        const streakDisplay = document.getElementById('streak');
+        const progressBar = document.getElementById('progress-bar');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const finalScoreDisplay = document.getElementById('final-score-display');
+
+        // Utility: Shuffle Array (Fisher-Yates)
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        // Initialize / Reset Game
+        function initGame() {
+            remainingElements = shuffleArray([...elementData]);
+            score = 0;
+            streak = 0;
+            questionsAnswered = 0;
+            
+            updateStatsUI();
+            progressBar.style.width = '0%';
+            
+            endScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            
+            // Allow pressing Enter to submit
+            symbolInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !symbolInput.disabled) {
+                    submitAnswer();
+                }
+            });
+            
+            loadNextQuestion();
+        }
+
+        // Load a Question
+        function loadNextQuestion() {
+            currentAttempts = 0;
+            
+            // Clear feedback and reset input
+            feedbackMsg.classList.remove('show');
+            symbolInput.value = '';
+            symbolInput.disabled = false;
+            symbolInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            symbolInput.style.boxShadow = 'none';
+            submitBtn.disabled = false;
+
+            // Focus the input automatically for fast typing
+            setTimeout(() => symbolInput.focus(), 100);
+
+            // Get next element
+            currentElement = remainingElements.pop();
+            elementDisplay.textContent = currentElement.name;
+        }
+
+        // Handle text submission
+        function submitAnswer() {
+            const userAnswer = symbolInput.value.trim();
+            if (!userAnswer) return; // ignore empty submits
+
+            symbolInput.disabled = true;
+            submitBtn.disabled = true;
+
+            // Compare answers regardless of uppercase/lowercase typing
+            const isCorrect = userAnswer.toLowerCase() === currentElement.symbol.toLowerCase();
+
+            if (isCorrect) {
+                // Correct Answer Logic
+                symbolInput.style.borderColor = "var(--neon-green)";
+                symbolInput.style.boxShadow = "0 0 20px rgba(0, 255, 102, 0.5)";
+                streak++;
+                
+                let pointsEarned = 10;
+                let msg = "Correct! +10";
+
+                // Streak Bonus
+                if (streak >= 3) {
+                    pointsEarned += 5;
+                    msg = "Correct! +10 (🔥 Streak Bonus +5)";
+                    feedbackMsg.style.color = "#ffae00";
+                } else {
+                    feedbackMsg.style.color = "var(--neon-green)";
+                }
+
+                score += pointsEarned;
+                feedbackMsg.textContent = msg;
+                
+                finishQuestion(1500);
+
+            } else {
+                currentAttempts++;
+                
+                if (currentAttempts < 2) {
+                    // First wrong attempt - try again!
+                    symbolInput.style.borderColor = "#ffae00";
+                    symbolInput.style.boxShadow = "0 0 20px rgba(255, 174, 0, 0.5)";
+                    feedbackMsg.style.color = "#ffae00";
+                    feedbackMsg.textContent = "Not quite, try again!";
+                    
+                    feedbackMsg.classList.add('show');
+                    
+                    // Reset input for second try after a brief pause
+                    setTimeout(() => {
+                        symbolInput.disabled = false;
+                        submitBtn.disabled = false;
+                        symbolInput.value = '';
+                        symbolInput.focus();
+                    }, 1200);
+                    
+                } else {
+                    // Second wrong attempt - show correct answer
+                    streak = 0;
+                    symbolInput.style.borderColor = "var(--neon-red)";
+                    symbolInput.style.boxShadow = "0 0 20px rgba(255, 0, 60, 0.5)";
+                    feedbackMsg.style.color = "var(--neon-red)";
+                    feedbackMsg.textContent = "Oops! The correct symbol is " + currentElement.symbol;
+                    
+                    // Put the correct answer in the box so she sees it clearly
+                    symbolInput.value = currentElement.symbol;
+                    
+                    finishQuestion(2800); // Wait longer so she can process the correct answer
+                }
+            }
+            
+            updateStatsUI();
+            feedbackMsg.classList.add('show');
+        }
+
+        // Handle transitioning to the next state
+        function finishQuestion(delay) {
+            questionsAnswered++;
+            updateStatsUI();
+            
+            setTimeout(() => {
+                if (questionsAnswered >= totalQuestions) {
+                    showEndScreen();
+                } else {
+                    loadNextQuestion();
+                }
+            }, delay);
+        }
+
+        function updateStatsUI() {
+            scoreDisplay.textContent = score;
+            streakDisplay.textContent = streak;
+            
+            // Update progress bar
+            const progressPercent = (questionsAnswered / totalQuestions) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+        }
+
+        function showEndScreen() {
+            gameScreen.style.display = 'none';
+            endScreen.style.display = 'flex';
+            finalScoreDisplay.textContent = score;
+        }
+
+        // Generate tiny stars in the background for extra "Space" feel
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.backgroundColor = 'white';
+                star.style.borderRadius = '50%';
+                star.style.opacity = Math.random();
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Start everything
+        createStars();
+        initGame();
+
+    </script>
+</body>
+</html>
