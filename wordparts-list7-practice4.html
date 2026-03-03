@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Microscope Containment</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --bg-color: #0b1115;
+            --panel-bg: #15222a;
+            --neon-green: #00ff88;
+            --alert-red: #ff3333;
+            --ui-blue: #00ccff;
+            --cell-color: rgba(170, 0, 255, 0.7);
+            --cell-core: rgba(255, 100, 255, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Share Tech Mono', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top HUD */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(180deg, var(--panel-bg) 0%, transparent 100%);
+            border-bottom: 2px solid rgba(0, 204, 255, 0.3);
+            z-index: 10;
+        }
+
+        .status-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: var(--ui-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status-val {
+            font-size: 1.5rem;
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        #containment-status {
+            color: var(--neon-green);
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transition: color 0.3s;
+        }
+
+        .lives {
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+        }
+
+        /* Microscope Area */
+        .microscope-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* The circular lens */
+        .lens {
+            width: 85vw;
+            height: 85vw;
+            max-width: 400px;
+            max-height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #1a2a35 0%, #050a0d 100%);
+            border: 8px solid #2a3b47;
+            box-shadow: 
+                0 0 0 10px #0b1115,
+                0 0 0 12px var(--ui-blue),
+                inset 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Crosshairs */
+        .crosshair-h {
+            position: absolute;
+            top: 50%; left: 0; width: 100%; height: 1px;
+            background: rgba(0, 204, 255, 0.2);
+        }
+        .crosshair-v {
+            position: absolute;
+            top: 0; left: 50%; width: 1px; height: 100%;
+            background: rgba(0, 204, 255, 0.2);
+        }
+
+        /* Grid Background */
+        .lens::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        /* The Mutating Cell */
+        .cell {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 120px;
+            height: 120px;
+            background: var(--cell-color);
+            border: 3px solid var(--cell-core);
+            box-shadow: 0 0 30px var(--cell-color), inset 0 0 20px var(--cell-core);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 15px;
+            /* Organic morphing animation */
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            animation: morph 4s linear infinite;
+            z-index: 5;
+        }
+
+        @keyframes morph {
+            0%, 100% { border-radius: 42% 56% 72% 28% / 42% 42% 56% 48%; }
+            33% { border-radius: 72% 28% 48% 48% / 28% 28% 72% 72%; }
+            66% { border-radius: 100% 56% 56% 100% / 100% 100% 56% 56%; }
+        }
+
+        .cell-text {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        /* Reagent Panel (Controls) */
+        .control-panel {
+            background: var(--panel-bg);
+            padding: 20px 10px;
+            border-top: 2px solid var(--ui-blue);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--ui-blue);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .reagents {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .reagent-btn {
+            background: linear-gradient(145deg, #1e303c, #15222a);
+            border: 1px solid var(--ui-blue);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 15px 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .reagent-btn:active {
+            transform: scale(0.95);
+            background: var(--ui-blue);
+            color: #000;
+        }
+
+        .reagent-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Flash effects overlay */
+        #flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 20;
+            transition: background 0.2s;
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 17, 21, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .screen h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 3rem;
+            color: var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .screen p {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.2rem;
+            max-width: 500px;
+            margin-bottom: 40px;
+            line-height: 1.5;
+            color: #ddd;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.2), 0 0 10px rgba(0, 255, 136, 0.2);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover, .action-btn:active {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        #game-over-screen { display: none; }
+
+        @media (max-width: 400px) {
+            .reagents { grid-template-columns: 1fr; gap: 10px; }
+            .reagent-btn { padding: 12px 10px; font-size: 1rem; }
+            .cell { width: 90px; height: 90px; }
+            .cell-text { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="flash-overlay"></div>
+
+    <div class="hud">
+        <div class="status-box">
+            <span class="status-label">Samples Analyzed</span>
+            <span class="status-val" id="score">0</span>
+        </div>
+        <div class="status-box" style="text-align: center;">
+            <span class="status-label">Status</span>
+            <span id="containment-status">STABLE</span>
+        </div>
+        <div class="status-box" style="text-align: right;">
+            <span class="status-label">Integrity</span>
+            <span class="lives" id="lives">🟢🟢🟢</span>
+        </div>
+    </div>
+
+    <div class="microscope-container">
+        <div class="lens" id="lens">
+            <div class="crosshair-h"></div>
+            <div class="crosshair-v"></div>
+            <div class="cell" id="cell">
+                <div class="cell-text" id="cell-text">LOADING</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="panel-title">SELECT INJECTION REAGENT</div>
+        <div class="reagents" id="reagents-container">
+            <!-- Buttons injected by JS -->
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1>Microscope Containment</h1>
+        <p>Warning: Unidentified vocabulary cells are mutating rapidly in the petri dish.<br><br>Read the cell's structure in the microscope. Inject it with the matching <strong>reagent</strong> before it grows too large and breaches containment!</p>
+        <button class="action-btn" onclick="startGame()">Initialize Sequence</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: var(--alert-red); text-shadow: 0 0 20px var(--alert-red);">CONTAINMENT BREACH</h1>
+        <p>The cells have overrun the laboratory!</p>
+        <div style="font-size: 1.5rem; margin-bottom: 30px; color: #fff;">Samples successfully cured: <span id="final-score" style="color: var(--neon-green); font-size: 2.5rem; display: block;">0</span></div>
+        <button class="action-btn" onclick="startGame()">Restart Protocol</button>
+    </div>
+
+    <script>
+        // Vocab List Data
+        const vocabList = [
+            { term: "auto-", meaning: "self" },
+            { term: "manu", meaning: "hand" },
+            { term: "ped", meaning: "foot" },
+            { term: "phon", meaning: "sound" },
+            { term: "in-", meaning: "not" },
+            { term: "scrib / script", meaning: "to write / draw" },
+            { term: "spec", meaning: "to look at" },
+            { term: "dict", meaning: "to say" },
+            { term: "sens", meaning: "to feel or think" },
+            { term: "-ment", meaning: "result of an action" },
+            { term: "aud", meaning: "to hear" },
+            { term: "path", meaning: "feeling" }
+        ];
+
+        // DOM Elements
+        const scoreUI = document.getElementById('score');
+        const livesUI = document.getElementById('lives');
+        const statusUI = document.getElementById('containment-status');
+        const cell = document.getElementById('cell');
+        const cellText = document.getElementById('cell-text');
+        const reagentsContainer = document.getElementById('reagents-container');
+        const flashOverlay = document.getElementById('flash-overlay');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreUI = document.getElementById('final-score');
+
+        // Game State Variables
+        let score = 0;
+        let lives = 3;
+        let isPlaying = false;
+        let currentTarget = null;
+        
+        // Growth Mechanics
+        let cellScale = 0;
+        let baseGrowthRate = 0.003; 
+        let currentGrowthRate = baseGrowthRate;
+        let maxScale = 2.8; // When it touches the edge
+        let animationFrameId;
+
+        // Shuffle Array
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            currentGrowthRate = baseGrowthRate;
+            isPlaying = true;
+            
+            updateUI();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            
+            spawnCell();
+            gameLoop();
+        }
+
+        function spawnCell() {
+            if (!isPlaying) return;
+
+            // 1. Pick target
+            const targetItem = vocabList[Math.floor(Math.random() * vocabList.length)];
+            
+            // 2. Decide if cell shows term or meaning
+            const showMeaningInCell = Math.random() > 0.5;
+
+            let cellDisplay, correctAnswer;
+            if (showMeaningInCell) {
+                cellDisplay = targetItem.meaning;
+                correctAnswer = targetItem.term;
+            } else {
+                cellDisplay = targetItem.term;
+                correctAnswer = targetItem.meaning;
+            }
+
+            currentTarget = correctAnswer;
+            cellText.innerHTML = cellDisplay;
+
+            // 3. Reset cell visuals and scale
+            cellScale = 0.2;
+            cell.style.transform = `translate(-50%, -50%) scale(${cellScale})`;
+            cell.style.background = 'var(--cell-color)';
+            cell.style.borderColor = 'var(--cell-core)';
+            statusUI.textContent = "STABLE";
+            statusUI.style.color = "var(--neon-green)";
+
+            // 4. Generate Buttons (3 distractors + 1 correct)
+            let pool = vocabList.filter(item => item !== targetItem);
+            pool = shuffle(pool);
+            
+            let buttonData = [correctAnswer];
+            for(let i=0; i<3; i++) {
+                if (showMeaningInCell) buttonData.push(pool[i].term);
+                else buttonData.push(pool[i].meaning);
+            }
+            buttonData = shuffle(buttonData);
+
+            // 5. Render Buttons
+            reagentsContainer.innerHTML = '';
+            buttonData.forEach(text => {
+                const btn = document.createElement('button');
+                btn.className = 'reagent-btn';
+                btn.innerHTML = `🧪 ${text}`;
+                btn.onclick = () => handleInjection(text, btn);
+                reagentsContainer.appendChild(btn);
+            });
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Grow the cell
+            cellScale += currentGrowthRate;
+            cell.style.transform = `translate(-50%, -50%) scale(${cellScale})`;
+
+            // Status Updates based on size
+            if (cellScale > maxScale * 0.75) {
+                statusUI.textContent = "CRITICAL";
+                statusUI.style.color = "var(--alert-red)";
+                cell.style.background = 'rgba(255, 0, 0, 0.6)';
+            } else if (cellScale > maxScale * 0.5) {
+                statusUI.textContent = "WARNING";
+                statusUI.style.color = "orange";
+            }
+
+            // Check for breach (Timeout)
+            if (cellScale >= maxScale) {
+                handleBreach();
+            } else {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function handleInjection(selectedText, btnElement) {
+            if (!isPlaying) return;
+
+            // Disable buttons temporarily
+            document.querySelectorAll('.reagent-btn').forEach(b => b.classList.add('disabled'));
+
+            if (selectedText === currentTarget) {
+                // Correct!
+                score++;
+                currentGrowthRate = baseGrowthRate + (score * 0.0002); // Speed up slightly over time
+                updateUI();
+                
+                // Success Visuals
+                cell.style.background = 'rgba(0, 255, 136, 0.8)'; // Green cure
+                flashOverlay.style.background = 'rgba(0, 255, 136, 0.2)';
+                setTimeout(() => flashOverlay.style.background = 'transparent', 150);
+
+                // Shrink animation
+                cellScale = 0;
+                cell.style.transform = `translate(-50%, -50%) scale(0)`;
+                
+                setTimeout(spawnCell, 500);
+            } else {
+                // Wrong!
+                btnElement.style.border = "2px solid red";
+                btnElement.style.color = "red";
+                handleBreach();
+            }
+        }
+
+        function handleBreach() {
+            cancelAnimationFrame(animationFrameId);
+            
+            // Visual feedback for failure
+            flashOverlay.style.background = 'rgba(255, 0, 0, 0.4)';
+            setTimeout(() => flashOverlay.style.background = 'transparent', 200);
+            
+            cell.style.transform = `translate(-50%, -50%) scale(4)`; // explode
+            cell.style.opacity = '0';
+
+            loseLife();
+
+            if (lives > 0) {
+                setTimeout(() => {
+                    cell.style.opacity = '1';
+                    spawnCell();
+                    gameLoop();
+                }, 800);
+            }
+        }
+
+        function loseLife() {
+            lives--;
+            updateUI();
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateUI() {
+            scoreUI.textContent = score;
+            let dots = '';
+            for(let i=0; i<3; i++) {
+                dots += (i < lives) ? '🟢' : '🔴';
+            }
+            livesUI.textContent = dots;
+        }
+
+        function endGame() {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrameId);
+            finalScoreUI.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Initialize UI before play
+        updateUI();
+
+    </script>
+</body>
+</html>
