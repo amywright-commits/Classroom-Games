@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lab Spill: Chemical Catch</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --bg-color: #1a0b2e;
+            --toxic-green: #39ff14;
+            --toxic-purple: #b53cff;
+            --toxic-pink: #ff00ea;
+            --toxic-blue: #00f3ff;
+            --beaker-glass: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: none; /* Prevent scrolling while swiping beaker */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 50% 100%, #2a114c 0%, #1a0b2e 80%);
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 2px solid var(--toxic-purple);
+            box-shadow: 0 4px 15px rgba(181, 60, 255, 0.3);
+        }
+
+        .stats {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            color: var(--toxic-green);
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+        }
+
+        .lives {
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+        }
+
+        .target-container {
+            align-self: center;
+            margin-top: 20px;
+            background: rgba(20, 10, 40, 0.8);
+            border: 3px solid var(--toxic-pink);
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 0, 234, 0.4);
+        }
+
+        .target-label {
+            font-size: 1rem;
+            color: var(--toxic-pink);
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .target-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 5, 25, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .screen h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 4rem;
+            color: var(--toxic-green);
+            text-shadow: 0 0 20px var(--toxic-green);
+            margin-bottom: 20px;
+        }
+
+        .screen p {
+            font-size: 1.3rem;
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: #ddd;
+        }
+
+        .btn {
+            background: var(--toxic-purple);
+            border: 3px solid #fff;
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(181, 60, 255, 0.6);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: #d470ff;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(181, 60, 255, 0.8);
+        }
+
+        #game-over-screen { display: none; }
+        
+        .score-display {
+            font-size: 3rem;
+            color: var(--toxic-blue);
+            font-family: 'Fredoka One', cursive;
+            margin: 10px 0 30px 0;
+        }
+
+        /* Instructions for controls */
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .screen h1 { font-size: 3rem; }
+            .target-name { font-size: 2rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="game-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div class="stats">SCORE: <span id="score">0</span></div>
+            <div class="lives" id="lives">🧪🧪🧪</div>
+        </div>
+        
+        <div class="target-container">
+            <div class="target-label">Catch the</div>
+            <div class="target-name" id="target-element">LOADING...</div>
+        </div>
+        
+        <div class="controls-hint">Drag beaker or use Left/Right arrows</div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1>Lab Spill!</h1>
+        <p>There's a leak in the chemistry lab! <br><br>Look at the element requested at the top of the screen. Slide your beaker to catch the drop with the <strong>correct symbol</strong> and dodge the wrong ones.</p>
+        <button class="btn" onclick="startGame()">Start Cleanup</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: var(--toxic-pink);">Experiment Failed</h1>
+        <p>You caught the wrong chemicals!</p>
+        <div class="score-display">Score: <span id="final-score">0</span></div>
+        <button class="btn" onclick="startGame()">Try Again</button>
+    </div>
+
+    <script>
+        // Data
+        const elements = [
+            { name: "Hydrogen", symbol: "H" }, { name: "Helium", symbol: "He" },
+            { name: "Lithium", symbol: "Li" }, { name: "Beryllium", symbol: "Be" },
+            { name: "Boron", symbol: "B" }, { name: "Carbon", symbol: "C" },
+            { name: "Nitrogen", symbol: "N" }, { name: "Oxygen", symbol: "O" },
+            { name: "Fluorine", symbol: "F" }, { name: "Neon", symbol: "Ne" },
+            { name: "Sodium", symbol: "Na" }, { name: "Magnesium", symbol: "Mg" },
+            { name: "Aluminum", symbol: "Al" }, { name: "Silicon", symbol: "Si" },
+            { name: "Phosphorus", symbol: "P" }, { name: "Sulfur", symbol: "S" },
+            { name: "Chlorine", symbol: "Cl" }, { name: "Argon", symbol: "Ar" },
+            { name: "Potassium", symbol: "K" }, { name: "Calcium", symbol: "Ca" },
+            { name: "Nickel", symbol: "Ni" }, { name: "Copper", symbol: "Cu" },
+            { name: "Silver", symbol: "Ag" }, { name: "Platinum", symbol: "Pt" },
+            { name: "Gold", symbol: "Au" }
+        ];
+
+        // Setup Canvas
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+
+        // DOM Elements
+        const scoreUI = document.getElementById('score');
+        const livesUI = document.getElementById('lives');
+        const targetElementUI = document.getElementById('target-element');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreUI = document.getElementById('final-score');
+
+        // Game State
+        let isPlaying = false;
+        let score = 0;
+        let lives = 3;
+        let targetElement = null;
+        let animationId;
+        
+        let drops = [];
+        let particles = [];
+        let baseSpeed = 3;
+
+        // Resize handler
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            if(player) player.y = h - 90; // Keep player at bottom
+        }
+        window.addEventListener('resize', resize);
+
+        // --- Classes ---
+
+        class PlayerBeaker {
+            constructor() {
+                this.width = 100;
+                this.height = 80;
+                this.x = w / 2;
+                this.y = h - 90;
+                this.targetX = w / 2;
+                this.liquidLevel = 0; // 0 to 1
+                this.color = '#00f3ff';
+            }
+
+            update() {
+                // Smooth follow mouse/touch
+                this.x += (this.targetX - this.x) * 0.2;
+
+                // Keep in bounds
+                if (this.x < this.width/2) this.x = this.width/2;
+                if (this.x > w - this.width/2) this.x = w - this.width/2;
+                
+                // Slowly drain liquid if it was filled
+                if (this.liquidLevel > 0) this.liquidLevel -= 0.01;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Draw Liquid inside Beaker
+                if (this.liquidLevel > 0) {
+                    let fillHeight = this.height * 0.8 * this.liquidLevel;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    // Bottom rounded part
+                    ctx.arc(0, this.height/2 - 10, this.width/2 - 10, 0, Math.PI);
+                    ctx.lineTo(-this.width/2 + 10, this.height/2 - 10 - fillHeight);
+                    ctx.lineTo(this.width/2 - 10, this.height/2 - 10 - fillHeight);
+                    ctx.fill();
+                    
+                    // Add some glow
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 15;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Draw Beaker Glass
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                ctx.beginPath();
+                // Left rim
+                ctx.moveTo(-this.width/2 - 10, -this.height/2);
+                ctx.lineTo(-this.width/2 + 10, -this.height/2);
+                // Left side
+                ctx.lineTo(-this.width/2 + 10, this.height/2 - 20);
+                // Bottom curve
+                ctx.quadraticCurveTo(-this.width/2 + 10, this.height/2, 0, this.height/2);
+                ctx.quadraticCurveTo(this.width/2 - 10, this.height/2, this.width/2 - 10, this.height/2 - 20);
+                // Right side
+                ctx.lineTo(this.width/2 - 10, -this.height/2);
+                // Right rim
+                ctx.lineTo(this.width/2 + 10, -this.height/2);
+                
+                // Beaker glare
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        class Drop {
+            constructor(x, elementData, isTarget) {
+                this.x = x;
+                this.y = -50;
+                this.radius = 35;
+                this.data = elementData;
+                this.isTarget = isTarget;
+                this.speed = baseSpeed + (Math.random() * 1.5);
+                
+                // Assign colors based on if it's the target (just randomly glowing colors)
+                const colors = ['#39ff14', '#b53cff', '#ff00ea', '#00f3ff', '#ffe600'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                this.wobbleOffset = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Add a slight wobble effect
+                let wobble = Math.sin(Date.now() / 200 + this.wobbleOffset) * 2;
+                ctx.translate(wobble, 0);
+
+                // Draw Tear Drop shape
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI); // bottom half circle
+                ctx.moveTo(-this.radius, 0);
+                // Curve up to a point
+                ctx.quadraticCurveTo(-this.radius/2, -this.radius * 1.5, 0, -this.radius * 1.8);
+                ctx.quadraticCurveTo(this.radius/2, -this.radius * 1.5, this.radius, 0);
+                
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 15;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // Glare
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(-this.radius/3, -this.radius/4, this.radius/4, 0, Math.PI*2);
+                ctx.fill();
+
+                // Draw Text
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 24px Nunito';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Black outline for text readability
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.strokeText(this.data.symbol, 0, 5);
+                ctx.fillText(this.data.symbol, 0, 5);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 1.0;
+                this.size = Math.random() * 8 + 3;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; // Gravity
+                this.life -= 0.03;
+            }
+            draw(ctx) {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- Mechanics ---
+
+        let player;
+
+        function startGame() {
+            resize();
+            player = new PlayerBeaker();
+            score = 0;
+            lives = 3;
+            baseSpeed = 3;
+            drops = [];
+            particles = [];
+            isPlaying = true;
+
+            updateUI();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+
+            pickTargetAndSpawnWave();
+            
+            cancelAnimationFrame(animationId);
+            gameLoop();
+        }
+
+        function pickTargetAndSpawnWave() {
+            // 1. Pick target
+            targetElement = elements[Math.floor(Math.random() * elements.length)];
+            targetElementUI.textContent = targetElement.name;
+
+            // 2. Clear old drops
+            drops = [];
+
+            // 3. Determine drop positions (divide screen into 3 columns)
+            let columns = [w/4, w/2, (w/4)*3];
+            columns = columns.sort(() => Math.random() - 0.5); // Shuffle
+
+            // 4. Create correct drop
+            drops.push(new Drop(columns[0], targetElement, true));
+
+            // 5. Create 2 wrong drops
+            for (let i = 1; i <= 2; i++) {
+                let distractor;
+                do {
+                    distractor = elements[Math.floor(Math.random() * elements.length)];
+                } while (distractor.symbol === targetElement.symbol);
+                
+                drops.push(new Drop(columns[i], distractor, false));
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, w, h);
+
+            // Update & Draw Player
+            player.update();
+            player.draw(ctx);
+
+            // Update & Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw(ctx);
+                if (particles[i].life <= 0) particles.splice(i, 1);
+            }
+
+            // Update & Draw Drops
+            for (let i = drops.length - 1; i >= 0; i--) {
+                let drop = drops[i];
+                drop.update();
+                drop.draw(ctx);
+
+                // Collision Detection (Circle vs Rect approximate)
+                let distX = Math.abs(drop.x - player.x);
+                let distY = Math.abs(drop.y - player.y);
+
+                if (distX < player.width/2 && distY < player.height/2) {
+                    // CAUGHT A DROP!
+                    handleCatch(drop);
+                } else if (drop.y > h + drop.radius) {
+                    // DROP MISSED (Hit floor)
+                    if (drop.isTarget) {
+                        // Missed the correct one!
+                        loseLife();
+                        if (isPlaying) pickTargetAndSpawnWave();
+                    } else {
+                        // Splatter effect on floor
+                        createParticles(drop.x, h, drop.color);
+                        drops.splice(i, 1);
+                    }
+                }
+            }
+
+            // Check if all drops are gone (edge case, usually handled by catching/missing the target)
+            if (drops.length === 0 && isPlaying) {
+                pickTargetAndSpawnWave();
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleCatch(drop) {
+            createParticles(drop.x, drop.y, drop.color);
+            player.color = drop.color;
+            player.liquidLevel = 1.0;
+
+            if (drop.isTarget) {
+                // Correct Catch!
+                score += 10;
+                baseSpeed += 0.1; // Slowly increase difficulty
+                updateUI();
+                
+                // Immediately clear screen and spawn next wave
+                pickTargetAndSpawnWave();
+            } else {
+                // Wrong Catch!
+                loseLife();
+                if (isPlaying) pickTargetAndSpawnWave();
+            }
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function loseLife() {
+            lives--;
+            updateUI();
+            
+            // Red flash screen
+            canvas.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+            setTimeout(() => { canvas.style.backgroundColor = 'transparent'; }, 100);
+
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateUI() {
+            scoreUI.textContent = score;
+            let hearts = '';
+            for(let i=0; i<lives; i++) hearts += '🧪';
+            livesUI.textContent = hearts || '💥';
+        }
+
+        function endGame() {
+            isPlaying = false;
+            finalScoreUI.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // --- Controls ---
+
+        // Mouse
+        window.addEventListener('mousemove', (e) => {
+            if (isPlaying && player) {
+                player.targetX = e.clientX;
+            }
+        });
+
+        // Touch
+        window.addEventListener('touchmove', (e) => {
+            if (isPlaying && player) {
+                player.targetX = e.touches[0].clientX;
+                e.preventDefault(); // Stop scrolling
+            }
+        }, { passive: false });
+
+        // Keyboard Arrow Keys
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying || !player) return;
+            const moveSpeed = 40;
+            if (e.key === 'ArrowLeft') {
+                player.targetX = Math.max(player.width/2, player.x - moveSpeed);
+                player.x = player.targetX; // Snappy movement for keys
+            }
+            if (e.key === 'ArrowRight') {
+                player.targetX = Math.min(w - player.width/2, player.x + moveSpeed);
+                player.x = player.targetX;
+            }
+        });
+
+    </script>
+</body>
+</html>
