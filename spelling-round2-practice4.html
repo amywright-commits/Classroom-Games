@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grammar Lab: Contraction Spill</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+
+        :root {
+            --bg-color: #1a0b2e;
+            --toxic-green: #39ff14;
+            --toxic-purple: #b53cff;
+            --toxic-pink: #ff00ea;
+            --toxic-blue: #00f3ff;
+            --beaker-glass: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: none; /* Prevent scrolling while swiping beaker */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 50% 100%, #171c3d 0%, #0a0e1c 80%);
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 2px solid var(--toxic-blue);
+            box-shadow: 0 4px 15px rgba(0, 243, 255, 0.2);
+        }
+
+        .stats {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            color: var(--toxic-green);
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+        }
+
+        .lives {
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+        }
+
+        .target-container {
+            align-self: center;
+            margin-top: 20px;
+            background: rgba(10, 20, 40, 0.8);
+            border: 3px solid var(--toxic-blue);
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        .target-label {
+            font-size: 1rem;
+            color: var(--toxic-blue);
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .target-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 25, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .screen h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3.5rem;
+            color: var(--toxic-blue);
+            text-shadow: 0 0 20px var(--toxic-blue);
+            margin-bottom: 20px;
+        }
+
+        .screen p {
+            font-size: 1.3rem;
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: #ddd;
+        }
+
+        .btn {
+            background: var(--toxic-blue);
+            border: 3px solid #fff;
+            color: #0a0e1c;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: #66f5ff;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.8);
+        }
+
+        #game-over-screen { display: none; }
+        
+        .score-display {
+            font-size: 3rem;
+            color: var(--toxic-pink);
+            font-family: 'Fredoka One', cursive;
+            margin: 10px 0 30px 0;
+        }
+
+        /* Instructions for controls */
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .screen h1 { font-size: 2.5rem; }
+            .target-name { font-size: 2rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="game-canvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div class="stats">SCORE: <span id="score">0</span></div>
+            <div class="lives" id="lives">❤️❤️❤️</div>
+        </div>
+        
+        <div class="target-container">
+            <div class="target-label">Catch the contraction for:</div>
+            <div class="target-name" id="target-element">LOADING...</div>
+        </div>
+        
+        <div class="controls-hint">Drag beaker or use Left/Right arrows</div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1>Grammar Lab</h1>
+        <p>There's a leak in the Grammar Lab! <br><br>Read the phrase at the top. Slide your beaker to catch the drop with the <strong>correctly spelled contraction</strong> and dodge the tricky misspellings.</p>
+        <button class="btn" onclick="startGame()">Start Cleanup</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: var(--toxic-pink);">Experiment Failed</h1>
+        <p>You caught the wrong spelling!</p>
+        <div class="score-display">Score: <span id="final-score">0</span></div>
+        <button class="btn" onclick="startGame()">Try Again</button>
+    </div>
+
+    <script>
+        // The 5th Grade Mastery List (with common misspellings to act as distractors)
+        const contractions = [
+            { phrase: "I am", correct: "I'm", distractors: ["Im", "I'am", "I,m"] },
+            { phrase: "you are", correct: "you're", distractors: ["your", "you'r", "youre"] },
+            { phrase: "he is", correct: "he's", distractors: ["hes", "he'is", "his"] },
+            { phrase: "she is", correct: "she's", distractors: ["shes", "she'is", "sh'es"] },
+            { phrase: "we are", correct: "we're", distractors: ["were", "we'ar", "wer'e"] },
+            { phrase: "they are", correct: "they're", distractors: ["their", "there", "theyre"] },
+            { phrase: "that is", correct: "that's", distractors: ["thats", "that'is", "tha'ts"] },
+            { phrase: "who is", correct: "who's", distractors: ["whose", "whos", "who'is"] },
+            { phrase: "how is", correct: "how's", distractors: ["hows", "how'is", "ho'ws"] },
+            { phrase: "what is", correct: "what's", distractors: ["whats", "what'is", "wha'ts"] },
+            { phrase: "when is", correct: "when's", distractors: ["whens", "when'is", "whe'ns"] },
+            { phrase: "is not", correct: "isn't", distractors: ["is'nt", "isnt", "isn'not"] },
+            { phrase: "are not", correct: "aren't", distractors: ["are'nt", "arent", "arn't"] },
+            { phrase: "was not", correct: "wasn't", distractors: ["was'nt", "wasnt", "wasen't"] },
+            { phrase: "were not", correct: "weren't", distractors: ["were'nt", "werent", "wern't"] },
+            { phrase: "have not", correct: "haven't", distractors: ["have'nt", "havent", "hav'nt"] },
+            { phrase: "has not", correct: "hasn't", distractors: ["has'nt", "hasnt", "hasen't"] },
+            { phrase: "had not", correct: "hadn't", distractors: ["had'nt", "hadnt", "haddent"] },
+            { phrase: "will not", correct: "won't", distractors: ["willn't", "wont", "will'nt"] },
+            { phrase: "would not", correct: "wouldn't", distractors: ["would'nt", "wouldnt", "woulden't"] },
+            { phrase: "could not", correct: "couldn't", distractors: ["could'nt", "couldnt", "coulden't"] },
+            { phrase: "should not", correct: "shouldn't", distractors: ["should'nt", "shouldnt", "shoulden't"] },
+            { phrase: "do not", correct: "don't", distractors: ["do'nt", "dont", "dun't"] },
+            { phrase: "does not", correct: "doesn't", distractors: ["does'nt", "doesnt", "dosn't"] },
+            { phrase: "did not", correct: "didn't", distractors: ["did'nt", "didnt", "diden't"] },
+            { phrase: "can not", correct: "can't", distractors: ["cant", "can'not", "cann't"] }
+        ];
+
+        // Setup Canvas
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+
+        // DOM Elements
+        const scoreUI = document.getElementById('score');
+        const livesUI = document.getElementById('lives');
+        const targetElementUI = document.getElementById('target-element');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreUI = document.getElementById('final-score');
+
+        // Game State
+        let isPlaying = false;
+        let score = 0;
+        let lives = 3;
+        let animationId;
+        
+        let drops = [];
+        let particles = [];
+        let baseSpeed = 2.5; // Slightly slower to allow reading text
+
+        // Resize handler
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            if(player) player.y = h - 90; // Keep player at bottom
+        }
+        window.addEventListener('resize', resize);
+
+        // --- Classes ---
+
+        class PlayerBeaker {
+            constructor() {
+                this.width = 110;
+                this.height = 80;
+                this.x = w / 2;
+                this.y = h - 90;
+                this.targetX = w / 2;
+                this.liquidLevel = 0; // 0 to 1
+                this.color = '#00f3ff';
+            }
+
+            update() {
+                // Smooth follow mouse/touch
+                this.x += (this.targetX - this.x) * 0.2;
+
+                // Keep in bounds
+                if (this.x < this.width/2) this.x = this.width/2;
+                if (this.x > w - this.width/2) this.x = w - this.width/2;
+                
+                // Slowly drain liquid if it was filled
+                if (this.liquidLevel > 0) this.liquidLevel -= 0.01;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Draw Liquid inside Beaker
+                if (this.liquidLevel > 0) {
+                    let fillHeight = this.height * 0.8 * this.liquidLevel;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(0, this.height/2 - 10, this.width/2 - 10, 0, Math.PI);
+                    ctx.lineTo(-this.width/2 + 10, this.height/2 - 10 - fillHeight);
+                    ctx.lineTo(this.width/2 - 10, this.height/2 - 10 - fillHeight);
+                    ctx.fill();
+                    
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 15;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Draw Beaker Glass
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(-this.width/2 - 10, -this.height/2);
+                ctx.lineTo(-this.width/2 + 10, -this.height/2);
+                ctx.lineTo(-this.width/2 + 10, this.height/2 - 20);
+                ctx.quadraticCurveTo(-this.width/2 + 10, this.height/2, 0, this.height/2);
+                ctx.quadraticCurveTo(this.width/2 - 10, this.height/2, this.width/2 - 10, this.height/2 - 20);
+                ctx.lineTo(this.width/2 - 10, -this.height/2);
+                ctx.lineTo(this.width/2 + 10, -this.height/2);
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        class Drop {
+            constructor(x, text, isTarget) {
+                this.x = x;
+                this.y = -60;
+                this.radius = 50; // Increased radius to fit longer words
+                this.text = text;
+                this.isTarget = isTarget;
+                this.speed = baseSpeed + (Math.random() * 1.0); // Slightly randomized speed
+                
+                // Color mapping: Give them bright random potion colors
+                const colors = ['#39ff14', '#b53cff', '#ff00ea', '#00f3ff', '#ffe600'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                this.wobbleOffset = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                let wobble = Math.sin(Date.now() / 200 + this.wobbleOffset) * 2;
+                ctx.translate(wobble, 0);
+
+                // Draw Tear Drop shape
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI); 
+                ctx.moveTo(-this.radius, 0);
+                ctx.quadraticCurveTo(-this.radius/2, -this.radius * 1.5, 0, -this.radius * 1.8);
+                ctx.quadraticCurveTo(this.radius/2, -this.radius * 1.5, this.radius, 0);
+                
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 15;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(-this.radius/3, -this.radius/4, this.radius/4, 0, Math.PI*2);
+                ctx.fill();
+
+                // Draw Text inside drop
+                ctx.fillStyle = '#fff';
+                // Slightly smaller font so words like "shouldn't" fit
+                ctx.font = 'bold 20px Nunito';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 4;
+                ctx.strokeText(this.text, 0, 5);
+                ctx.fillText(this.text, 0, 5);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 1.0;
+                this.size = Math.random() * 8 + 3;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; 
+                this.life -= 0.03;
+            }
+            draw(ctx) {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- Mechanics ---
+
+        let player;
+
+        function startGame() {
+            resize();
+            player = new PlayerBeaker();
+            score = 0;
+            lives = 3;
+            baseSpeed = 2.5; 
+            drops = [];
+            particles = [];
+            isPlaying = true;
+
+            updateUI();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+
+            pickTargetAndSpawnWave();
+            
+            cancelAnimationFrame(animationId);
+            gameLoop();
+        }
+
+        function pickTargetAndSpawnWave() {
+            // 1. Pick target grammar phrase
+            let currentItem = contractions[Math.floor(Math.random() * contractions.length)];
+            targetElementUI.textContent = currentItem.phrase;
+
+            drops = [];
+
+            // 2. Determine drop positions (3 columns)
+            let columns = [w/4, w/2, (w/4)*3];
+            columns = columns.sort(() => Math.random() - 0.5); 
+
+            // 3. Create the correct drop
+            drops.push(new Drop(columns[0], currentItem.correct, true));
+
+            // 4. Create 2 wrong drops using the misspellings!
+            let shuffledDistractors = [...currentItem.distractors].sort(() => Math.random() - 0.5);
+            drops.push(new Drop(columns[1], shuffledDistractors[0], false));
+            drops.push(new Drop(columns[2], shuffledDistractors[1], false));
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            ctx.clearRect(0, 0, w, h);
+
+            player.update();
+            player.draw(ctx);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw(ctx);
+                if (particles[i].life <= 0) particles.splice(i, 1);
+            }
+
+            for (let i = drops.length - 1; i >= 0; i--) {
+                let drop = drops[i];
+                drop.update();
+                drop.draw(ctx);
+
+                let distX = Math.abs(drop.x - player.x);
+                let distY = Math.abs(drop.y - player.y);
+
+                // Collision Detection
+                if (distX < player.width/2 && distY < player.height/2) {
+                    handleCatch(drop);
+                } else if (drop.y > h + drop.radius) {
+                    // DROP MISSED (Hit floor)
+                    if (drop.isTarget) {
+                        loseLife();
+                        if (isPlaying) pickTargetAndSpawnWave();
+                    } else {
+                        createParticles(drop.x, h, drop.color);
+                        drops.splice(i, 1);
+                    }
+                }
+            }
+
+            // Fallback if drops are empty
+            if (drops.length === 0 && isPlaying) {
+                pickTargetAndSpawnWave();
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleCatch(drop) {
+            createParticles(drop.x, drop.y, drop.color);
+            player.color = drop.color;
+            player.liquidLevel = 1.0;
+
+            if (drop.isTarget) {
+                // Correct Catch!
+                score += 10;
+                baseSpeed += 0.05; // Slightly faster each correct catch
+                updateUI();
+                pickTargetAndSpawnWave();
+            } else {
+                // Wrong Catch!
+                loseLife();
+                if (isPlaying) pickTargetAndSpawnWave();
+            }
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function loseLife() {
+            lives--;
+            updateUI();
+            
+            canvas.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+            setTimeout(() => { canvas.style.backgroundColor = 'transparent'; }, 100);
+
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateUI() {
+            scoreUI.textContent = score;
+            let hearts = '';
+            for(let i=0; i<lives; i++) hearts += '❤️';
+            livesUI.textContent = hearts || '💥';
+        }
+
+        function endGame() {
+            isPlaying = false;
+            finalScoreUI.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // --- Controls ---
+        window.addEventListener('mousemove', (e) => {
+            if (isPlaying && player) {
+                player.targetX = e.clientX;
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isPlaying && player) {
+                player.targetX = e.touches[0].clientX;
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying || !player) return;
+            const moveSpeed = 40;
+            if (e.key === 'ArrowLeft') {
+                player.targetX = Math.max(player.width/2, player.x - moveSpeed);
+                player.x = player.targetX;
+            }
+            if (e.key === 'ArrowRight') {
+                player.targetX = Math.min(w - player.width/2, player.x + moveSpeed);
+                player.x = player.targetX;
+            }
+        });
+
+    </script>
+</body>
+</html>
