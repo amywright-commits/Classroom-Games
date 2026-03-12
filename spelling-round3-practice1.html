@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5th Grade Spelling Challenge</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #357ABD;
+            --secondary: #F39C12;
+            --secondary-dark: #D68910;
+            --success: #2ECC71;
+            --danger: #E74C3C;
+            --background: #F0F4F8;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-light: #7F8C8D;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; /* Kid-friendly fonts fallback */
+            background-color: var(--background);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 2.2em;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: #E0E0E0;
+            border-radius: 10px;
+            height: 20px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--success);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 10px;
+        }
+
+        /* Game Elements */
+        .clue-box {
+            font-size: 2.5em;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--primary-dark);
+            background: #EAF2F8;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .instruction {
+            font-size: 1.2em;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            max-width: 300px;
+            padding: 15px;
+            font-size: 1.5em;
+            border: 3px solid #BDC3C7;
+            border-radius: 10px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, background-color 0.2s;
+            color: white;
+            font-family: inherit;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-submit {
+            background-color: var(--primary);
+            box-shadow: 0 4px 0 var(--primary-dark);
+        }
+        .btn-submit:hover { background-color: #5AA0ED; }
+
+        .btn-hint {
+            background-color: var(--secondary);
+            box-shadow: 0 4px 0 var(--secondary-dark);
+        }
+        .btn-hint:hover { background-color: #F5B041; }
+
+        .btn-restart {
+            background-color: var(--success);
+            box-shadow: 0 4px 0 #27AE60;
+            display: none;
+            margin: 20px auto;
+        }
+
+        /* Feedback and Hints */
+        .feedback {
+            margin-top: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .hint-text {
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: var(--secondary-dark);
+            background-color: #FEF9E7;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed var(--secondary);
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+            border-color: var(--danger) !important;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .correct-pop {
+            animation: pop 0.4s ease-in-out;
+            color: var(--success);
+        }
+
+        .incorrect-text {
+            color: var(--danger);
+        }
+
+        /* End Screen */
+        #end-screen {
+            display: none;
+        }
+        
+        .confetti {
+            font-size: 4em;
+            margin: 0;
+        }
+
+        @media (max-width: 480px) {
+            .button-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+            .clue-box {
+                font-size: 2em;
+                letter-spacing: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div id="game-screen">
+            <h1>Tricky Words Quest! 🎯</h1>
+            <p class="instruction">Fill in the blanks and type the <strong>full word</strong> correctly.</p>
+            
+            <div class="clue-box" id="clue-box">l _ _ g h</div>
+            
+            <input type="text" id="word-input" placeholder="Type full word here..." autocomplete="off" spellcheck="false">
+            
+            <div class="button-group">
+                <button class="btn-submit" id="submit-btn" onclick="checkAnswer()">Check Answer</button>
+                <button class="btn-hint" id="hint-btn" onclick="showHint()">Get a Hint 💡</button>
+            </div>
+
+            <div class="hint-text" id="hint-text"></div>
+            <div class="feedback" id="feedback-msg"></div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen">
+            <div class="confetti">🎉🏆🌟</div>
+            <h1>Amazing Job!</h1>
+            <p class="instruction">You conquered all the tricky spelling words.</p>
+            <button class="btn-restart" id="restart-btn" style="display: block;" onclick="initGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // The Spelling List with Tricky Spots and Hints
+        const wordList = [
+            { word: "laugh", clue: "l _ _ g h", hint: "Vowel pair! Think of 'a' and 'u' laughing together." },
+            { word: "embarrass", clue: "e m b a _ _ a _ _", hint: "Double trouble! Two R's and two S's." },
+            { word: "separate", clue: "s e p _ _ a t e", hint: "There is a 'rat' in the middle of sep-a-rat-e." },
+            { word: "decide", clue: "d e c _ _ e", hint: "Ends with the sound 'ide'." },
+            { word: "ignore", clue: "i g n _ _ e", hint: "Ends with the word 'ore'." },
+            { word: "believe", clue: "b e l _ _ v e", hint: "Rule: 'i' before 'e'." },
+            { word: "bought", clue: "b _ _ _ _ t", hint: "Tricky ending! Uses 'ough'." },
+            { word: "thought", clue: "t h _ _ _ _ t", hint: "Tricky ending! Uses 'ough'." },
+            { word: "favorite", clue: "f a v o r _ _ e", hint: "Ends like the word 'ite' (i-t-e)." },
+            { word: "different", clue: "d i _ _ e r e n t", hint: "Don't forget the double 'f' and the 'er' in the middle!" },
+            { word: "beautiful", clue: "b _ _ _ t i f u l", hint: "Remember: b - e - a - utiful!" },
+            { word: "interesting", clue: "i n t _ _ e s t i n g", hint: "Don't skip the 'er' in the middle: int-er-esting." },
+            { word: "terrible", clue: "t e _ _ i b l e", hint: "Double 'r' in the middle." },
+            { word: "excited", clue: "e _ _ i t e d", hint: "Starts with 'ex' and hides a 'c' before the 'i'." },
+            { word: "weird", clue: "w _ _ r d", hint: "Rule breaker! It's 'e' before 'i' for this weird word." },
+            { word: "quiet", clue: "q u _ _ t", hint: "Ends with 'iet' (i-e-t). Shhh!" }
+        ];
+
+        let currentWords = [];
+        let currentIndex = 0;
+
+        // DOM Elements
+        const clueBox = document.getElementById('clue-box');
+        const wordInput = document.getElementById('word-input');
+        const hintText = document.getElementById('hint-text');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const progressBar = document.getElementById('progress-bar');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const progressContainer = document.getElementById('progress-container');
+
+        // Shuffle array to randomize the game each time
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Initialize / Start Game
+        function initGame() {
+            // Deep copy and shuffle the word list
+            currentWords = shuffle([...wordList]);
+            currentIndex = 0;
+            
+            gameScreen.style.display = 'block';
+            endScreen.style.display = 'none';
+            progressContainer.style.display = 'block';
+            
+            updateProgress();
+            loadWord();
+        }
+
+        // Load current word to UI
+        function loadWord() {
+            const currentObj = currentWords[currentIndex];
+            clueBox.textContent = currentObj.clue;
+            wordInput.value = '';
+            wordInput.classList.remove('shake');
+            
+            hintText.style.display = 'none';
+            hintText.textContent = currentObj.hint;
+            
+            feedbackMsg.textContent = '';
+            feedbackMsg.className = 'feedback';
+            
+            wordInput.focus();
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const percentage = (currentIndex / currentWords.length) * 100;
+            progressBar.style.width = percentage + '%';
+        }
+
+        // Check the user's answer
+        function checkAnswer() {
+            const userAnswer = wordInput.value.trim().toLowerCase();
+            const correctAnswer = currentWords[currentIndex].word.toLowerCase();
+
+            if (userAnswer === correctAnswer) {
+                // Correct Answer
+                feedbackMsg.textContent = "Awesome job! 🌟";
+                feedbackMsg.className = 'feedback correct-pop';
+                wordInput.style.borderColor = "var(--success)";
+                
+                // Wait briefly, then move to next word
+                setTimeout(() => {
+                    wordInput.style.borderColor = "#BDC3C7"; // reset border
+                    currentIndex++;
+                    if (currentIndex < currentWords.length) {
+                        updateProgress();
+                        loadWord();
+                    } else {
+                        endGame();
+                    }
+                }, 1200);
+
+            } else {
+                // Incorrect Answer
+                feedbackMsg.textContent = "Not quite! Try again. ❌";
+                feedbackMsg.className = 'feedback incorrect-text';
+                
+                // Trigger CSS shake animation
+                wordInput.classList.remove('shake');
+                void wordInput.offsetWidth; // trigger reflow
+                wordInput.classList.add('shake');
+                
+                wordInput.focus();
+            }
+        }
+
+        // Show Hint
+        function showHint() {
+            hintText.style.display = 'block';
+            wordInput.focus();
+        }
+
+        // End the game
+        function endGame() {
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                gameScreen.style.display = 'none';
+                progressContainer.style.display = 'none';
+                endScreen.style.display = 'block';
+            }, 500);
+        }
+
+        // Allow pressing 'Enter' to submit
+        wordInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                checkAnswer();
+            }
+        });
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
