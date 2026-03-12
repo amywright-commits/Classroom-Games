@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Noun Shelf</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#bbf7d0 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+        }
+
+        h1, h2, .chewy-font {
+            font-family: 'Chewy', cursive;
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+
+        /* The Wooden Shelf Styling */
+        .wood-shelf {
+            background: #d97706; /* Amber 600 */
+            border-bottom: 12px solid #b45309; /* Amber 700 */
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            min-height: 100px;
+            position: relative;
+        }
+        
+        .wood-shelf::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 40px,
+                rgba(0,0,0,0.05) 40px,
+                rgba(0,0,0,0.05) 80px
+            );
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        /* Word Tile Styling */
+        .word-tile {
+            background-color: white;
+            border: 3px solid #e5e7eb;
+            border-bottom: 6px solid #d1d5db;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-block;
+            margin: 6px;
+        }
+
+        .word-tile:hover {
+            transform: translateY(-4px) scale(1.05);
+            border-color: #60a5fa;
+            border-bottom-color: #3b82f6;
+            color: #1d4ed8;
+        }
+
+        .word-tile:active {
+            transform: translateY(2px);
+            border-bottom-width: 3px;
+            margin-bottom: 9px; /* Compensate for border change */
+        }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .pop { animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes pop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center">
+
+    <div class="bg-white shadow-2xl rounded-3xl p-6 md:p-10 w-full max-w-4xl border-4 border-emerald-400">
+        
+        <!-- ==================== START SCREEN ==================== -->
+        <div id="start-screen" class="text-center fade-in space-y-6">
+            <h1 class="text-6xl text-amber-600 mb-2 tracking-wide">📚 The Noun Shelf</h1>
+            <p class="text-2xl text-gray-600 font-bold">Collect all the nouns!</p>
+            
+            <div class="bg-emerald-50 p-6 rounded-2xl text-left inline-block mt-6 border-2 border-emerald-200">
+                <h2 class="text-2xl text-emerald-800 mb-3 chewy-font">How to Play:</h2>
+                <ul class="text-lg text-emerald-800 space-y-3 font-semibold">
+                    <li>🧩 We've broken a sentence into puzzle pieces.</li>
+                    <li>👆 Tap any word that is a <strong>NOUN</strong> (Person, Place, Thing, or Idea).</li>
+                    <li>🪵 It will pop up onto your wooden Noun Shelf!</li>
+                    <li>🛑 Be careful! Don't let any verbs, adjectives, or pronouns sneak onto the shelf.</li>
+                </ul>
+            </div>
+
+            <div class="pt-6">
+                <button onclick="startGame()" class="bg-amber-500 hover:bg-amber-600 text-white text-3xl chewy-font py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 border-b-4 border-amber-700">
+                    Let's Play! 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== GAME SCREEN ==================== -->
+        <div id="game-screen" class="hidden-screen fade-in">
+            
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="text-xl font-bold text-gray-400">
+                    Level <span id="level-text" class="text-amber-500 text-2xl">1 / 15</span>
+                </div>
+                <button onclick="resetGame()" class="text-gray-400 hover:text-red-500 font-bold transition-colors">
+                    Restart Game
+                </button>
+            </div>
+
+            <!-- The Shelf -->
+            <div class="mb-8">
+                <h2 class="chewy-font text-3xl text-amber-800 mb-2 ml-2">Your Noun Shelf:</h2>
+                <!-- Drop Zone -->
+                <div id="shelf-container" class="wood-shelf p-4 flex flex-wrap items-center justify-center gap-2">
+                    <!-- Shelf words go here -->
+                </div>
+            </div>
+
+            <!-- The Sentence -->
+            <div class="mb-8">
+                <h2 class="chewy-font text-2xl text-gray-500 mb-2 ml-2">The Sentence:</h2>
+                <div id="sentence-container" class="bg-gray-50 border-4 border-dashed border-gray-200 rounded-2xl p-6 flex flex-wrap items-center justify-center gap-2 min-h-[120px]">
+                    <!-- Sentence words go here -->
+                </div>
+            </div>
+
+            <!-- Check Button & Feedback -->
+            <div class="text-center mt-8">
+                <button id="check-btn" onclick="checkShelf()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-3xl chewy-font py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 border-b-4 border-emerald-700 w-full md:w-auto">
+                    Check My Shelf! ✔️
+                </button>
+                
+                <div id="feedback-area" class="mt-6 min-h-[80px]">
+                    <p id="feedback-message" class="text-2xl font-bold opacity-0 transition-opacity duration-300"></p>
+                    <button id="next-btn" onclick="nextLevel()" class="hidden bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-3 px-8 rounded-full mt-4 mx-auto transition-transform hover:scale-105">
+                        Next Sentence ➡️
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== END SCREEN ==================== -->
+        <div id="end-screen" class="hidden-screen text-center fade-in space-y-6">
+            <h1 class="text-6xl text-amber-600 mb-4 chewy-font">Shelf Master! 🏆</h1>
+            <p class="text-2xl text-gray-700 font-bold">You found all the nouns and kept your shelf perfectly organized.</p>
+            
+            <div class="pt-8">
+                <button onclick="location.reload()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-3xl chewy-font py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 border-b-4 border-emerald-700">
+                    Play Again! 🔄
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // The Data: Sentences broken into objects. 
+        // We include punctuation attached to the word for visual simplicity.
+        const allLevels = [
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "fluffy", isNoun: false },
+                    { text: "cat", isNoun: true },
+                    { text: "slept.", isNoun: false }
+                ]
+            },
+            {
+                words: [
+                    { text: "My", isNoun: false },
+                    { text: "brother", isNoun: true },
+                    { text: "ate", isNoun: false },
+                    { text: "cold", isNoun: false },
+                    { text: "pizza.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "bright", isNoun: false },
+                    { text: "sun", isNoun: true },
+                    { text: "melted", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "ice.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Our", isNoun: false },
+                    { text: "teacher", isNoun: true },
+                    { text: "gave", isNoun: false },
+                    { text: "us", isNoun: false }, // "us" is a pronoun, not a noun
+                    { text: "a", isNoun: false },
+                    { text: "fun", isNoun: false },
+                    { text: "project.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "A", isNoun: false },
+                    { text: "loud", isNoun: false },
+                    { text: "thunderstorm", isNoun: true },
+                    { text: "scared", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "dog.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Brave", isNoun: false },
+                    { text: "knights", isNoun: true },
+                    { text: "fought", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "fierce", isNoun: false },
+                    { text: "dragon.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Her", isNoun: false },
+                    { text: "backpack", isNoun: true },
+                    { text: "is", isNoun: false },
+                    { text: "full", isNoun: false },
+                    { text: "of", isNoun: false },
+                    { text: "heavy", isNoun: false },
+                    { text: "books.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "fast", isNoun: false },
+                    { text: "runner", isNoun: true },
+                    { text: "won", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "gold", isNoun: false }, // Gold can be a noun, but here it's an adjective describing medal.
+                    { text: "medal.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "My", isNoun: false },
+                    { text: "family", isNoun: true },
+                    { text: "traveled", isNoun: false },
+                    { text: "to", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "beautiful", isNoun: false },
+                    { text: "beach.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "tiny", isNoun: false },
+                    { text: "mouse", isNoun: true },
+                    { text: "hid", isNoun: false },
+                    { text: "under", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "sofa.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "A", isNoun: false },
+                    { text: "huge", isNoun: false },
+                    { text: "elephant", isNoun: true },
+                    { text: "sprayed", isNoun: false },
+                    { text: "water.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "dusty", isNoun: false },
+                    { text: "old", isNoun: false },
+                    { text: "book", isNoun: true },
+                    { text: "contains", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "secret", isNoun: false },
+                    { text: "map.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "My", isNoun: false },
+                    { text: "best", isNoun: false },
+                    { text: "friend", isNoun: true },
+                    { text: "plays", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "guitar.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "shiny", isNoun: false },
+                    { text: "robot", isNoun: true },
+                    { text: "cleaned", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "floor.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "A", isNoun: false },
+                    { text: "wise", isNoun: false },
+                    { text: "owl", isNoun: true },
+                    { text: "sat", isNoun: false },
+                    { text: "in", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "tall", isNoun: false },
+                    { text: "tree.", isNoun: true }
+                ]
+            },
+            // --- NEW HARDER LEVELS: PROPER NOUNS & IDEAS ---
+            {
+                words: [
+                    { text: "Sarah", isNoun: true },
+                    { text: "traveled", isNoun: false },
+                    { text: "to", isNoun: false },
+                    { text: "Paris", isNoun: true },
+                    { text: "in", isNoun: false },
+                    { text: "October.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Her", isNoun: false },
+                    { text: "honesty", isNoun: true },
+                    { text: "earned", isNoun: false },
+                    { text: "great", isNoun: false },
+                    { text: "respect.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "brave", isNoun: false },
+                    { text: "astronaut", isNoun: true },
+                    { text: "explored", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "dark", isNoun: false },
+                    { text: "crater.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "George", isNoun: true },
+                    { text: "Washington", isNoun: true },
+                    { text: "showed", isNoun: false },
+                    { text: "incredible", isNoun: false },
+                    { text: "courage.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "A", isNoun: false },
+                    { text: "yellow", isNoun: false },
+                    { text: "taxicab", isNoun: true },
+                    { text: "sped", isNoun: false },
+                    { text: "through", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "busy", isNoun: false },
+                    { text: "city.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Mrs.", isNoun: true },
+                    { text: "Davis", isNoun: true },
+                    { text: "took", isNoun: false },
+                    { text: "her", isNoun: false },
+                    { text: "students", isNoun: true },
+                    { text: "to", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "museum.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "True", isNoun: false },
+                    { text: "friendship", isNoun: true },
+                    { text: "is", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "rare", isNoun: false },
+                    { text: "treasure.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "William", isNoun: true },
+                    { text: "Shakespeare", isNoun: true },
+                    { text: "wrote", isNoun: false },
+                    { text: "many", isNoun: false },
+                    { text: "famous", isNoun: false },
+                    { text: "plays.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "ancient", isNoun: false },
+                    { text: "pyramids", isNoun: true },
+                    { text: "hide", isNoun: false },
+                    { text: "mysterious", isNoun: false },
+                    { text: "secrets.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "We", isNoun: false },
+                    { text: "climbed", isNoun: false },
+                    { text: "Mount", isNoun: true },
+                    { text: "Everest", isNoun: true },
+                    { text: "during", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "freezing", isNoun: false },
+                    { text: "winter.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "scientist", isNoun: true },
+                    { text: "explained", isNoun: false },
+                    { text: "his", isNoun: false },
+                    { text: "brilliant", isNoun: false },
+                    { text: "theory.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Friday", isNoun: true },
+                    { text: "is", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "best", isNoun: false },
+                    { text: "day", isNoun: true },
+                    { text: "of", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "week.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "A", isNoun: false },
+                    { text: "sparkling", isNoun: false },
+                    { text: "diamond", isNoun: true },
+                    { text: "fell", isNoun: false },
+                    { text: "into", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "deep", isNoun: false },
+                    { text: "ocean.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Harry", isNoun: true },
+                    { text: "Potter", isNoun: true },
+                    { text: "flew", isNoun: false },
+                    { text: "his", isNoun: false },
+                    { text: "magical", isNoun: false },
+                    { text: "broomstick.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "musician", isNoun: true },
+                    { text: "played", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "song", isNoun: true },
+                    { text: "with", isNoun: false },
+                    { text: "deep", isNoun: false },
+                    { text: "emotion.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "I", isNoun: false },
+                    { text: "bought", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "new", isNoun: false },
+                    { text: "shirt", isNoun: true },
+                    { text: "at", isNoun: false },
+                    { text: "Target.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "smell", isNoun: true },
+                    { text: "of", isNoun: false },
+                    { text: "fresh", isNoun: false },
+                    { text: "cookies", isNoun: true },
+                    { text: "brings", isNoun: false },
+                    { text: "pure", isNoun: false },
+                    { text: "joy.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "dusty", isNoun: false },
+                    { text: "library", isNoun: true },
+                    { text: "holds", isNoun: false },
+                    { text: "many", isNoun: false },
+                    { text: "forgotten", isNoun: false },
+                    { text: "stories.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Albert", isNoun: true },
+                    { text: "Einstein", isNoun: true },
+                    { text: "was", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "famous", isNoun: false },
+                    { text: "genius.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Her", isNoun: false },
+                    { text: "sudden", isNoun: false },
+                    { text: "anger", isNoun: true },
+                    { text: "surprised", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "whole", isNoun: false },
+                    { text: "class.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Our", isNoun: false },
+                    { text: "long", isNoun: false },
+                    { text: "trip", isNoun: true },
+                    { text: "to", isNoun: false },
+                    { text: "Florida", isNoun: true },
+                    { text: "was", isNoun: false },
+                    { text: "an", isNoun: false },
+                    { text: "amazing", isNoun: false },
+                    { text: "adventure.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Did", isNoun: false },
+                    { text: "you", isNoun: false },
+                    { text: "watch", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "Super", isNoun: true },
+                    { text: "Bowl", isNoun: true },
+                    { text: "on", isNoun: false },
+                    { text: "television?", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "The", isNoun: false },
+                    { text: "key", isNoun: true },
+                    { text: "to", isNoun: false },
+                    { text: "success", isNoun: true },
+                    { text: "is", isNoun: false },
+                    { text: "hard", isNoun: false },
+                    { text: "work.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "Doctor", isNoun: true },
+                    { text: "Miller", isNoun: true },
+                    { text: "checked", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "heartbeat", isNoun: true },
+                    { text: "of", isNoun: false },
+                    { text: "the", isNoun: false },
+                    { text: "patient.", isNoun: true }
+                ]
+            },
+            {
+                words: [
+                    { text: "A", isNoun: false },
+                    { text: "heavy", isNoun: false },
+                    { text: "blanket", isNoun: true },
+                    { text: "provides", isNoun: false },
+                    { text: "comfort", isNoun: true },
+                    { text: "during", isNoun: false },
+                    { text: "a", isNoun: false },
+                    { text: "storm.", isNoun: true }
+                ]
+            }
+        ];
+
+        // State variables
+        let currentLevelIndex = 0;
+        let wordLocations = []; // Tracks where each word is: 'sentence' or 'shelf'
+        
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        
+        const shelfContainer = document.getElementById('shelf-container');
+        const sentenceContainer = document.getElementById('sentence-container');
+        const levelText = document.getElementById('level-text');
+        
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const feedbackMessage = document.getElementById('feedback-message');
+
+        function startGame() {
+            currentLevelIndex = 0;
+            startScreen.classList.add('hidden-screen');
+            gameScreen.classList.remove('hidden-screen');
+            loadLevel();
+        }
+
+        function loadLevel() {
+            // Reset UI
+            shelfContainer.innerHTML = '';
+            sentenceContainer.innerHTML = '';
+            feedbackMessage.style.opacity = '0';
+            nextBtn.classList.add('hidden');
+            checkBtn.classList.remove('hidden');
+            
+            levelText.innerText = `${currentLevelIndex + 1} / ${allLevels.length}`;
+            
+            // Initialize locations (all words start in 'sentence')
+            const levelData = allLevels[currentLevelIndex];
+            wordLocations = Array(levelData.words.length).fill('sentence');
+
+            // Render word blocks
+            levelData.words.forEach((wordObj, index) => {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'word-tile pop';
+                wordDiv.id = `word-${index}`;
+                // Strip punctuation for the display text just to make it look cleaner on the tiles
+                wordDiv.innerText = wordObj.text.replace(/[.,]/g, ''); 
+                
+                wordDiv.onclick = () => moveWord(index);
+                
+                sentenceContainer.appendChild(wordDiv);
+            });
+        }
+
+        function moveWord(index) {
+            const wordElement = document.getElementById(`word-${index}`);
+            
+            if (wordLocations[index] === 'sentence') {
+                // Move to shelf
+                wordLocations[index] = 'shelf';
+                shelfContainer.appendChild(wordElement);
+            } else {
+                // Move back to sentence
+                wordLocations[index] = 'sentence';
+                
+                // Re-insert into the correct original order in the sentence container
+                const levelData = allLevels[currentLevelIndex];
+                sentenceContainer.innerHTML = '';
+                levelData.words.forEach((_, i) => {
+                    if (wordLocations[i] === 'sentence') {
+                        const el = document.getElementById(`word-${i}`);
+                        if (el) sentenceContainer.appendChild(el);
+                    }
+                });
+            }
+            
+            // Add a little pop animation when moved
+            wordElement.classList.remove('pop');
+            void wordElement.offsetWidth; // trigger reflow
+            wordElement.classList.add('pop');
+        }
+
+        function checkShelf() {
+            const levelData = allLevels[currentLevelIndex];
+            
+            let missingNouns = 0;
+            let wrongWords = 0;
+
+            // Check every word's location against whether it's actually a noun
+            levelData.words.forEach((wordObj, index) => {
+                const isOnShelf = wordLocations[index] === 'shelf';
+                
+                if (wordObj.isNoun && !isOnShelf) {
+                    missingNouns++;
+                }
+                if (!wordObj.isNoun && isOnShelf) {
+                    wrongWords++;
+                }
+            });
+
+            feedbackMessage.style.opacity = '1';
+
+            // Check conditions
+            if (wordLocations.every(loc => loc === 'sentence')) {
+                feedbackMessage.innerHTML = "🤔 Your shelf is empty! Tap some nouns to move them up.";
+                feedbackMessage.className = "text-2xl font-bold text-amber-600 shake";
+            } 
+            else if (wrongWords > 0) {
+                feedbackMessage.innerHTML = `❌ Oops! You put a word on the shelf that IS NOT a noun. <br><span class="text-lg font-normal text-gray-600">(Hint: Watch out for action words or describing words!)</span>`;
+                feedbackMessage.className = "text-2xl font-bold text-red-500 shake";
+            } 
+            else if (missingNouns > 0) {
+                feedbackMessage.innerHTML = `🔍 You're close! But there are still <strong>${missingNouns}</strong> more noun(s) hidden in the sentence.`;
+                feedbackMessage.className = "text-2xl font-bold text-blue-500 pop";
+            } 
+            else {
+                // Success!
+                feedbackMessage.innerHTML = "✅ Perfect! Your shelf only has nouns on it!";
+                feedbackMessage.className = "text-2xl font-bold text-emerald-600 pop";
+                
+                checkBtn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
+            }
+        }
+
+        function nextLevel() {
+            currentLevelIndex++;
+            if (currentLevelIndex >= allLevels.length) {
+                gameScreen.classList.add('hidden-screen');
+                endScreen.classList.remove('hidden-screen');
+            } else {
+                loadLevel();
+            }
+        }
+
+        function resetGame() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
