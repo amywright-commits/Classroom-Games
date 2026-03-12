@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double Duty Detective: Noun or Verb?</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+        }
+
+        .target-word {
+            color: #ef4444; /* Red to make it stand out */
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-underline-offset: 4px;
+            font-weight: 700;
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bounce {
+            animation: bounce 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center">
+
+    <div class="bg-white shadow-2xl rounded-3xl p-6 md:p-10 w-full max-w-4xl border-t-8 border-indigo-500">
+        
+        <!-- ==================== START SCREEN ==================== -->
+        <div id="start-screen" class="text-center fade-in space-y-6">
+            <h1 class="text-5xl font-bold text-indigo-600 mb-2">🕵️‍♂️ Double Duty Detective</h1>
+            <p class="text-2xl text-gray-600 font-semibold">Noun or Verb?</p>
+            
+            <div class="bg-indigo-50 p-6 rounded-2xl text-left inline-block mt-6 border border-indigo-100">
+                <h2 class="text-xl font-bold text-indigo-800 mb-3">Your Mission:</h2>
+                <ul class="text-lg text-indigo-700 space-y-2">
+                    <li>🔍 Some words pull "Double Duty"—they can be a noun OR a verb depending on the sentence!</li>
+                    <li>🧱 <strong>Noun:</strong> A person, place, thing, or idea. (Hint: Try the "a/an/the" test!)</li>
+                    <li>⚙️ <strong>Verb:</strong> An action or the "engine" of the sentence.</li>
+                    <li>👉 Read the sentence, look at the <span class="text-red-500 font-bold">highlighted</span> word, and decide its job!</li>
+                </ul>
+            </div>
+
+            <div class="pt-6">
+                <button onclick="startGame()" class="bg-indigo-500 hover:bg-indigo-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95">
+                    Start Investigating! 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== GAME SCREEN ==================== -->
+        <div id="game-screen" class="hidden-screen fade-in">
+            
+            <!-- Header (Progress & Score) -->
+            <div class="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-4">
+                <div class="text-lg font-bold text-gray-500">
+                    Case: <span id="progress-text" class="text-indigo-600">1 / 10</span>
+                </div>
+                <div class="text-lg font-bold text-gray-500">
+                    Score: <span id="score-text" class="text-green-500">0</span>
+                </div>
+            </div>
+
+            <!-- The Question -->
+            <div class="text-center min-h-[150px] flex items-center justify-center mb-8">
+                <h2 id="sentence-display" class="text-3xl md:text-4xl text-gray-800 leading-snug font-semibold">
+                    <!-- Sentence injected via JS -->
+                </h2>
+            </div>
+
+            <!-- The Choices -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto" id="choices-container">
+                <button onclick="checkAnswer('noun')" class="bg-blue-100 hover:bg-blue-200 border-4 border-blue-400 text-blue-800 text-3xl font-bold py-8 rounded-2xl shadow-sm transition-transform hover:scale-105 active:scale-95 flex flex-col items-center">
+                    <span class="text-4xl mb-2">🧱</span>
+                    It's a NOUN!
+                    <span class="text-sm font-normal mt-2 text-blue-600">(Person, Place, Thing, Idea)</span>
+                </button>
+                
+                <button onclick="checkAnswer('verb')" class="bg-orange-100 hover:bg-orange-200 border-4 border-orange-400 text-orange-800 text-3xl font-bold py-8 rounded-2xl shadow-sm transition-transform hover:scale-105 active:scale-95 flex flex-col items-center">
+                    <span class="text-4xl mb-2">⚙️</span>
+                    It's a VERB!
+                    <span class="text-sm font-normal mt-2 text-orange-600">(Action / Engine)</span>
+                </button>
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback-area" class="mt-8 text-center min-h-[80px]">
+                <p id="feedback-message" class="text-2xl font-bold opacity-0 transition-opacity duration-300"></p>
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full mt-4 mx-auto transition-transform hover:scale-105">
+                    Next Case ➡️
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ==================== END SCREEN ==================== -->
+        <div id="end-screen" class="hidden-screen text-center fade-in space-y-6">
+            <h1 class="text-5xl font-bold text-indigo-600 mb-4">Case Closed! 🏆</h1>
+            <p class="text-2xl text-gray-700">You identified nouns and verbs like a pro.</p>
+            
+            <div class="bg-gray-100 p-8 rounded-3xl inline-block mt-4">
+                <p class="text-xl text-gray-500 font-bold mb-2">Final Score</p>
+                <p id="final-score" class="text-6xl font-black text-green-500"></p>
+            </div>
+
+            <div class="pt-8">
+                <button onclick="resetGame()" class="bg-indigo-500 hover:bg-indigo-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95">
+                    Play Again 🔄
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // The Data: Pairs of sentences using the same word as both a noun and a verb.
+        const allQuestions = [
+            // Pair 1: Water
+            { text: "The freezing <span class='target-word'>water</span> splashed on my face.", answer: "noun", hint: "Hint: It's a thing. You can put 'the' in front of it!" },
+            { text: "Don't forget to <span class='target-word'>water</span> the tomatoes!", answer: "verb", hint: "Hint: It's an action. Someone is doing it." },
+            
+            // Pair 2: Dance
+            { text: "I can't wait for the school <span class='target-word'>dance</span> on Friday.", answer: "noun", hint: "Hint: It's an event or a thing. (The dance)." },
+            { text: "We will <span class='target-word'>dance</span> all night at the party.", answer: "verb", hint: "Hint: It's an action you are doing!" },
+            
+            // Pair 3: Fly
+            { text: "There is a giant, annoying <span class='target-word'>fly</span> in the kitchen.", answer: "noun", hint: "Hint: It's a living thing (an insect)." },
+            { text: "We are going to <span class='target-word'>fly</span> to Florida for vacation.", answer: "verb", hint: "Hint: It's an action. You are moving through the air." },
+            
+            // Pair 4: Park
+            { text: "Let's go play on the swings at the <span class='target-word'>park</span>.", answer: "noun", hint: "Hint: It's a place. You can visit it." },
+            { text: "My dad had to <span class='target-word'>park</span> the car in the garage.", answer: "verb", hint: "Hint: It's an action. He is moving the car." },
+            
+            // Pair 5: Bark
+            { text: "The tree's <span class='target-word'>bark</span> was rough and scratched my arm.", answer: "noun", hint: "Hint: It's a thing (the outside of a tree)." },
+            { text: "My dog loves to <span class='target-word'>bark</span> at the mail carrier.", answer: "verb", hint: "Hint: It's an action. The dog is making a noise." },
+
+            // Pair 6: Slide
+            { text: "Let's go down the big <span class='target-word'>slide</span> at recess.", answer: "noun", hint: "Hint: It's a piece of equipment (a thing)." },
+            { text: "Be careful not to <span class='target-word'>slide</span> on the icy sidewalk!", answer: "verb", hint: "Hint: It's an action. You are moving." },
+
+            // Pair 7: Jump
+            { text: "The athlete made a huge <span class='target-word'>jump</span> over the hurdle.", answer: "noun", hint: "Hint: It's a specific event or achievement." },
+            { text: "How high can you <span class='target-word'>jump</span> on the trampoline?", answer: "verb", hint: "Hint: It's an action your body is doing." },
+
+            // Pair 8: Fish
+            { text: "We fed the colorful <span class='target-word'>fish</span> in the aquarium.", answer: "noun", hint: "Hint: It's a living animal (a thing)." },
+            { text: "My grandpa and I like to <span class='target-word'>fish</span> at the lake.", answer: "verb", hint: "Hint: It's an action. You are trying to catch something." },
+
+            // Pair 9: Record
+            { text: "She broke the world <span class='target-word'>record</span> for the fastest sprint.", answer: "noun", hint: "Hint: It's an achievement or thing." },
+            { text: "Please <span class='target-word'>record</span> your voice for the presentation.", answer: "verb", hint: "Hint: It's an action. You are pressing a button to do something." },
+
+            // Pair 10: Block
+            { text: "They walked around the city <span class='target-word'>block</span> twice.", answer: "noun", hint: "Hint: It's a place or an area." },
+            { text: "The tall tree will <span class='target-word'>block</span> the sunlight.", answer: "verb", hint: "Hint: It's an action. It is stopping something." },
+
+            // Pair 11: Watch
+            { text: "My dad checked his <span class='target-word'>watch</span> to see the time.", answer: "noun", hint: "Hint: It's an object you wear on your wrist." },
+            { text: "We are going to <span class='target-word'>watch</span> a movie tonight.", answer: "verb", hint: "Hint: It's an action you do with your eyes." },
+
+            // Pair 12: Run
+            { text: "She went for a five-mile <span class='target-word'>run</span> this morning.", answer: "noun", hint: "Hint: It's an activity or event." },
+            { text: "Don't <span class='target-word'>run</span> in the school hallways!", answer: "verb", hint: "Hint: It's an action." },
+
+            // Pair 13: Play
+            { text: "We watched the school <span class='target-word'>play</span> in the auditorium.", answer: "noun", hint: "Hint: It's a performance or event (a thing)." },
+            { text: "I want to <span class='target-word'>play</span> soccer after school.", answer: "verb", hint: "Hint: It's an action." },
+
+            // Pair 14: Brush
+            { text: "I need to buy a new hair <span class='target-word'>brush</span>.", answer: "noun", hint: "Hint: It's a tool (a thing)." },
+            { text: "Don't forget to <span class='target-word'>brush</span> your teeth!", answer: "verb", hint: "Hint: It's an action." },
+
+            // Pair 15: Color
+            { text: "Blue is my absolute favorite <span class='target-word'>color</span>.", answer: "noun", hint: "Hint: It's a concept or thing." },
+            { text: "I like to <span class='target-word'>color</span> in my new sketchpad.", answer: "verb", hint: "Hint: It's an action. You are using crayons or markers." }
+        ];
+
+        // Game State Variables
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const progressText = document.getElementById('progress-text');
+        const scoreText = document.getElementById('score-text');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextBtn = document.getElementById('next-btn');
+        const choicesContainer = document.getElementById('choices-container');
+
+        // Shuffle an array (Fisher-Yates) to make the game different every time
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            // Setup new game
+            score = 0;
+            currentIndex = 0;
+            
+            // Create a copy of questions and shuffle them
+            currentQuestions = [...allQuestions];
+            shuffleArray(currentQuestions);
+
+            // Update UI
+            scoreText.innerText = score;
+            startScreen.classList.add('hidden-screen');
+            endScreen.classList.add('hidden-screen');
+            gameScreen.classList.remove('hidden-screen');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            
+            // Reset feedback area
+            feedbackMessage.style.opacity = '0';
+            feedbackMessage.className = 'text-2xl font-bold opacity-0 transition-opacity duration-300';
+            nextBtn.classList.add('hidden');
+            choicesContainer.classList.remove('opacity-50', 'pointer-events-none');
+
+            // Load data
+            const q = currentQuestions[currentIndex];
+            sentenceDisplay.innerHTML = q.text;
+            progressText.innerText = `${currentIndex + 1} / ${currentQuestions.length}`;
+            
+            // Re-trigger fade in animation for the sentence
+            sentenceDisplay.classList.remove('fade-in');
+            void sentenceDisplay.offsetWidth; // trigger reflow
+            sentenceDisplay.classList.add('fade-in');
+        }
+
+        function checkAnswer(guess) {
+            if (answered) return;
+            answered = true;
+            
+            const q = currentQuestions[currentIndex];
+            const isCorrect = guess === q.answer;
+
+            // Lock the buttons
+            choicesContainer.classList.add('opacity-50', 'pointer-events-none');
+            
+            feedbackMessage.style.opacity = '1';
+
+            if (isCorrect) {
+                // Correct Answer
+                score++;
+                scoreText.innerText = score;
+                feedbackMessage.innerHTML = "✅ Correct! Great detective work!";
+                feedbackMessage.classList.add('text-green-600', 'bounce');
+            } else {
+                // Incorrect Answer
+                feedbackMessage.innerHTML = `❌ Oops! <br><span class="text-lg text-gray-600 font-medium">${q.hint}</span>`;
+                feedbackMessage.classList.add('text-red-500', 'shake');
+            }
+
+            // Show next button
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            
+            if (currentIndex >= currentQuestions.length) {
+                endGame();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function endGame() {
+            gameScreen.classList.add('hidden-screen');
+            endScreen.classList.remove('hidden-screen');
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
