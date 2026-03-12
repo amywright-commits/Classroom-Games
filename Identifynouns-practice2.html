@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noun Adventure Game</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a playful, kid-friendly look -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            /* Fun, colorful animated gradient background */
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hidden-screen {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kid-input {
+            transition: all 0.2s ease;
+        }
+        
+        .kid-input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.4);
+        }
+
+        /* The bold, bright color for the inserted words */
+        .story-word {
+            color: #7c3aed; /* Bright purple */
+            font-weight: 900;
+            text-transform: uppercase;
+            background-color: #ede9fe;
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-block;
+            transform: rotate(-1deg);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center">
+
+    <!-- Main Game Container -->
+    <div class="bg-white/95 backdrop-blur-sm shadow-2xl rounded-3xl p-6 md:p-10 w-full max-w-3xl border-4 border-white">
+        
+        <!-- Header / Title -->
+        <h1 class="text-4xl md:text-5xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 mb-8">
+            Noun Adventure!
+        </h1>
+
+        <!-- ==================== STEP 1: INTRO SCREEN ==================== -->
+        <div id="intro-screen" class="fade-in space-y-6">
+            <div class="bg-blue-50 border-l-8 border-blue-400 p-6 rounded-r-2xl shadow-sm">
+                <p class="text-2xl text-blue-900 font-bold mb-2">What is a noun?</p>
+                <p class="text-xl text-blue-800">a noun is a person, place, thing, or idea.</p>
+            </div>
+
+            <div class="bg-yellow-50 border-l-8 border-yellow-400 p-6 rounded-r-2xl shadow-sm space-y-4">
+                <p class="text-2xl text-yellow-900 font-bold">The Rules:</p>
+                <ul class="text-lg text-yellow-800 space-y-3">
+                    <li class="flex items-start">
+                        <span class="mr-2 text-2xl">✨</span>
+                        <span>a <strong>proper noun</strong> is a specific name and needs a capital letter (like Nike or Starbucks).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="mr-2 text-2xl">📦</span>
+                        <span>a <strong>common noun</strong> is general and does not need a capital (like shoe or store).</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="mr-2 text-2xl">💡</span>
+                        <span>an <strong>idea noun</strong> is a value or feeling you can’t touch, like bravery or friendship.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="text-center pt-4">
+                <button onclick="startGame()" class="bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold text-2xl py-4 px-10 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all active:scale-95">
+                    let's play! 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== STEP 2: INPUT SCREEN ==================== -->
+        <div id="input-screen" class="hidden-screen fade-in space-y-6">
+            <p class="text-center text-xl text-gray-600 font-bold mb-6">Fill in the blanks to create your story!</p>
+            
+            <!-- Error message container (replaces alert) -->
+            <div id="error-message" class="hidden bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-xl text-center font-bold mb-4">
+                Oops! Please fill in all the blanks before continuing.
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Input 1 -->
+                <div class="flex flex-col">
+                    <label for="word1" class="text-lg font-bold text-gray-700 mb-1 ml-2">1. person (common)</label>
+                    <input type="text" id="word1" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. friend, teacher">
+                </div>
+                <!-- Input 2 -->
+                <div class="flex flex-col">
+                    <label for="word2" class="text-lg font-bold text-gray-700 mb-1 ml-2">2. place (proper)</label>
+                    <input type="text" id="word2" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. Target, Chicago">
+                </div>
+                <!-- Input 3 -->
+                <div class="flex flex-col">
+                    <label for="word3" class="text-lg font-bold text-gray-700 mb-1 ml-2">3. thing (common)</label>
+                    <input type="text" id="word3" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. treasure, book">
+                </div>
+                <!-- Input 4 -->
+                <div class="flex flex-col">
+                    <label for="word4" class="text-lg font-bold text-gray-700 mb-1 ml-2">4. idea/value (like bravery or honesty)</label>
+                    <input type="text" id="word4" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. courage, teamwork">
+                </div>
+                <!-- Input 5 -->
+                <div class="flex flex-col">
+                    <label for="word5" class="text-lg font-bold text-gray-700 mb-1 ml-2">5. thing (common, plural)</label>
+                    <input type="text" id="word5" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. sandwiches, maps">
+                </div>
+                <!-- Input 6 -->
+                <div class="flex flex-col">
+                    <label for="word6" class="text-lg font-bold text-gray-700 mb-1 ml-2">6. thing (common, plural)</label>
+                    <input type="text" id="word6" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. flashlights, apples">
+                </div>
+                <!-- Input 7 -->
+                <div class="flex flex-col">
+                    <label for="word7" class="text-lg font-bold text-gray-700 mb-1 ml-2">7. thing (common)</label>
+                    <input type="text" id="word7" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. monster, robot">
+                </div>
+                <!-- Input 8 -->
+                <div class="flex flex-col">
+                    <label for="word8" class="text-lg font-bold text-gray-700 mb-1 ml-2">8. idea/value (like joy or fear)</label>
+                    <input type="text" id="word8" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. panic, excitement">
+                </div>
+                <!-- Input 9 -->
+                <div class="flex flex-col">
+                    <label for="word9" class="text-lg font-bold text-gray-700 mb-1 ml-2">9. thing (common)</label>
+                    <input type="text" id="word9" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. lucky rock, whistle">
+                </div>
+                <!-- Input 10 -->
+                <div class="flex flex-col">
+                    <label for="word10" class="text-lg font-bold text-gray-700 mb-1 ml-2">10. place (common)</label>
+                    <input type="text" id="word10" class="kid-input bg-gray-50 border-2 border-purple-200 rounded-2xl p-3 text-lg outline-none w-full placeholder-gray-300" placeholder="e.g. treehouse, school">
+                </div>
+            </div>
+
+            <div class="text-center pt-8">
+                <button onclick="generateStory()" class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-2xl py-4 px-10 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all active:scale-95">
+                    tell my story! ✨
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== STEP 3: STORY SCREEN ==================== -->
+        <div id="story-screen" class="hidden-screen fade-in space-y-8">
+            <div class="bg-gray-50 border-4 border-dashed border-purple-300 p-6 md:p-10 rounded-3xl">
+                <p id="story-text" class="text-2xl md:text-3xl text-gray-800 leading-relaxed md:leading-loose">
+                    <!-- Story will be injected here -->
+                </p>
+            </div>
+
+            <div class="text-center pt-4">
+                <button onclick="resetGame()" class="bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold text-2xl py-4 px-10 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all active:scale-95">
+                    play again! 🔄
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Get references to our screens
+        const introScreen = document.getElementById('intro-screen');
+        const inputScreen = document.getElementById('input-screen');
+        const storyScreen = document.getElementById('story-screen');
+        const errorMessage = document.getElementById('error-message');
+
+        // Transition from Intro to Inputs
+        function startGame() {
+            introScreen.classList.add('hidden-screen');
+            introScreen.classList.remove('fade-in');
+            
+            inputScreen.classList.remove('hidden-screen');
+            inputScreen.classList.add('fade-in');
+            
+            // Focus the first input for accessibility/ease of use
+            setTimeout(() => document.getElementById('word1').focus(), 100);
+        }
+
+        // Generate the story from the inputs
+        function generateStory() {
+            // Hide any previous error messages
+            errorMessage.classList.add('hidden');
+
+            // Array to hold the 10 words
+            const words = [];
+            let isFormValid = true;
+
+            // Collect all 10 words and check if any are empty
+            for (let i = 1; i <= 10; i++) {
+                const inputElement = document.getElementById(`word${i}`);
+                const value = inputElement.value.trim();
+                
+                if (value === "") {
+                    isFormValid = false;
+                    inputElement.classList.add('border-red-400'); // Highlight empty fields
+                    inputElement.classList.remove('border-purple-200');
+                } else {
+                    inputElement.classList.remove('border-red-400');
+                    inputElement.classList.add('border-purple-200');
+                    // Format the word into our special span for highlighting
+                    words[i] = `<span class="story-word">${value}</span>`;
+                }
+            }
+
+            // If a kid missed a blank, show the friendly error message and stop
+            if (!isFormValid) {
+                errorMessage.classList.remove('hidden');
+                // Scroll back up so they see the error
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // The exact Story Template requested (capitalized sentences, numbers matched up)
+            const storyHTML = `Yesterday, my best ${words[1]} and I traveled all the way to ${words[2]} to look for a hidden ${words[3]}. We knew the journey would require a lot of ${words[4]}, so we packed a backpack full of ${words[5]} and ${words[6]}. Suddenly, a giant ${words[7]} jumped out! I felt a sudden wave of ${words[8]}, but then I remembered my ${words[9]} was in my pocket. We grabbed it and ran all the way back to the ${words[10]}!`;
+
+            // Inject the story into the DOM
+            document.getElementById('story-text').innerHTML = storyHTML;
+
+            // Switch screens
+            inputScreen.classList.add('hidden-screen');
+            inputScreen.classList.remove('fade-in');
+            
+            storyScreen.classList.remove('hidden-screen');
+            storyScreen.classList.add('fade-in');
+        }
+
+        // Reset the game to play again
+        function resetGame() {
+            // Clear all inputs and remove any red borders
+            for (let i = 1; i <= 10; i++) {
+                const inputElement = document.getElementById(`word${i}`);
+                inputElement.value = "";
+                inputElement.classList.remove('border-red-400');
+                inputElement.classList.add('border-purple-200');
+            }
+            
+            // Hide error message if it was stuck open
+            errorMessage.classList.add('hidden');
+
+            // Switch back to the input screen (bypassing the intro)
+            storyScreen.classList.add('hidden-screen');
+            storyScreen.classList.remove('fade-in');
+            
+            inputScreen.classList.remove('hidden-screen');
+            inputScreen.classList.add('fade-in');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Focus the first input again
+            setTimeout(() => document.getElementById('word1').focus(), 100);
+        }
+    </script>
+</body>
+</html>
