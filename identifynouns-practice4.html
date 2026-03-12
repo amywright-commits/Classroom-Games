@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noun Type Sorter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #dcfce7 100%);
+            min-height: 100vh;
+        }
+
+        .target-word {
+            color: #db2777; /* Bright pink */
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-underline-offset: 4px;
+            font-weight: 700;
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bounce {
+            animation: bounce 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center">
+
+    <div class="bg-white shadow-2xl rounded-3xl p-6 md:p-10 w-full max-w-4xl border-t-8 border-teal-500">
+        
+        <!-- ==================== START SCREEN ==================== -->
+        <div id="start-screen" class="text-center fade-in space-y-6">
+            <h1 class="text-5xl font-bold text-teal-600 mb-2">🧠 Noun Type Sorter</h1>
+            <p class="text-2xl text-gray-600 font-semibold">Person, Place, Thing, or Idea?</p>
+            
+            <div class="bg-teal-50 p-6 rounded-2xl text-left inline-block mt-6 border border-teal-100">
+                <h2 class="text-xl font-bold text-teal-800 mb-3">Your Mission:</h2>
+                <ul class="text-lg text-teal-700 space-y-3">
+                    <li>Read the sentence and look at the <span class="text-pink-600 font-bold">highlighted</span> noun.</li>
+                    <li>Choose what type of noun it is!</li>
+                    <li>🧑 <strong>Person:</strong> A human being (like a girl, dentist, or Mr. Smith).</li>
+                    <li>📍 <strong>Place:</strong> Somewhere you can go (like a city, park, or Target).</li>
+                    <li>📦 <strong>Thing:</strong> An object you can usually touch (like a book or apple).</li>
+                    <li>💡 <strong>Idea/Value:</strong> A feeling or concept you <em>can't</em> touch (like bravery, joy, or friendship).</li>
+                </ul>
+            </div>
+
+            <div class="pt-6">
+                <button onclick="startGame()" class="bg-teal-500 hover:bg-teal-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95">
+                    Start Sorting! 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== GAME SCREEN ==================== -->
+        <div id="game-screen" class="hidden-screen fade-in">
+            
+            <!-- Header (Progress & Score) -->
+            <div class="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-4">
+                <div class="text-lg font-bold text-gray-500">
+                    Sentence: <span id="progress-text" class="text-teal-600">1 / 30</span>
+                </div>
+                <div class="text-lg font-bold text-gray-500">
+                    Score: <span id="score-text" class="text-green-500">0</span>
+                </div>
+            </div>
+
+            <!-- The Question -->
+            <div class="text-center min-h-[150px] flex items-center justify-center mb-8">
+                <h2 id="sentence-display" class="text-3xl md:text-4xl text-gray-800 leading-snug font-semibold">
+                    <!-- Sentence injected via JS -->
+                </h2>
+            </div>
+
+            <!-- The 4 Choices -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto" id="choices-container">
+                <button onclick="checkAnswer('person')" class="bg-yellow-100 hover:bg-yellow-200 border-4 border-yellow-400 text-yellow-800 text-2xl font-bold py-6 rounded-2xl shadow-sm transition-transform hover:scale-105 active:scale-95 flex flex-col items-center">
+                    <span class="text-4xl mb-2">🧑</span>
+                    Person
+                </button>
+                
+                <button onclick="checkAnswer('place')" class="bg-emerald-100 hover:bg-emerald-200 border-4 border-emerald-400 text-emerald-800 text-2xl font-bold py-6 rounded-2xl shadow-sm transition-transform hover:scale-105 active:scale-95 flex flex-col items-center">
+                    <span class="text-4xl mb-2">📍</span>
+                    Place
+                </button>
+
+                <button onclick="checkAnswer('thing')" class="bg-blue-100 hover:bg-blue-200 border-4 border-blue-400 text-blue-800 text-2xl font-bold py-6 rounded-2xl shadow-sm transition-transform hover:scale-105 active:scale-95 flex flex-col items-center">
+                    <span class="text-4xl mb-2">📦</span>
+                    Thing
+                </button>
+
+                <button onclick="checkAnswer('idea')" class="bg-purple-100 hover:bg-purple-200 border-4 border-purple-400 text-purple-800 text-2xl font-bold py-6 rounded-2xl shadow-sm transition-transform hover:scale-105 active:scale-95 flex flex-col items-center">
+                    <span class="text-4xl mb-2">💡</span>
+                    Idea
+                </button>
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback-area" class="mt-8 text-center min-h-[80px]">
+                <p id="feedback-message" class="text-2xl font-bold opacity-0 transition-opacity duration-300"></p>
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full mt-4 mx-auto transition-transform hover:scale-105">
+                    Next Sentence ➡️
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ==================== END SCREEN ==================== -->
+        <div id="end-screen" class="hidden-screen text-center fade-in space-y-6">
+            <h1 class="text-5xl font-bold text-teal-600 mb-4">Sorting Complete! 🎉</h1>
+            <p class="text-2xl text-gray-700">You are a master of nouns!</p>
+            
+            <div class="bg-gray-100 p-8 rounded-3xl inline-block mt-4">
+                <p class="text-xl text-gray-500 font-bold mb-2">Final Score</p>
+                <p id="final-score" class="text-6xl font-black text-green-500"></p>
+            </div>
+
+            <div class="pt-8">
+                <button onclick="resetGame()" class="bg-teal-500 hover:bg-teal-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95">
+                    Play Again 🔄
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // Data: 30 sentences covering all 4 types of nouns
+        const allQuestions = [
+            // PERSON
+            { text: "The friendly <span class='target-word'>dentist</span> cleaned my teeth.", answer: "person", hint: "Hint: It's a human being who does a job." },
+            { text: "<span class='target-word'>Mr. Johnson</span> is our new school principal.", answer: "person", hint: "Hint: It's a specific name of a human being (Proper Noun)." },
+            { text: "My <span class='target-word'>brother</span> always eats the last slice of pizza.", answer: "person", hint: "Hint: It's a family member (a human)." },
+            { text: "The young <span class='target-word'>girl</span> won the spelling bee.", answer: "person", hint: "Hint: It's a human." },
+            { text: "Our <span class='target-word'>teacher</span> gave us a fun assignment.", answer: "person", hint: "Hint: It's a human being who leads the class." },
+            { text: "The brave <span class='target-word'>firefighter</span> rescued the cat from the tree.", answer: "person", hint: "Hint: It's a human being who does a job." },
+            { text: "My <span class='target-word'>uncle</span> tells the funniest jokes at dinner.", answer: "person", hint: "Hint: It's a family member." },
+            
+            // PLACE
+            { text: "My family traveled to <span class='target-word'>Mexico</span> for vacation.", answer: "place", hint: "Hint: It's a specific country you can visit (Proper Noun)." },
+            { text: "We are going to the <span class='target-word'>museum</span> tomorrow.", answer: "place", hint: "Hint: It's a location you can walk into." },
+            { text: "I left my jacket at the <span class='target-word'>park</span>.", answer: "place", hint: "Hint: It's an outdoor area you can go to." },
+            { text: "Let's meet at <span class='target-word'>Starbucks</span> after school.", answer: "place", hint: "Hint: It's a specific store location (Proper Noun)." },
+            { text: "The <span class='target-word'>library</span> is my favorite spot to read.", answer: "place", hint: "Hint: It's a building you can visit." },
+            { text: "We ate dinner at a fancy Italian <span class='target-word'>restaurant</span>.", answer: "place", hint: "Hint: It's a building where you go to eat." },
+            { text: "The sandy <span class='target-word'>beach</span> is my favorite summer destination.", answer: "place", hint: "Hint: It's a location in nature you can visit." },
+            { text: "Please clean up the toys in your <span class='target-word'>bedroom</span>.", answer: "place", hint: "Hint: It's a room you can be inside." },
+
+            // THING
+            { text: "Please hand me that <span class='target-word'>laptop</span>.", answer: "thing", hint: "Hint: It's an object you can touch and use." },
+            { text: "The fluffy <span class='target-word'>blanket</span> kept me warm.", answer: "thing", hint: "Hint: It's a physical object you can wrap around yourself." },
+            { text: "A loud <span class='target-word'>thunderstorm</span> woke me up.", answer: "thing", hint: "Hint: It's a physical event/object in nature." },
+            { text: "Don't forget to eat your <span class='target-word'>vegetables</span>!", answer: "thing", hint: "Hint: They are physical objects you eat." },
+            { text: "The shiny <span class='target-word'>bicycle</span> was a birthday gift.", answer: "thing", hint: "Hint: It's an object with wheels you can ride." },
+            { text: "The delicious <span class='target-word'>pizza</span> was covered in gooey cheese.", answer: "thing", hint: "Hint: It's a physical object you can eat." },
+            { text: "The loud <span class='target-word'>telephone</span> startled me when it rang.", answer: "thing", hint: "Hint: It's an object you can touch." },
+            { text: "The toy <span class='target-word'>rocket</span> flew high into the sky.", answer: "thing", hint: "Hint: It's an object you can play with." },
+
+            // IDEA / VALUE
+            { text: "It took a lot of <span class='target-word'>courage</span> to speak on stage.", answer: "idea", hint: "Hint: You can't touch it! It's an inner value/feeling." },
+            { text: "Her <span class='target-word'>honesty</span> was appreciated by everyone.", answer: "idea", hint: "Hint: It's a concept. You can't hold it in your hand." },
+            { text: "The dog showed great <span class='target-word'>loyalty</span> to his owner.", answer: "idea", hint: "Hint: It's a value or trait, not a physical object." },
+            { text: "He felt a sudden wave of <span class='target-word'>panic</span>.", answer: "idea", hint: "Hint: It's an emotion or feeling." },
+            { text: "Their <span class='target-word'>friendship</span> lasted for many years.", answer: "idea", hint: "Hint: It's a relationship concept, not something you can physically touch." },
+            { text: "Reading lots of books gives you incredible <span class='target-word'>knowledge</span>.", answer: "idea", hint: "Hint: It's a concept inside your mind." },
+            { text: "The treaty brought <span class='target-word'>peace</span> to the entire kingdom.", answer: "idea", hint: "Hint: It's a state of being, not something you can touch." }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const progressText = document.getElementById('progress-text');
+        const scoreText = document.getElementById('score-text');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextBtn = document.getElementById('next-btn');
+        const choicesContainer = document.getElementById('choices-container');
+
+        // Shuffle the array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            currentIndex = 0;
+            
+            // Duplicate and shuffle the 20 questions
+            currentQuestions = [...allQuestions];
+            shuffleArray(currentQuestions);
+
+            scoreText.innerText = score;
+            startScreen.classList.add('hidden-screen');
+            endScreen.classList.add('hidden-screen');
+            gameScreen.classList.remove('hidden-screen');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            
+            feedbackMessage.style.opacity = '0';
+            feedbackMessage.className = 'text-2xl font-bold opacity-0 transition-opacity duration-300';
+            nextBtn.classList.add('hidden');
+            choicesContainer.classList.remove('opacity-50', 'pointer-events-none');
+
+            const q = currentQuestions[currentIndex];
+            sentenceDisplay.innerHTML = q.text;
+            progressText.innerText = `${currentIndex + 1} / ${currentQuestions.length}`;
+            
+            // Animation reset
+            sentenceDisplay.classList.remove('fade-in');
+            void sentenceDisplay.offsetWidth;
+            sentenceDisplay.classList.add('fade-in');
+        }
+
+        function checkAnswer(guess) {
+            if (answered) return;
+            answered = true;
+            
+            const q = currentQuestions[currentIndex];
+            const isCorrect = guess === q.answer;
+
+            choicesContainer.classList.add('opacity-50', 'pointer-events-none');
+            feedbackMessage.style.opacity = '1';
+
+            if (isCorrect) {
+                score++;
+                scoreText.innerText = score;
+                feedbackMessage.innerHTML = "✅ Spot on! You nailed it!";
+                feedbackMessage.classList.add('text-green-600', 'bounce');
+            } else {
+                feedbackMessage.innerHTML = `❌ Not quite! <br><span class="text-lg text-gray-600 font-medium">${q.hint}</span>`;
+                feedbackMessage.classList.add('text-red-500', 'shake');
+            }
+
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex >= currentQuestions.length) {
+                endGame();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function endGame() {
+            gameScreen.classList.add('hidden-screen');
+            endScreen.classList.remove('hidden-screen');
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
