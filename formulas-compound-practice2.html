@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Control Inspector</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Friendly Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f3f4f6; /* Industrial bakery gray/silver background */
+            background-image: repeating-linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb), repeating-linear-gradient(45deg, #e5e7eb 25%, #f3f4f6 25%, #f3f4f6 75%, #e5e7eb 75%, #e5e7eb);
+            background-position: 0 0, 20px 20px;
+            background-size: 40px 40px;
+        }
+
+        .conveyor-belt {
+            background: #374151;
+            border-top: 8px solid #1f2937;
+            border-bottom: 8px solid #1f2937;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Conveyor belt animated stripes */
+        .conveyor-belt::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 40px,
+                rgba(0,0,0,0.2) 40px,
+                rgba(0,0,0,0.2) 50px
+            );
+            animation: moveBelt 2s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes moveBelt {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 0; }
+        }
+
+        .box-slide-in {
+            animation: slideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .box-slide-out {
+            animation: slideOut 0.5s ease-in forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(150%) rotate(5deg); opacity: 0; }
+            to { transform: translateX(0) rotate(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-150%) rotate(-5deg); opacity: 0; }
+        }
+
+        /* Stamp button styles */
+        .stamp-btn {
+            transition: all 0.2s;
+            position: relative;
+        }
+        .stamp-btn:active {
+            transform: scale(0.95) translateY(4px);
+            box-shadow: none !important;
+        }
+
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease-out;
+        }
+        .modal-content {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col pb-10">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md rounded-b-3xl pt-6 pb-4 px-4 mb-6 text-center border-b-4 border-slate-400 max-w-5xl mx-auto w-full">
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-700 mb-2 flex justify-center items-center gap-3">
+            <span class="text-4xl">📋</span>
+            Quality Control Inspector
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 font-medium max-w-2xl mx-auto">
+            Inspect the Muffin Boxes on the conveyor belt. Stamp them with the correct error, or approve them!
+        </p>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-grow flex flex-col w-full max-w-4xl mx-auto px-4 gap-6">
+        
+        <!-- Progress Tracker -->
+        <div class="flex justify-between items-center bg-white px-6 py-3 rounded-3xl shadow-sm border-2 border-slate-200">
+            <span class="font-bold text-slate-500 text-lg">Box <span id="current-q" class="text-indigo-500">1</span> of <span id="total-q">30</span></span>
+            <div class="flex gap-1 flex-wrap justify-end" id="progress-dots"></div>
+        </div>
+
+        <!-- Conveyor Belt Area -->
+        <div class="w-full bg-white rounded-3xl shadow-lg border-4 border-slate-300 overflow-hidden">
+            <div class="bg-slate-100 p-4 text-center border-b-2 border-slate-200 font-bold text-slate-500 tracking-widest uppercase text-sm">
+                Inspection Zone
+            </div>
+            
+            <div class="conveyor-belt h-48 md:h-64 flex items-center justify-center p-4">
+                
+                <!-- The Sentence Box -->
+                <div id="sentence-box" class="bg-amber-100 border-4 border-amber-300 rounded-xl p-6 md:p-8 max-w-2xl w-full shadow-xl relative z-10 box-slide-in">
+                    <div class="absolute -top-4 -left-4 text-4xl bg-white rounded-full p-1 shadow-md">📦</div>
+                    <p id="sentence-text" class="text-xl md:text-3xl font-medium text-amber-900 text-center leading-relaxed">
+                        <!-- Sentence goes here -->
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- The Inspection Stamps -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            
+            <button onclick="checkAnswer('missing_comma')" class="stamp-btn bg-white border-b-4 border-rose-400 rounded-2xl p-4 shadow-md hover:bg-rose-50 flex flex-col items-center gap-2 group">
+                <div class="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 text-2xl font-bold border-2 border-rose-300 group-hover:scale-110 transition-transform">,</div>
+                <span class="font-bold text-slate-700">Missing Comma</span>
+                <span class="text-xs text-slate-500 text-center">Has FANBOYS, forgot the comma.</span>
+            </button>
+
+            <button onclick="checkAnswer('wrong_fanboys')" class="stamp-btn bg-white border-b-4 border-orange-400 rounded-2xl p-4 shadow-md hover:bg-orange-50 flex flex-col items-center gap-2 group">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-2xl font-bold border-2 border-orange-300 group-hover:scale-110 transition-transform">🏷️</div>
+                <span class="font-bold text-slate-700">Wrong Sticker</span>
+                <span class="text-xs text-slate-500 text-center">FANBOYS doesn't make sense.</span>
+            </button>
+
+            <button onclick="checkAnswer('run_on')" class="stamp-btn bg-white border-b-4 border-purple-400 rounded-2xl p-4 shadow-md hover:bg-purple-50 flex flex-col items-center gap-2 group">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-500 text-2xl font-bold border-2 border-purple-300 group-hover:scale-110 transition-transform">🚧</div>
+                <span class="font-bold text-slate-700">Run-On!</span>
+                <span class="text-xs text-slate-500 text-center">Mashed together, no sticker.</span>
+            </button>
+
+            <button onclick="checkAnswer('perfect')" class="stamp-btn bg-white border-b-4 border-emerald-400 rounded-2xl p-4 shadow-md hover:bg-emerald-50 flex flex-col items-center gap-2 group">
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 text-2xl font-bold border-2 border-emerald-300 group-hover:scale-110 transition-transform">✅</div>
+                <span class="font-bold text-slate-700">Approved!</span>
+                <span class="text-xs text-slate-500 text-center">Perfect compound sentence.</span>
+            </button>
+
+        </div>
+    </main>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-900/60 modal-overlay z-50 hidden flex items-center justify-center p-4">
+        <div id="feedback-card" class="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl modal-content text-center border-4">
+            
+            <div id="feedback-icon" class="text-6xl mb-2"></div>
+            <h2 id="feedback-title" class="text-3xl font-bold mb-4"></h2>
+            
+            <div id="feedback-explanation" class="text-lg text-slate-600 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <!-- Explanation text -->
+            </div>
+
+            <div id="fixed-sentence-area" class="mb-6 hidden">
+                <p class="text-sm font-bold text-slate-400 uppercase tracking-wide mb-1">The Correct Fix:</p>
+                <p id="fixed-sentence" class="text-xl font-medium text-indigo-700 bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200">
+                    <!-- Fixed sentence goes here -->
+                </p>
+            </div>
+
+            <button onclick="nextQuestion()" id="next-btn" class="text-white font-bold py-3 px-10 rounded-full shadow-md transition-transform active:scale-95 text-xl w-full">
+                Next Box
+            </button>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/80 modal-overlay z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl modal-content text-center border-4 border-emerald-400">
+            <div class="text-6xl mb-4">🎖️</div>
+            <h2 class="text-3xl font-bold mb-2 text-emerald-600">Head Inspector!</h2>
+            <p class="text-lg text-slate-600 mb-6">You inspected all the boxes and fixed the broken ones. The bakery is saved!</p>
+            <p class="text-2xl font-bold text-slate-700 mb-6">Score: <span id="final-score" class="text-indigo-500"></span></p>
+            <button onclick="location.reload()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform active:scale-95 text-xl w-full">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        // Types: 'missing_comma', 'wrong_fanboys', 'run_on', 'perfect'
+        const rawData = [
+            {
+                text: "I wanted to buy a cookie but I didn't have enough money.",
+                type: "missing_comma",
+                explanation: "You have the FANBOYS 'but', but you forgot the comma before it!",
+                fixed: "I wanted to buy a cookie<strong>,</strong> but I didn't have enough money."
+            },
+            {
+                text: "The dog barked loudly, so the mail carrier didn't even notice.",
+                type: "wrong_fanboys",
+                explanation: "The sticker ', so' means a result. But these ideas are opposite! The mail carrier ignoring the bark is unexpected.",
+                fixed: "The dog barked loudly<strong>, but</strong> the mail carrier didn't even notice."
+            },
+            {
+                text: "The oven timer beeped the muffins were finally ready.",
+                type: "run_on",
+                explanation: "Two complete thoughts are mashed together with no comma and no FANBOYS (or semicolon)!",
+                fixed: "The oven timer beeped<strong>, and</strong> the muffins were finally ready."
+            },
+            {
+                text: "Kate loves to read fantasy books, and she reads every night.",
+                type: "perfect",
+                explanation: "This box is perfect! It has a comma and a FANBOYS correctly joining two complete thoughts.",
+                fixed: ""
+            },
+            {
+                text: "We can go to the park or we can stay inside and play games.",
+                type: "missing_comma",
+                explanation: "You used the FANBOYS 'or', but you need a comma to join two complete thoughts.",
+                fixed: "We can go to the park<strong>,</strong> or we can stay inside and play games."
+            },
+            {
+                text: "It was raining heavily outside, or we decided to wear our boots.",
+                type: "wrong_fanboys",
+                explanation: "The sticker ', or' is for choices. Wearing boots is a *result* of the rain.",
+                fixed: "It was raining heavily outside<strong>, so</strong> we decided to wear our boots."
+            },
+            {
+                text: "The cat stretched lazily it went back to sleep on the rug.",
+                type: "run_on",
+                explanation: "This is a run-on sentence. You need a sticker to join these two muffins together!",
+                fixed: "The cat stretched lazily<strong>;</strong> it went back to sleep on the rug."
+            },
+            {
+                text: "The baker dropped the flour, yet she quickly swept it up.",
+                type: "perfect",
+                explanation: "Excellent! The comma and the FANBOYS 'yet' perfectly connect the action to the surprising response.",
+                fixed: ""
+            },
+            {
+                text: "I ate a huge breakfast so I am not hungry for lunch.",
+                type: "missing_comma",
+                explanation: "Don't forget the comma before your FANBOYS when joining two full sentences!",
+                fixed: "I ate a huge breakfast<strong>,</strong> so I am not hungry for lunch."
+            },
+            {
+                text: "The students worked hard on their project, but they got an A+.",
+                type: "wrong_fanboys",
+                explanation: "The sticker ', but' shows an unexpected contrast. Getting an A+ is a direct result of working hard!",
+                fixed: "The students worked hard on their project<strong>, and</strong> they got an A+."
+            },
+            {
+                text: "I looked everywhere for my shoes I couldn't find them anywhere.",
+                type: "run_on",
+                explanation: "Run-on! Two complete thoughts colliding. They need a comma and a FANBOYS.",
+                fixed: "I looked everywhere for my shoes<strong>, but</strong> I couldn't find them anywhere."
+            },
+            {
+                text: "Mom washed the dishes, and dad dried them.",
+                type: "perfect",
+                explanation: "Perfect! Two related thoughts correctly joined with a comma and 'and'.",
+                fixed: ""
+            },
+            {
+                text: "You must finish your vegetables or you will not get dessert.",
+                type: "missing_comma",
+                explanation: "Whenever you use 'or' to connect two complete sentences, you must put a comma before it.",
+                fixed: "You must finish your vegetables<strong>,</strong> or you will not get dessert."
+            },
+            {
+                text: "He didn't study for the test, so he was surprised when he passed.",
+                type: "wrong_fanboys",
+                explanation: "Passing without studying is unexpected! The sticker ', so' shows normal cause-and-effect.",
+                fixed: "He didn't study for the test<strong>, yet</strong> he was surprised when he passed."
+            },
+            {
+                text: "The wind blew fiercely the old tree groaned.",
+                type: "run_on",
+                explanation: "Two complete thoughts without any punctuation between them is a run-on sentence.",
+                fixed: "The wind blew fiercely<strong>, and</strong> the old tree groaned."
+            },
+            {
+                text: "The alarm clock rang loudly I hit the snooze button.",
+                type: "run_on",
+                explanation: "Run-on! Two complete thoughts are smashed together without punctuation.",
+                fixed: "The alarm clock rang loudly<strong>, so</strong> I hit the snooze button."
+            },
+            {
+                text: "She loves strawberry ice cream but her brother prefers chocolate.",
+                type: "missing_comma",
+                explanation: "You have the FANBOYS 'but', but you forgot the comma before it!",
+                fixed: "She loves strawberry ice cream<strong>,</strong> but her brother prefers chocolate."
+            },
+            {
+                text: "It was getting very late, or we decided to go to bed.",
+                type: "wrong_fanboys",
+                explanation: "The sticker ', or' is for choices. Going to bed is a *result* of it getting late.",
+                fixed: "It was getting very late<strong>, so</strong> we decided to go to bed."
+            },
+            {
+                text: "The team practiced every single day, so they won the championship.",
+                type: "perfect",
+                explanation: "Perfect! The comma and 'so' correctly show that their practice caused their victory.",
+                fixed: ""
+            },
+            {
+                text: "He searched his backpack for a pencil but he only found a marker.",
+                type: "missing_comma",
+                explanation: "Don't forget the comma before your FANBOYS when joining two full sentences!",
+                fixed: "He searched his backpack for a pencil<strong>,</strong> but he only found a marker."
+            },
+            {
+                text: "The concert was extremely loud my ears were ringing afterwards.",
+                type: "run_on",
+                explanation: "Run-on sentence! You need a comma and a FANBOYS to join these related thoughts.",
+                fixed: "The concert was extremely loud<strong>, and</strong> my ears were ringing afterwards."
+            },
+            {
+                text: "I wanted to buy the new video game, so I didn't have enough allowance.",
+                type: "wrong_fanboys",
+                explanation: "Not having enough money prevents you from buying it. This is an unexpected contrast, so use 'but' or 'yet'.",
+                fixed: "I wanted to buy the new video game<strong>, but</strong> I didn't have enough allowance."
+            },
+            {
+                text: "The kitten chased the laser pointer, but it couldn't catch the red dot.",
+                type: "perfect",
+                explanation: "Excellent! The comma and the FANBOYS 'but' perfectly show the contrast.",
+                fixed: ""
+            },
+            {
+                text: "We can bake a pepperoni pizza or we can order Chinese food.",
+                type: "missing_comma",
+                explanation: "Whenever you use 'or' to connect two complete choices, you must put a comma before it.",
+                fixed: "We can bake a pepperoni pizza<strong>,</strong> or we can order Chinese food."
+            },
+            {
+                text: "The batteries in my controller died I had to pause the game.",
+                type: "run_on",
+                explanation: "This is a run-on sentence. You need a sticker to join these two ideas together!",
+                fixed: "The batteries in my controller died<strong>, so</strong> I had to pause the game."
+            },
+            {
+                text: "You need to wear your snow pants, and you will freeze outside.",
+                type: "wrong_fanboys",
+                explanation: "The sticker ', and' just adds info. Freezing is the consequence if you don't wear snow pants, so use 'or'.",
+                fixed: "You need to wear your snow pants<strong>, or</strong> you will freeze outside."
+            },
+            {
+                text: "She finished all her chores, so she went outside to play.",
+                type: "perfect",
+                explanation: "Great job! A perfectly punctuated compound sentence showing cause and effect.",
+                fixed: ""
+            },
+            {
+                text: "The wind howled through the trees and the windows rattled.",
+                type: "missing_comma",
+                explanation: "You have the FANBOYS 'and', but you missed the comma needed to join two complete thoughts.",
+                fixed: "The wind howled through the trees<strong>,</strong> and the windows rattled."
+            },
+            {
+                text: "He studied for hours, so he failed the spelling test.",
+                type: "wrong_fanboys",
+                explanation: "Failing after studying is a surprising contrast! The sticker ', so' is for expected results.",
+                fixed: "He studied for hours<strong>, yet</strong> he failed the spelling test."
+            },
+            {
+                text: "The magician waved his magic wand, and a white rabbit appeared.",
+                type: "perfect",
+                explanation: "This box is perfect! A comma and the FANBOYS 'and' correctly join the two actions.",
+                fixed: ""
+            }
+        ];
+
+        let challenges = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isProcessing = false;
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Copy and shuffle the data
+            challenges = [...rawData].sort(() => Math.random() - 0.5);
+            
+            document.getElementById('total-q').textContent = challenges.length;
+            renderProgressDots();
+            loadChallenge();
+        }
+
+        function renderProgressDots() {
+            const container = document.getElementById('progress-dots');
+            container.innerHTML = '';
+            for (let i = 0; i < challenges.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-3 h-3 rounded-full ${i === 0 ? 'bg-indigo-500' : 'bg-slate-300'}`;
+                dot.id = `dot-${i}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('current-q').textContent = currentIndex + 1;
+            for (let i = 0; i < challenges.length; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < currentIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-emerald-400'; // Finished
+                } else if (i === currentIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-indigo-500'; // Current
+                } else {
+                    dot.className = 'w-3 h-3 rounded-full bg-slate-300'; // Future
+                }
+            }
+        }
+
+        function loadChallenge() {
+            isProcessing = false;
+            const data = challenges[currentIndex];
+            
+            const box = document.getElementById('sentence-box');
+            
+            // Remove animation classes to reset
+            box.classList.remove('box-slide-in', 'box-slide-out');
+            
+            // Force a reflow to restart animation
+            void box.offsetWidth; 
+            
+            // Add slide in
+            box.classList.add('box-slide-in');
+            
+            document.getElementById('sentence-text').textContent = data.text;
+            updateProgress();
+        }
+
+        // --- LOGIC ---
+        function checkAnswer(selectedType) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const data = challenges[currentIndex];
+            const isCorrect = selectedType === data.type;
+            
+            if (isCorrect) {
+                score++;
+            }
+
+            showFeedback(isCorrect, data, selectedType);
+        }
+
+        // --- FEEDBACK ---
+        function showFeedback(isCorrect, data, selectedType) {
+            const modal = document.getElementById('feedback-modal');
+            const card = document.getElementById('feedback-card');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const explanation = document.getElementById('feedback-explanation');
+            const fixedArea = document.getElementById('fixed-sentence-area');
+            const fixedText = document.getElementById('fixed-sentence');
+            const btn = document.getElementById('next-btn');
+
+            // Reset borders
+            card.className = "bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl modal-content text-center border-4";
+            
+            if (isCorrect) {
+                icon.textContent = "🎯";
+                title.textContent = "Great Inspection!";
+                title.className = "text-3xl font-bold mb-4 text-emerald-500";
+                card.classList.add('border-emerald-400');
+                btn.className = "bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-10 rounded-full shadow-md transition-transform active:scale-95 text-xl w-full mt-4";
+            } else {
+                icon.textContent = "🤔";
+                title.textContent = "Oops! Incorrect Stamp.";
+                title.className = "text-3xl font-bold mb-4 text-rose-500";
+                card.classList.add('border-rose-400');
+                btn.className = "bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-10 rounded-full shadow-md transition-transform active:scale-95 text-xl w-full mt-4";
+            }
+
+            explanation.innerHTML = data.explanation;
+
+            // Show the "Fix" if it wasn't a perfect sentence
+            if (data.type !== 'perfect') {
+                fixedArea.classList.remove('hidden');
+                fixedText.innerHTML = data.fixed;
+            } else {
+                fixedArea.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            
+            // Animate box out
+            const box = document.getElementById('sentence-box');
+            box.classList.remove('box-slide-in');
+            box.classList.add('box-slide-out');
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex >= challenges.length) {
+                    endGame();
+                } else {
+                    loadChallenge();
+                }
+            }, 500); // Wait for slide out animation
+        }
+
+        function endGame() {
+            const modal = document.getElementById('victory-modal');
+            document.getElementById('final-score').textContent = `${score} out of ${challenges.length}`;
+            modal.classList.remove('hidden');
+        }
+
+        // Start the game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
