@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sentence Bakery</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Friendly Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #fdf2f8; /* Light pink bakery background */
+            background-image: radial-gradient(#fce7f3 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        
+        .sentence-card {
+            transition: all 0.2s ease;
+            cursor: grab;
+            touch-action: manipulation;
+        }
+        
+        .sentence-card:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+        
+        .sentence-card.selected {
+            ring: 4px;
+            ring-color: #f59e0b;
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .plate-area {
+            min-height: 150px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .plate-area.drag-over {
+            background-color: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        /* Custom scrollbar for plates if they get full */
+        .plate-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .plate-area::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .correct-animation {
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col pb-10">
+
+    <!-- Header & Concept Area -->
+    <header class="bg-white shadow-md rounded-b-3xl pt-6 pb-4 px-4 mb-6 text-center border-b-4 border-pink-300 max-w-5xl mx-auto w-full">
+        <h1 class="text-4xl md:text-5xl font-bold text-pink-500 mb-2 flex justify-center items-center gap-3">
+            <svg viewBox="0 0 24 24" class="w-10 h-10 md:w-12 md:h-12 text-amber-600" fill="currentColor">
+                <path d="M12 3C7 3 3 7 3 12c0 1.5 1 3 2 3h14c1 0 2-1.5 2-3 0-5-4-9-9-9z" />
+                <path d="M5 15l2 7h10l2-7H5z" fill-opacity="0.6" />
+            </svg>
+            The Sentence Bakery
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 font-medium max-w-2xl mx-auto">
+            Drag and drop (or tap) the sentences to the correct plate!
+        </p>
+        
+        <div class="flex flex-col md:flex-row justify-center gap-4 mt-6">
+            <div class="bg-amber-50 p-3 rounded-xl border-2 border-amber-200 flex-1">
+                <div class="text-2xl mb-1 flex justify-center">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 text-amber-600" fill="currentColor">
+                        <path d="M12 3C7 3 3 7 3 12c0 1.5 1 3 2 3h14c1 0 2-1.5 2-3 0-5-4-9-9-9z" />
+                        <path d="M5 15l2 7h10l2-7H5z" fill-opacity="0.6" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-amber-800">Simple = One Muffin</h3>
+                <p class="text-sm text-amber-700">ONE complete thought (subject + verb).</p>
+            </div>
+            <div class="bg-blue-50 p-3 rounded-xl border-2 border-blue-200 flex-1">
+                <div class="text-2xl mb-1">📦</div>
+                <h3 class="font-bold text-blue-800">Compound = Muffin Box</h3>
+                <p class="text-sm text-blue-700">TWO muffins joined by a "sticker" (semicolon or comma + FANBOYS).</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-grow flex flex-col w-full max-w-5xl mx-auto px-4 gap-6">
+        
+        <!-- Sentence Pool -->
+        <div class="bg-white/80 p-4 rounded-2xl shadow-sm border-2 border-pink-100">
+            <h2 class="text-xl font-bold text-pink-400 mb-3 text-center">Fresh Out of the Oven (Sort These)</h2>
+            <div id="sentence-pool" class="flex flex-wrap justify-center gap-3">
+                <!-- Sentences injected here by JS -->
+            </div>
+        </div>
+
+        <!-- Sorting Plates -->
+        <div class="flex flex-col md:flex-row gap-6 mt-4 h-full">
+            
+            <!-- Simple Plate -->
+            <div class="flex-1 bg-white rounded-3xl p-4 shadow-md border-4 border-amber-300 relative overflow-hidden flex flex-col">
+                <div class="text-center border-b-2 border-amber-100 pb-2 mb-3">
+                    <span class="block mb-2 flex justify-center">
+                        <svg viewBox="0 0 24 24" class="w-12 h-12 text-amber-500" fill="currentColor">
+                            <path d="M12 3C7 3 3 7 3 12c0 1.5 1 3 2 3h14c1 0 2-1.5 2-3 0-5-4-9-9-9z" />
+                            <path d="M5 15l2 7h10l2-7H5z" fill-opacity="0.6" />
+                        </svg>
+                    </span>
+                    <h2 class="text-2xl font-bold text-amber-600">Simple Muffin Plate</h2>
+                </div>
+                <div id="plate-simple" class="plate-area flex-grow flex flex-col gap-2 overflow-y-auto p-2 rounded-xl" ondragover="allowDrop(event)" ondrop="drop(event, 'simple')" onclick="handlePlateClick('simple')">
+                    <!-- Dropped sentences go here -->
+                </div>
+            </div>
+
+            <!-- Compound Box -->
+            <div class="flex-1 bg-white rounded-xl p-4 shadow-md border-4 border-blue-300 relative overflow-hidden flex flex-col">
+                <div class="text-center border-b-2 border-blue-100 pb-2 mb-3">
+                    <span class="text-4xl block mb-2">📦</span>
+                    <h2 class="text-2xl font-bold text-blue-600">Compound Muffin Box</h2>
+                </div>
+                <div id="plate-compound" class="plate-area flex-grow flex flex-col gap-2 overflow-y-auto p-2 rounded-xl" ondragover="allowDrop(event)" ondrop="drop(event, 'compound')" onclick="handlePlateClick('compound')">
+                    <!-- Dropped sentences go here -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-900/40 modal-overlay z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl modal-content text-center border-4 border-white">
+            <div id="feedback-icon" class="text-6xl mb-4"></div>
+            <h2 id="feedback-title" class="text-3xl font-bold mb-2"></h2>
+            <p id="feedback-message" class="text-lg text-slate-600 mb-6"></p>
+            <button onclick="closeFeedback()" id="feedback-btn" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform active:scale-95 text-xl">
+                Got it!
+            </button>
+        </div>
+    </div>
+
+    <!-- Sticker Challenge Modal -->
+    <div id="sticker-modal" class="fixed inset-0 bg-slate-900/60 modal-overlay z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-blue-50 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl modal-content border-4 border-blue-400">
+            <div class="text-center">
+                <span class="text-5xl block mb-2">🏷️</span>
+                <h2 class="text-2xl md:text-3xl font-bold text-blue-800 mb-2">Identify the Sticker!</h2>
+                <p class="text-slate-700 mb-6 font-medium text-lg">You found a Compound Muffin Box! What is the "sticker" joining these two muffins together?</p>
+                
+                <div id="sticker-sentence" class="bg-white p-4 rounded-xl shadow-inner border border-blue-100 text-lg md:text-xl font-medium text-slate-800 mb-8 italic">
+                    <!-- Sentence goes here -->
+                </div>
+
+                <div id="sticker-options" class="flex flex-col md:flex-row gap-3 justify-center">
+                    <!-- Buttons go here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const lessonData = [
+            { id: "s1", text: "The cat purred, stretched, and slept.", type: "simple" },
+            { 
+                id: "s2", 
+                text: "The gutters are packed full of leaves; they will probably overflow.", 
+                type: "compound",
+                sticker: ";",
+                wrongOptions: ["packed full", "probably"]
+            },
+            { id: "s3", text: "Kate and Amy met at the coffee shop.", type: "simple" },
+            { 
+                id: "s4", 
+                text: "I really want to attend the party, but I have a soccer game.", 
+                type: "compound",
+                sticker: ", but",
+                wrongOptions: [", want", ", soccer"]
+            },
+            { id: "s5", text: "Look on top of the fridge.", type: "simple" },
+            { 
+                id: "s6", 
+                text: "Everyone was busy, so I went alone.", 
+                type: "compound",
+                sticker: ", so",
+                wrongOptions: [", busy", ", alone"]
+            },
+            { 
+                id: "s7", 
+                text: "He didn’t want to go to the dentist, yet he went anyway.", 
+                type: "compound",
+                sticker: ", yet",
+                wrongOptions: [", didn't", ", anyway"]
+            },
+            { 
+                id: "s8", 
+                text: "Should I apologize, or should I wait until tomorrow?", 
+                type: "compound",
+                sticker: ", or",
+                wrongOptions: [", apologize", ", until"]
+            },
+            { id: "s9", text: "The fluffy dog ran and jumped into the lake.", type: "simple" },
+            { 
+                id: "s10", 
+                text: "The sun was shining brightly, yet the wind felt cold.", 
+                type: "compound",
+                sticker: ", yet",
+                wrongOptions: [", brightly", ", felt"]
+            },
+            { id: "s11", text: "My brother and I are baking a chocolate cake.", type: "simple" },
+            { 
+                id: "s12", 
+                text: "We can go to the park, or we can play board games.", 
+                type: "compound",
+                sticker: ", or",
+                wrongOptions: [", park", ", play"]
+            },
+            { id: "s13", text: "Put your heavy backpack in the hall closet.", type: "simple" },
+            { 
+                id: "s14", 
+                text: "The boy dropped his ice cream; he started to cry.", 
+                type: "compound",
+                sticker: ";",
+                wrongOptions: ["dropped", "started"]
+            },
+            { id: "s15", text: "The mysterious old house at the end of the street is empty.", type: "simple" },
+            { 
+                id: "s16", 
+                text: "I studied for my test, so I feel very confident.", 
+                type: "compound",
+                sticker: ", so",
+                wrongOptions: ["for", ", confident"]
+            }
+        ];
+
+        // --- STATE ---
+        let selectedSentenceId = null;
+        let sentencesToPlay = [...lessonData];
+        let currentChallengeSentence = null;
+        let score = 0;
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle sentences
+            sentencesToPlay.sort(() => Math.random() - 0.5);
+            renderPool();
+        }
+
+        function renderPool() {
+            const pool = document.getElementById('sentence-pool');
+            pool.innerHTML = '';
+            
+            sentencesToPlay.forEach(sentence => {
+                const div = document.createElement('div');
+                div.className = "sentence-card bg-white px-4 py-3 rounded-xl border-2 border-slate-200 shadow-sm font-medium text-slate-700 hover:border-pink-300 hover:shadow-md select-none";
+                div.textContent = sentence.text;
+                div.id = sentence.id;
+                div.draggable = true;
+                
+                // Drag Events
+                div.addEventListener('dragstart', dragStart);
+                div.addEventListener('dragend', dragEnd);
+                
+                // Click Event (for mobile/tap support)
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectSentence(sentence.id);
+                });
+
+                pool.appendChild(div);
+            });
+        }
+
+        // --- INTERACTION LOGIC (DRAG & DROP + CLICK) ---
+        
+        // Tap to select logic
+        function selectSentence(id) {
+            // Deselect previous
+            if (selectedSentenceId) {
+                const prev = document.getElementById(selectedSentenceId);
+                if(prev) prev.classList.remove('ring-4', 'ring-amber-400', 'scale-105', 'shadow-lg');
+            }
+            
+            selectedSentenceId = id;
+            const current = document.getElementById(id);
+            if(current) {
+                current.classList.add('ring-4', 'ring-amber-400', 'scale-105', 'shadow-lg');
+            }
+        }
+
+        function handlePlateClick(targetType) {
+            if (!selectedSentenceId) return; // Do nothing if no sentence selected
+            processMove(selectedSentenceId, targetType);
+        }
+
+        // Drag & Drop Logic
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.id);
+            setTimeout(() => {
+                e.target.classList.add('opacity-50');
+            }, 0);
+            selectSentence(e.target.id); // Also select it visually
+        }
+
+        function dragEnd(e) {
+            e.target.classList.remove('opacity-50');
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+            const plate = e.currentTarget;
+            plate.classList.add('bg-opacity-50');
+        }
+
+        function drop(e, targetType) {
+            e.preventDefault();
+            const plate = e.currentTarget;
+            plate.classList.remove('bg-opacity-50');
+            
+            const id = e.dataTransfer.getData('text/plain');
+            processMove(id, targetType);
+        }
+
+        // Core Evaluation Logic
+        function processMove(sentenceId, targetType) {
+            const sentence = lessonData.find(s => s.id === sentenceId);
+            if (!sentence) return;
+
+            if (sentence.type === targetType) {
+                // Correct!
+                moveSentenceToPlate(sentenceId, targetType);
+                
+                if (targetType === 'compound') {
+                    // Compound requires sticker challenge
+                    openStickerChallenge(sentence);
+                } else {
+                    // Simple is done
+                    showFeedback(true, "Tasty!", "Perfect! That is one complete thought (one muffin)!");
+                    checkWinCondition();
+                }
+            } else {
+                // Incorrect
+                let hint = targetType === 'compound' 
+                    ? "Look closely. Is there a sticker (FANBOYS or semicolon) joining TWO complete thoughts together?" 
+                    : "Check again! Doesn't this have a sticker (FANBOYS or semicolon) joining two complete thoughts?";
+                
+                // Specific hint for compound subjects/verbs
+                if (sentence.id === "s1" || sentence.id === "s3") {
+                    hint = "Remember, a muffin can have extra chocolate chips! Even with multiple subjects or verbs, it's still just ONE complete thought.";
+                }
+
+                showFeedback(false, "Needs more baking!", hint);
+            }
+            
+            // Reset selection
+            if (selectedSentenceId) {
+                const el = document.getElementById(selectedSentenceId);
+                if(el) el.classList.remove('ring-4', 'ring-amber-400', 'scale-105', 'shadow-lg');
+                selectedSentenceId = null;
+            }
+        }
+
+        function moveSentenceToPlate(sentenceId, targetType) {
+            const el = document.getElementById(sentenceId);
+            const targetPlate = document.getElementById(`plate-${targetType}`);
+            
+            // Style adjustment for inside plate
+            el.className = `p-3 rounded-lg text-sm md:text-base font-medium border-2 shadow-sm correct-animation ${
+                targetType === 'simple' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-blue-50 border-blue-200 text-blue-900'
+            }`;
+            el.draggable = false;
+            el.onclick = null; // Remove click event
+            
+            targetPlate.appendChild(el);
+            
+            // Remove from array
+            sentencesToPlay = sentencesToPlay.filter(s => s.id !== sentenceId);
+        }
+
+        // --- STICKER CHALLENGE MODAL ---
+        function openStickerChallenge(sentence) {
+            currentChallengeSentence = sentence;
+            const modal = document.getElementById('sticker-modal');
+            const sentenceDisplay = document.getElementById('sticker-sentence');
+            const optionsContainer = document.getElementById('sticker-options');
+            
+            sentenceDisplay.textContent = `"${sentence.text}"`;
+            optionsContainer.innerHTML = '';
+
+            // Create options array and shuffle
+            let options = [sentence.sticker, ...sentence.wrongOptions];
+            options.sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-blue-100 text-blue-800 font-bold py-3 px-6 rounded-xl border-2 border-blue-300 shadow-sm transition-all text-xl active:scale-95";
+                btn.textContent = opt;
+                btn.onclick = () => checkSticker(opt, sentence.sticker);
+                optionsContainer.appendChild(btn);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function checkSticker(selectedText, correctText) {
+            const modal = document.getElementById('sticker-modal');
+            if (selectedText === correctText) {
+                modal.classList.add('hidden');
+                showFeedback(true, "Great Catch!", `You found the sticker: <strong>${correctText}</strong>`);
+                checkWinCondition();
+            } else {
+                // Shake animation for wrong answer
+                const optionsContainer = document.getElementById('sticker-options');
+                optionsContainer.classList.add('animate-[shake_0.5s_ease-in-out]');
+                setTimeout(() => optionsContainer.classList.remove('animate-[shake_0.5s_ease-in-out]'), 500);
+            }
+        }
+
+        // --- FEEDBACK MODAL ---
+        function showFeedback(isCorrect, title, message) {
+            const modal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const msgEl = document.getElementById('feedback-message');
+            const btn = document.getElementById('feedback-btn');
+
+            if (isCorrect) {
+                icon.textContent = "🌟";
+                titleEl.className = "text-3xl font-bold mb-2 text-green-500";
+                btn.className = "bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform active:scale-95 text-xl";
+            } else {
+                icon.textContent = "👨‍🍳";
+                titleEl.className = "text-3xl font-bold mb-2 text-rose-500";
+                btn.className = "bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform active:scale-95 text-xl";
+            }
+
+            titleEl.textContent = title;
+            msgEl.innerHTML = message;
+            modal.classList.remove('hidden');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+        }
+
+        function checkWinCondition() {
+            if (sentencesToPlay.length === 0) {
+                setTimeout(() => {
+                    showFeedback(true, "Master Baker! 🏆", "You have successfully sorted all the sentences! You know exactly how to spot a simple muffin and a compound muffin box.");
+                    
+                    // Add a reset button
+                    const btn = document.getElementById('feedback-btn');
+                    btn.textContent = "Play Again";
+                    btn.onclick = () => location.reload();
+                }, 1000);
+            }
+        }
+
+        // Add shake animation to Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-10px)' },
+                            '75%': { transform: 'translateX(10px)' },
+                        }
+                    }
+                }
+            }
+        }
+
+        // Start the game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
