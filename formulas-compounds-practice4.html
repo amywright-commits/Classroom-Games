@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finish the Box</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Friendly Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Compromise.js NLP Library for Grammar Checking -->
+    <script src="https://unpkg.com/compromise"></script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0fdfa; /* Light teal background */
+            background-image: radial-gradient(#ccfbf1 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        /* Cardboard Box Style (Used for the final animation) */
+        .cardboard-box {
+            background-color: #dcb788;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23c19b6c' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+            border: 6px solid #b48550;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-error {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Sealing the box animations */
+        @keyframes slideTogetherLeft {
+            from { transform: translateX(0); }
+            to { transform: translateX(50%); opacity: 0; }
+        }
+        @keyframes slideTogetherRight {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); opacity: 0; }
+        }
+        @keyframes slideTogetherUp {
+            from { transform: translateY(0); }
+            to { transform: translateY(50%); opacity: 0; }
+        }
+        @keyframes slideTogetherDown {
+            from { transform: translateY(0); }
+            to { transform: translateY(-50%); opacity: 0; }
+        }
+
+        @keyframes boxAppear {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .seal-muffin-left { animation: slideTogetherDown 0.5s ease-in forwards; }
+        .seal-muffin-right { animation: slideTogetherUp 0.5s ease-in forwards; }
+        
+        @media (min-width: 768px) {
+            .seal-muffin-left { animation: slideTogetherLeft 0.5s ease-in forwards; }
+            .seal-muffin-right { animation: slideTogetherRight 0.5s ease-in forwards; }
+        }
+
+        .show-box {
+            animation: boxAppear 0.5s 0.4s ease-out forwards;
+        }
+
+        /* Custom Textarea styling */
+        textarea {
+            resize: none;
+            outline: none;
+        }
+        textarea:focus {
+            border-color: #14b8a6; /* teal-500 */
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.2);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col pb-10">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md rounded-b-3xl pt-6 pb-4 px-4 mb-6 text-center border-b-4 border-teal-300 max-w-5xl mx-auto w-full">
+        <h1 class="text-4xl md:text-5xl font-bold text-teal-600 mb-2 flex justify-center items-center gap-3">
+            <span class="text-4xl">✏️</span>
+            Finish the Box
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 font-medium max-w-2xl mx-auto">
+            You have the first muffin and the sticker. It's your job to bake the second muffin! <br>
+            <span class="text-teal-600 font-bold text-base md:text-lg mt-2 inline-block">Type a complete thought to finish the compound sentence.</span>
+        </p>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-grow flex flex-col w-full max-w-5xl mx-auto px-4 gap-6">
+        
+        <!-- Progress Tracker -->
+        <div class="flex justify-between items-center bg-white px-6 py-3 rounded-3xl shadow-sm border-2 border-slate-200">
+            <span class="font-bold text-slate-500 text-lg">Box <span id="current-q" class="text-teal-500">1</span> of <span id="total-q">20</span></span>
+            <div class="flex gap-1 flex-wrap justify-end" id="progress-dots"></div>
+        </div>
+
+        <!-- Notification Area (for hints) -->
+        <div id="notification-area" class="h-10 flex justify-center items-center">
+            <p id="hint-text" class="text-rose-500 font-bold text-lg bg-rose-50 px-4 py-1 rounded-full border border-rose-200 opacity-0 transition-opacity duration-300 shadow-sm text-center">
+                Hint goes here!
+            </p>
+        </div>
+
+        <!-- The Interactive Area -->
+        <div class="w-full relative min-h-[350px] flex items-center justify-center">
+            
+            <!-- STATE 1: The Split Muffins (Waiting for input) -->
+            <div id="split-muffins" class="flex flex-col md:flex-row w-full gap-4 md:gap-2 absolute inset-0 items-center justify-center z-20">
+                
+                <!-- Muffin 1 (Provided) -->
+                <div id="muffin-left-container" class="flex-1 bg-white p-6 md:p-8 rounded-3xl border-4 border-slate-200 text-center w-full max-w-sm shadow-md relative">
+                    <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-2 shadow-sm border-2 border-slate-100 flex items-center justify-center w-14 h-14">
+                        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8">
+                            <!-- Muffin top -->
+                            <path d="M12 30 C 12 10, 52 10, 52 30 C 60 30, 60 40, 52 40 L 12 40 C 4 40, 4 30, 12 30 Z" fill="#DEB887"/>
+                            <!-- Muffin base -->
+                            <path d="M16 40 L 48 40 L 44 60 L 20 60 Z" fill="#8B4513"/>
+                            <!-- Muffin texture/crumbs -->
+                            <circle cx="25" cy="25" r="2" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="40" cy="22" r="1.5" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="32" cy="18" r="2" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="20" cy="32" r="1.5" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="45" cy="34" r="2" fill="#8B4513" opacity="0.3"/>
+                        </svg>
+                    </div>
+                    <p id="muffin-1-text" class="text-xl md:text-2xl font-medium text-slate-700 mt-4 leading-relaxed"></p>
+                    <div class="mt-4 inline-block bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full border border-slate-200">
+                        Complete Thought 1
+                    </div>
+                </div>
+
+                <!-- The Sticker -->
+                <div id="sticker-container" class="flex-shrink-0 bg-amber-200 text-amber-900 text-3xl font-bold px-4 py-2 rounded-xl border-2 border-amber-400 shadow-sm z-30 transform md:-rotate-12">
+                    <span id="sticker-text"></span>
+                </div>
+
+                <!-- Muffin 2 (Student Input) -->
+                <div id="muffin-right-container" class="flex-1 bg-teal-50 p-6 md:p-8 rounded-3xl border-4 border-teal-300 text-center w-full max-w-sm shadow-md relative transition-colors">
+                    <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-2 shadow-sm border-2 border-teal-100 flex items-center justify-center w-14 h-14">
+                        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8">
+                            <!-- Muffin top -->
+                            <path d="M12 30 C 12 10, 52 10, 52 30 C 60 30, 60 40, 52 40 L 12 40 C 4 40, 4 30, 12 30 Z" fill="#DEB887"/>
+                            <!-- Muffin base -->
+                            <path d="M16 40 L 48 40 L 44 60 L 20 60 Z" fill="#8B4513"/>
+                            <!-- Muffin texture/crumbs -->
+                            <circle cx="25" cy="25" r="2" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="40" cy="22" r="1.5" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="32" cy="18" r="2" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="20" cy="32" r="1.5" fill="#8B4513" opacity="0.3"/>
+                            <circle cx="45" cy="34" r="2" fill="#8B4513" opacity="0.3"/>
+                        </svg>
+                    </div>
+                    
+                    <textarea id="student-input" class="w-full bg-white text-xl md:text-2xl font-medium text-teal-900 mt-4 p-3 rounded-xl border-2 border-teal-200 shadow-inner h-32 md:h-40 placeholder-teal-300/50" placeholder="Type the rest of the sentence here..."></textarea>
+                    
+                    <div class="mt-4 inline-block bg-teal-100 text-teal-700 text-xs font-bold px-3 py-1 rounded-full border border-teal-300">
+                        Complete Thought 2
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- STATE 2: The Sealed Box (Hidden initially) -->
+            <div id="sealed-box" class="hidden cardboard-box rounded-2xl p-8 md:p-12 w-full max-w-3xl text-center relative z-10 opacity-0">
+                <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-amber-800 text-white px-6 py-1 rounded text-sm font-bold uppercase tracking-widest shadow-md">
+                    Sealed Box
+                </div>
+                
+                <!-- Completed Sentence container -->
+                <p id="completed-sentence" class="text-2xl md:text-4xl font-medium text-amber-950 leading-loose">
+                    <!-- Text injected here -->
+                </p>
+                <div class="mt-6 text-emerald-600 font-bold text-xl flex justify-center items-center gap-2">
+                    <span>✅ Great sentence!</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Controls Area -->
+        <div class="flex justify-center mt-8 h-16 gap-4 z-30">
+            <button id="seal-btn" onclick="validateAndSeal()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-transform active:scale-95 text-xl flex items-center gap-2">
+                📦 Seal the Box!
+            </button>
+            <button id="next-btn" onclick="nextQuestion()" class="hidden bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-transform active:scale-95 text-xl animate-bounce flex items-center gap-2">
+                Next Box ➡️
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Final Gallery Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-4xl w-full shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="text-center mb-4">
+                <div class="text-6xl mb-2">🏆</div>
+                <h2 class="text-3xl font-bold text-teal-600">Master Builder!</h2>
+                <p class="text-slate-600">Look at all the awesome compound sentences you built today!</p>
+            </div>
+            
+            <!-- Scrollable list of user's sentences -->
+            <div id="sentence-gallery" class="flex-grow overflow-y-auto bg-slate-50 rounded-xl p-4 border border-slate-200 mb-6 space-y-4">
+                <!-- Sentences injected here -->
+            </div>
+
+            <button onclick="location.reload()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform active:scale-95 text-xl w-full md:w-1/2 mx-auto">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        // Fun, engaging prompts designed for 5th graders to finish.
+        const prompts = [
+            { start: "The alien landed his spaceship in my yard", sticker: ", so" },
+            { start: "I wanted to buy a giant chocolate dinosaur", sticker: ", but" },
+            { start: "We can build a secret treehouse in the woods", sticker: ", or" },
+            { start: "The mad scientist mixed the glowing green potions", sticker: ", and" },
+            { start: "My pet iguana learned how to skateboard", sticker: ";" },
+            { start: "The ninja tiptoed across the squeaky floor", sticker: ", yet" },
+            { start: "I forgot to do my math homework", sticker: ", for" },
+            { start: "The wizard waved his magical wooden wand", sticker: ", and" },
+            { start: "We must hide the pirate treasure map immediately", sticker: ", or" },
+            { start: "The giant volcano started to rumble loudly", sticker: ", so" },
+            { start: "The robot vacuum cleaned the entire house", sticker: ", but" },
+            { start: "You can ride the giant roller coaster", sticker: ", or" },
+            { start: "The detective found a secret trapdoor", sticker: ", and" },
+            { start: "My little brother ate all the cookies", sticker: ", so" },
+            { start: "The dragon breathed a massive ball of fire", sticker: ";" },
+            { start: "I searched everywhere for my missing shoe", sticker: ", yet" },
+            { start: "We stayed up late watching spooky movies", sticker: ", for" },
+            { start: "The pirate captain shouted at his crew", sticker: ", and" },
+            { start: "The zoo animals escaped from their cages", sticker: ", so" },
+            { start: "She studied all night for the spelling test", sticker: ", but" }
+        ];
+
+        let currentIndex = 0;
+        let isAnimating = false;
+        let completedSentences = []; // Store them for the end gallery
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle the prompts so it's fresh each time
+            prompts.sort(() => Math.random() - 0.5);
+            
+            document.getElementById('total-q').textContent = prompts.length;
+            renderProgressDots();
+            loadPrompt();
+        }
+
+        function renderProgressDots() {
+            const container = document.getElementById('progress-dots');
+            container.innerHTML = '';
+            for (let i = 0; i < prompts.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-3 h-3 rounded-full ${i === 0 ? 'bg-teal-500' : 'bg-slate-300'}`;
+                dot.id = `dot-${i}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('current-q').textContent = currentIndex + 1;
+            for (let i = 0; i < prompts.length; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < currentIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-green-400';
+                } else if (i === currentIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-teal-500';
+                } else {
+                    dot.className = 'w-3 h-3 rounded-full bg-slate-300';
+                }
+            }
+        }
+
+        function loadPrompt() {
+            isAnimating = false;
+            const data = prompts[currentIndex];
+            
+            // Reset UI Visibility
+            document.getElementById('split-muffins').classList.remove('hidden');
+            document.getElementById('sealed-box').classList.add('hidden', 'opacity-0');
+            document.getElementById('sealed-box').classList.remove('show-box');
+            
+            // Remove animation classes
+            document.getElementById('muffin-left-container').classList.remove('seal-muffin-left');
+            document.getElementById('muffin-right-container').classList.remove('seal-muffin-right');
+            document.getElementById('sticker-container').classList.remove('seal-muffin-left'); // Animate sticker with the left one
+            
+            // Reset Buttons
+            document.getElementById('seal-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            // Hide Hint
+            hideHint();
+
+            // Populate Text
+            document.getElementById('muffin-1-text').textContent = data.start;
+            document.getElementById('sticker-text').textContent = data.sticker;
+            
+            // Reset Input
+            const inputField = document.getElementById('student-input');
+            inputField.value = '';
+            inputField.classList.remove('border-rose-400', 'bg-rose-50');
+            
+            updateProgress();
+            
+            // Focus the textarea automatically
+            setTimeout(() => inputField.focus(), 100);
+        }
+
+        function showHint(msg) {
+            const hint = document.getElementById('hint-text');
+            hint.textContent = msg;
+            hint.classList.remove('opacity-0');
+            hint.classList.add('opacity-100');
+            
+            const inputField = document.getElementById('student-input');
+            inputField.classList.add('border-rose-400', 'bg-rose-50', 'shake-error');
+            
+            setTimeout(() => {
+                inputField.classList.remove('shake-error');
+            }, 400);
+        }
+
+        function hideHint() {
+            const hint = document.getElementById('hint-text');
+            hint.classList.remove('opacity-100');
+            hint.classList.add('opacity-0');
+            const inputField = document.getElementById('student-input');
+            inputField.classList.remove('border-rose-400', 'bg-rose-50');
+        }
+
+        // --- VALIDATION & ANIMATION LOGIC ---
+        function validateAndSeal() {
+            if (isAnimating) return;
+            
+            const inputField = document.getElementById('student-input');
+            let studentText = inputField.value.trim();
+
+            // 1. Check if empty
+            if (studentText.length === 0) {
+                showHint("Oops! You forgot to bake the second muffin. Type your sentence!");
+                return;
+            }
+
+            // 2. Check length (must be a decent thought, let's say at least 2 words)
+            const wordCount = studentText.split(/\s+/).filter(word => word.length > 0).length;
+            if (wordCount < 2) {
+                showHint("That muffin looks a bit too small. Make sure it has a subject and an action!");
+                return;
+            }
+
+            // 3. NLP Grammar Check (The "Grammar Brain")
+            // We use compromise.js to parse the parts of speech!
+            let parsed = nlp(studentText);
+            
+            // Check if they completely forgot an action word
+            if (!parsed.has('#Verb')) {
+                showHint("Where is the action? A complete thought needs a verb!");
+                return;
+            }
+
+            // Check if they started with a verb (e.g., "told me.", "ate the pizza.")
+            // If they did, they probably forgot the subject!
+            if (parsed.match('^#Verb').found) {
+                // If it's a command like "do your homework", we let it pass. Otherwise, call it out!
+                if (!parsed.match('^#Imperative').found) {
+                    showHint("Who did that? Your thought starts with an action, which means you forgot your subject (like 'he', 'she', or 'the dog')!");
+                    return;
+                }
+            }
+
+            // 4. Capitalization Check: Point out if they capitalized the first word unnecessarily
+            const firstWordMatch = studentText.match(/^\W*([a-zA-Z']+)/);
+            if (firstWordMatch) {
+                const firstWord = firstWordMatch[1];
+                const iWords = ["I", "I'm", "I'll", "I've", "I'd"];
+                const startsWithUpper = /^[A-Z]/.test(firstWord);
+
+                if (startsWithUpper && !iWords.includes(firstWord)) {
+                    showHint(`Oops! "${firstWord}" shouldn't be capitalized in the middle of a sentence!`);
+                    return;
+                }
+            }
+
+            // 5. Ensure they didn't just type another FANBOYS or start with a lowercase letter (optional, but good practice)
+            // We will automatically capitalize their first letter just in case they forgot, to make the final sentence look nice.
+            // But we SHOULD force them to use ending punctuation.
+            const lastChar = studentText.charAt(studentText.length - 1);
+            if (!['.', '!', '?'].includes(lastChar)) {
+                showHint("Don't forget your ending punctuation! (. ! ?)");
+                return;
+            }
+
+            // If we pass validation, proceed!
+            hideHint();
+            isAnimating = true;
+
+            const data = prompts[currentIndex];
+            
+            // Format the final sentence nicely
+            // If they started with a capital letter, make it lowercase IF it's not a proper noun. 
+            // Actually, safest is to just leave their casing alone but ensure a space after the sticker.
+            const finalSentence = `${data.start}${data.sticker} ${studentText}`;
+            
+            // Save to our gallery
+            completedSentences.push(finalSentence);
+            
+            // Set text for the sealed box
+            document.getElementById('completed-sentence').innerHTML = `${data.start}<strong class="text-amber-700">${data.sticker}</strong> <span class="text-teal-900">${studentText}</span>`;
+
+            // Trigger animations
+            document.getElementById('muffin-left-container').classList.add('seal-muffin-left');
+            document.getElementById('sticker-container').classList.add('seal-muffin-left'); // Moves with left muffin
+            document.getElementById('muffin-right-container').classList.add('seal-muffin-right');
+
+            // Swap buttons
+            document.getElementById('seal-btn').classList.add('hidden');
+
+            setTimeout(() => {
+                // Hide the split view
+                document.getElementById('split-muffins').classList.add('hidden');
+                
+                // Show the sealed box
+                const sealedBox = document.getElementById('sealed-box');
+                sealedBox.classList.remove('hidden');
+                sealedBox.classList.add('show-box');
+                
+                // Show Next button
+                document.getElementById('next-btn').classList.remove('hidden');
+            }, 500); // Wait for sliding animation to finish
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex >= prompts.length) {
+                showEndGallery();
+            } else {
+                loadPrompt();
+            }
+        }
+
+        function showEndGallery() {
+            const gallery = document.getElementById('sentence-gallery');
+            gallery.innerHTML = '';
+            
+            completedSentences.forEach((sentence, index) => {
+                const p = document.createElement('p');
+                p.className = "text-lg md:text-xl text-slate-800 bg-white p-3 rounded-lg shadow-sm border border-slate-200";
+                
+                // Re-highlight the sticker just to remind them
+                const stickerRegex = /(, (for|and|nor|but|or|yet|so)|;)/;
+                const match = sentence.match(stickerRegex);
+                
+                if(match) {
+                    p.innerHTML = `<span class="text-slate-500 font-bold mr-2">${index + 1}.</span> ` + sentence.replace(match[0], `<strong class="text-amber-600">${match[0]}</strong>`);
+                } else {
+                    p.textContent = `${index + 1}. ${sentence}`;
+                }
+
+                gallery.appendChild(p);
+            });
+
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        // Allow pressing "Enter" to submit, but since it's a textarea, "Enter" usually makes a new line.
+        // Let's capture Shift+Enter for new lines, and just Enter for submit.
+        document.getElementById('student-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Stop new line
+                if(!isAnimating) {
+                    validateAndSeal();
+                }
+            }
+        });
+
+        // Start game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
