@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Muffin Matchmaker - Sentence Connectors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            /* Vibrant, moving pastel gradient background */
+            background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #a1c4fd, #c2e9fb, #fbc2eb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .muffin-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .muffin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Color coded cards to make the screen pop! */
+        .card-left {
+            background-color: #f0f9ff; /* sky 50 */
+            border-color: #bae6fd; /* sky 200 */
+            color: #0369a1; /* sky 700 */
+        }
+        
+        .card-right {
+            background-color: #f0fdf4; /* green 50 */
+            border-color: #bbf7d0; /* green 200 */
+            color: #15803d; /* green 700 */
+        }
+
+        .muffin-card.selected {
+            border-color: #f59e0b !important; /* Amber 500 */
+            background-color: #fffbeb !important; /* Amber 50 */
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+            transform: scale(1.03);
+            z-index: 40;
+            color: #b45309 !important;
+        }
+
+        .muffin-card.matched {
+            opacity: 0.6;
+            pointer-events: none;
+            filter: grayscale(40%);
+        }
+
+        .muffin-card.error {
+            animation: shake 0.5s;
+            border-color: #ef4444 !important; /* Red 500 */
+            background-color: #fef2f2 !important; /* Red 50 */
+            color: #b91c1c !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .line-path {
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: drawLine 0.6s ease-out forwards;
+        }
+
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+        
+        /* Node dot styling */
+        .node-point {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.25rem;
+            height: 1.25rem;
+            background-color: white;
+            border-radius: 9999px;
+            border: 3px solid currentColor;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+        .node-left { right: -10px; }
+        .node-right { left: -10px; }
+        
+        /* Utility class for the custom muffin SVG */
+        .muffin-icon {
+            display: inline-block;
+            filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="text-center mb-6">
+        <h1 class="text-4xl md:text-5xl font-black text-slate-800 drop-shadow-sm mb-2 flex items-center justify-center gap-2 md:gap-4">
+            <!-- Custom Simple Muffin SVG -->
+            <svg class="muffin-icon w-10 h-10 md:w-14 md:h-14" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Wrapper -->
+                <path d="M 25 55 L 35 95 L 65 95 L 75 55 Z" fill="#fde68a" stroke="#d97706" stroke-width="4" stroke-linejoin="round"/>
+                <line x1="38" y1="55" x2="43" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                <line x1="50" y1="55" x2="50" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                <line x1="62" y1="55" x2="57" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                <!-- Muffin Top Dome -->
+                <path d="M 15 55 C 15 15 85 15 85 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                <!-- Muffin Top Puffy Overlap -->
+                <path d="M 10 55 C 10 65 25 68 35 55 C 45 68 55 68 65 55 C 75 68 90 65 90 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                <!-- Chips/Texture -->
+                <circle cx="35" cy="35" r="4" fill="#78350f"/>
+                <circle cx="65" cy="40" r="3" fill="#78350f"/>
+                <circle cx="50" cy="28" r="5" fill="#78350f"/>
+                <circle cx="45" cy="48" r="3.5" fill="#78350f"/>
+                <circle cx="75" cy="45" r="2.5" fill="#78350f"/>
+                <circle cx="25" cy="45" r="3" fill="#78350f"/>
+            </svg>
+            
+            The Muffin Matchmaker
+            
+            <svg class="muffin-icon w-10 h-10 md:w-14 md:h-14" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 25 55 L 35 95 L 65 95 L 75 55 Z" fill="#fde68a" stroke="#d97706" stroke-width="4" stroke-linejoin="round"/>
+                <line x1="38" y1="55" x2="43" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                <line x1="50" y1="55" x2="50" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                <line x1="62" y1="55" x2="57" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                <path d="M 15 55 C 15 15 85 15 85 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                <path d="M 10 55 C 10 65 25 68 35 55 C 45 68 55 68 65 55 C 75 68 90 65 90 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                <circle cx="35" cy="35" r="4" fill="#78350f"/>
+                <circle cx="65" cy="40" r="3" fill="#78350f"/>
+                <circle cx="50" cy="28" r="5" fill="#78350f"/>
+                <circle cx="45" cy="48" r="3.5" fill="#78350f"/>
+                <circle cx="75" cy="45" r="2.5" fill="#78350f"/>
+                <circle cx="25" cy="45" r="3" fill="#78350f"/>
+            </svg>
+        </h1>
+        <p class="text-slate-700 text-lg md:text-xl font-bold bg-white/50 inline-block px-4 py-1 rounded-full shadow-sm backdrop-blur-sm">
+            Connect the sentences through the center sticker!
+        </p>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-grow flex flex-col w-full max-w-6xl mx-auto px-4 gap-6 relative">
+        
+        <!-- Progress & Level Info -->
+        <div class="flex flex-col md:flex-row justify-between items-center bg-white/90 backdrop-blur-md px-6 py-4 rounded-2xl shadow-md border-2 border-white z-50 gap-4 md:gap-0">
+            <div class="font-bold text-slate-500 text-xl whitespace-nowrap bg-slate-100 px-4 py-2 rounded-xl">
+                Level <span id="current-level" class="text-indigo-600 text-2xl font-black">1</span> / <span id="total-levels">24</span>
+            </div>
+            
+            <div class="flex flex-col items-center">
+                <div id="topic-title" class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Topic: Space Exploration</div>
+                <div id="level-title" class="text-2xl md:text-3xl font-extrabold text-white px-8 py-2 rounded-2xl shadow-sm text-center tracking-wide w-full md:w-auto transition-colors duration-300">
+                    Reason
+                </div>
+            </div>
+
+            <div class="text-slate-400 font-bold hidden md:flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
+                <span>Match the halves.</span>
+            </div>
+        </div>
+
+        <!-- The Interactive Board Container -->
+        <div class="relative w-full flex-grow bg-white/70 backdrop-blur-xl rounded-3xl border-4 border-white p-6 md:p-10 shadow-2xl flex flex-col justify-center min-h-[500px]" id="board-container">
+            
+            <!-- SVG Canvas for Lines -->
+            <svg id="lines-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+
+            <!-- THE CENTER STICKER -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <div id="center-sticker" class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-xl flex items-center justify-center transform -rotate-3 transition-all duration-300">
+                    <span id="sticker-text" class="text-3xl md:text-4xl font-black text-white drop-shadow-md">, for</span>
+                </div>
+            </div>
+
+            <!-- Left and Right Columns -->
+            <div class="flex flex-col md:flex-row justify-between w-full relative z-30 h-full">
+                
+                <!-- Left Column (Starts) -->
+                <div id="left-column" class="flex flex-col justify-around gap-4 md:gap-8 w-full md:w-5/12">
+                    <!-- Cards generated by JS -->
+                </div>
+
+                <!-- Spacer on Mobile to make room for sticker -->
+                <div class="h-40 md:hidden w-full flex-shrink-0"></div>
+
+                <!-- Right Column (Ends) -->
+                <div id="right-column" class="flex flex-col justify-around gap-4 md:gap-8 w-full md:w-5/12">
+                    <!-- Cards generated by JS -->
+                </div>
+
+            </div>
+            
+            <!-- Level Complete Overlay -->
+            <div id="level-complete" class="hidden absolute inset-0 bg-white/95 rounded-3xl z-50 flex flex-col items-center justify-center backdrop-blur-md transition-opacity border-4 border-indigo-200">
+                
+                <!-- Dancing Muffins -->
+                <div class="flex justify-center gap-6 mb-6 animate-bounce">
+                    <svg class="muffin-icon w-20 h-20 md:w-28 md:h-28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 25 55 L 35 95 L 65 95 L 75 55 Z" fill="#fde68a" stroke="#d97706" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="38" y1="55" x2="43" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="50" y1="55" x2="50" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="62" y1="55" x2="57" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M 15 55 C 15 15 85 15 85 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M 10 55 C 10 65 25 68 35 55 C 45 68 55 68 65 55 C 75 68 90 65 90 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                        <circle cx="35" cy="35" r="4" fill="#78350f"/><circle cx="65" cy="40" r="3" fill="#78350f"/><circle cx="50" cy="28" r="5" fill="#78350f"/><circle cx="45" cy="48" r="3.5" fill="#78350f"/><circle cx="75" cy="45" r="2.5" fill="#78350f"/><circle cx="25" cy="45" r="3" fill="#78350f"/>
+                    </svg>
+                    <svg class="muffin-icon w-20 h-20 md:w-28 md:h-28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="animation-delay: 0.2s;">
+                        <path d="M 25 55 L 35 95 L 65 95 L 75 55 Z" fill="#fde68a" stroke="#d97706" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="38" y1="55" x2="43" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="50" y1="55" x2="50" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="62" y1="55" x2="57" y2="95" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M 15 55 C 15 15 85 15 85 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M 10 55 C 10 65 25 68 35 55 C 45 68 55 68 65 55 C 75 68 90 65 90 55 Z" fill="#b45309" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+                        <circle cx="35" cy="35" r="4" fill="#78350f"/><circle cx="65" cy="40" r="3" fill="#78350f"/><circle cx="50" cy="28" r="5" fill="#78350f"/><circle cx="45" cy="48" r="3.5" fill="#78350f"/><circle cx="75" cy="45" r="2.5" fill="#78350f"/><circle cx="25" cy="45" r="3" fill="#78350f"/>
+                    </svg>
+                </div>
+
+                <h2 class="text-5xl md:text-6xl font-black text-indigo-600 mb-2 text-center px-4 drop-shadow-sm">Perfect Batch!</h2>
+                <p class="text-xl text-slate-500 font-bold mb-8">Sentences successfully baked together.</p>
+                <button id="next-btn" class="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 text-white text-2xl font-bold rounded-xl shadow-lg transform transition hover:scale-105 border-b-4 border-indigo-700 active:border-b-0 active:translate-y-1">
+                    Next Recipe ➔
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // 24 Levels total: 7 FANBOYS + 1 Semicolon, each used 3 times with unique topics!
+        const levelsData = [
+            // F: , for (Reason) - Color: Orange (#f97316)
+            { purpose: "Reason", topic: "Space Exploration", sticker: ", for", color: "#f97316", pairs: [
+                { left: "The astronauts trained daily", right: "they had a mission to Mars." },
+                { left: "The telescope was built carefully", right: "it needed to see distant galaxies." },
+                { left: "We look up at the night sky", right: "the stars are beautiful to observe." }
+            ]},
+            { purpose: "Reason", topic: "Gardening", sticker: ", for", color: "#f97316", pairs: [
+                { left: "She watered the plants every morning", right: "they needed hydration to grow." },
+                { left: "He planted extra tomato seeds", right: "he wanted a large harvest." },
+                { left: "The bees visited the flowers", right: "they were collecting sweet nectar." }
+            ]},
+            { purpose: "Reason", topic: "Ancient Egypt", sticker: ", for", color: "#f97316", pairs: [
+                { left: "The pyramids were built strong", right: "they were meant to last forever." },
+                { left: "The pharaohs wore gold jewelry", right: "it showed their great wealth." },
+                { left: "We study the hieroglyphs", right: "they tell stories of the past." }
+            ]},
+
+            // A: , and (Addition) - Color: Emerald (#10b981)
+            { purpose: "Addition", topic: "Deep Sea Diving", sticker: ", and", color: "#10b981", pairs: [
+                { left: "The diver adjusted her mask", right: "she plunged into the ocean." },
+                { left: "We saw a glowing jellyfish", right: "it floated gracefully past us." },
+                { left: "The coral reef was colorful", right: "it was teeming with small fish." }
+            ]},
+            { purpose: "Addition", topic: "Playing in a Band", sticker: ", and", color: "#10b981", pairs: [
+                { left: "The drummer started the beat", right: "the guitarist joined in smoothly." },
+                { left: "We practiced the song twice", right: "we felt ready for the concert." },
+                { left: "The crowd cheered loudly", right: "they asked for an encore." }
+            ]},
+            { purpose: "Addition", topic: "Baking Muffins", sticker: ", and", color: "#10b981", pairs: [
+                { left: "The baker mixed the flour", right: "he added the sweet blueberries." },
+                { left: "I ordered a chocolate muffin", right: "my sister got a banana one." },
+                { left: "We sat by the window", right: "we enjoyed our warm treats." }
+            ]},
+
+            // N: , nor (Negative Addition) - Color: Violet (#8b5cf6)
+            { purpose: "Negative Addition", topic: "Winter Weather", sticker: ", nor", color: "#8b5cf6", pairs: [
+                { left: "The sun didn't shine today", right: "did the temperature rise above freezing." },
+                { left: "We cannot go ice skating", right: "can we build a proper snowman." },
+                { left: "The roads aren't plowed yet", right: "are the sidewalks safe to walk on." }
+            ]},
+            { purpose: "Negative Addition", topic: "Picky Eaters", sticker: ", nor", color: "#8b5cf6", pairs: [
+                { left: "He does not like broccoli", right: "does he enjoy eating spinach." },
+                { left: "She won't eat spicy food", right: "will she try anything sour." },
+                { left: "They haven't touched their peas", right: "have they finished their carrots." }
+            ]},
+            { purpose: "Negative Addition", topic: "Desert Survival", sticker: ", nor", color: "#8b5cf6", pairs: [
+                { left: "There is no water in sight", right: "is there any shade to rest in." },
+                { left: "The cactus doesn't need much rain", right: "does it need fertile soil." },
+                { left: "We didn't bring a compass", right: "do we have a physical map." }
+            ]},
+
+            // B: , but (Contrast) - Color: Red (#ef4444)
+            { purpose: "Contrast", topic: "Video Games", sticker: ", but", color: "#ef4444", pairs: [
+                { left: "I tried to defeat the boss", right: "his attacks were too fast." },
+                { left: "We searched the whole map", right: "we couldn't find the hidden treasure." },
+                { left: "The graphics are amazing", right: "the storyline is a bit boring." }
+            ]},
+            { purpose: "Contrast", topic: "Pets", sticker: ", but", color: "#ef4444", pairs: [
+                { left: "The dog barked at the mailman", right: "he wagged his tail at the neighbor." },
+                { left: "My cat loves to sleep all day", right: "she gets energetic at midnight." },
+                { left: "We bought a new chew toy", right: "the puppy preferred the cardboard box." }
+            ]},
+            { purpose: "Contrast", topic: "Camping", sticker: ", but", color: "#ef4444", pairs: [
+                { left: "We set up the tent perfectly", right: "we forgot to bring the sleeping bags." },
+                { left: "The campfire was warm", right: "the wind kept blowing smoke in our faces." },
+                { left: "I wanted to go hiking", right: "my boots were completely soaked." }
+            ]},
+
+            // O: , or (Options) - Color: Yellow (#eab308)
+            { purpose: "Options", topic: "Movie Theater", sticker: ", or", color: "#eab308", pairs: [
+                { left: "We can watch an action film", right: "we can choose a funny comedy." },
+                { left: "You can get buttery popcorn", right: "you can buy some chocolate candy." },
+                { left: "We should find our seats now", right: "we will miss the opening previews." }
+            ]},
+            { purpose: "Options", topic: "Vacation Planning", sticker: ", or", color: "#eab308", pairs: [
+                { left: "We might travel to the beach", right: "we might visit a snowy mountain." },
+                { left: "You need to pack your bags", right: "we will leave without you." },
+                { left: "We could take a fast airplane", right: "we could go on a long road trip." }
+            ]},
+            { purpose: "Options", topic: "Morning Routine", sticker: ", or", color: "#eab308", pairs: [
+                { left: "You can eat cereal for breakfast", right: "you can make a fresh smoothie." },
+                { left: "I need to set my alarm clock", right: "I will oversleep tomorrow." },
+                { left: "We must catch the early bus", right: "we will be late for school." }
+            ]},
+
+            // Y: , yet (Unexpected Contrast) - Color: Pink (#ec4899)
+            { purpose: "Unexpected Contrast", topic: "Superheroes", sticker: ", yet", color: "#ec4899", pairs: [
+                { left: "The hero was completely exhausted", right: "she managed to save the city." },
+                { left: "The villain's plan was clever", right: "it was defeated in the end." },
+                { left: "He doesn't have any superpowers", right: "he is the bravest on the team." }
+            ]},
+            { purpose: "Unexpected Contrast", topic: "Haunted House", sticker: ", yet", color: "#ec4899", pairs: [
+                { left: "The old mansion looked terrifying", right: "we decided to go inside anyway." },
+                { left: "I heard a loud crash upstairs", right: "I saw nothing out of the ordinary." },
+                { left: "The ghost stories are just myths", right: "I still feel a chill in the air." }
+            ]},
+            { purpose: "Unexpected Contrast", topic: "Magic Tricks", sticker: ", yet", color: "#ec4899", pairs: [
+                { left: "The magician showed his empty hands", right: "he pulled a rabbit out of thin air." },
+                { left: "I watched the trick very closely", right: "I couldn't figure out the secret." },
+                { left: "The illusion was simple", right: "it completely fooled the entire audience." }
+            ]},
+
+            // S: , so (Consequences) - Color: Blue (#3b82f6)
+            { purpose: "Consequences", topic: "Amusement Park", sticker: ", so", color: "#3b82f6", pairs: [
+                { left: "The rollercoaster looked thrilling", right: "we waited in line for an hour." },
+                { left: "I felt a little bit dizzy", right: "I sat on a bench to rest." },
+                { left: "We wanted to win a giant prize", right: "we played the ring toss game." }
+            ]},
+            { purpose: "Consequences", topic: "Extreme Sports", sticker: ", so", color: "#3b82f6", pairs: [
+                { left: "The skateboarder practiced daily", right: "he won the local competition." },
+                { left: "The ramp was very steep", right: "she wore her helmet and pads." },
+                { left: "He wanted to learn how to surf", right: "he moved to a town near the ocean." }
+            ]},
+            { purpose: "Consequences", topic: "Detective Mystery", sticker: ", so", color: "#3b82f6", pairs: [
+                { left: "The safe was left wide open", right: "the detective dusted for fingerprints." },
+                { left: "The suspect had a solid alibi", right: "the police had to keep searching." },
+                { left: "She found a hidden diary", right: "she read it to look for clues." }
+            ]},
+
+            // ; (Semicolon - Closely Related) - Color: Teal (#14b8a6)
+            { purpose: "Closely Related", topic: "Dinosaurs", sticker: ";", color: "#14b8a6", pairs: [
+                { left: "The T-Rex was a fierce predator", right: "it hunted for food in the jungle." },
+                { left: "Triceratops had three sharp horns", right: "they were used for defense." },
+                { left: "Many dinosaurs were massive", right: "some were the size of modern chickens." }
+            ]},
+            { purpose: "Closely Related", topic: "Coding & Computers", sticker: ";", color: "#14b8a6", pairs: [
+                { left: "The programmer found a bug", right: "she fixed the error in the code." },
+                { left: "The server crashed unexpectedly", right: "the website went offline for hours." },
+                { left: "He learned a new language", right: "Python is his favorite so far." }
+            ]},
+            { purpose: "Closely Related", topic: "Art & Painting", sticker: ";", color: "#14b8a6", pairs: [
+                { left: "She mixed blue and yellow", right: "the canvas was soon covered in green." },
+                { left: "The museum displayed classic art", right: "the modern pieces were in the back." },
+                { left: "He cleaned his paintbrushes", right: "the studio was finally tidy." }
+            ]}
+        ];
+
+        let currentLevelIndex = 0;
+        let selectedLeft = null;
+        let selectedRight = null;
+        let matchedPairs = 0;
+        const totalItemsPerLevel = 3;
+
+        // DOM Elements
+        const leftColumn = document.getElementById('left-column');
+        const rightColumn = document.getElementById('right-column');
+        const svgCanvas = document.getElementById('lines-canvas');
+        const levelTitle = document.getElementById('level-title');
+        const topicTitle = document.getElementById('topic-title');
+        const stickerText = document.getElementById('sticker-text');
+        const centerSticker = document.getElementById('center-sticker');
+        const currentLevelSpan = document.getElementById('current-level');
+        const totalLevelsSpan = document.getElementById('total-levels');
+        const levelCompleteOverlay = document.getElementById('level-complete');
+        const nextBtn = document.getElementById('next-btn');
+
+        totalLevelsSpan.textContent = levelsData.length;
+        
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function loadLevel(index) {
+            leftColumn.innerHTML = '';
+            rightColumn.innerHTML = '';
+            svgCanvas.innerHTML = '';
+            selectedLeft = null;
+            selectedRight = null;
+            matchedPairs = 0;
+            levelCompleteOverlay.classList.add('hidden');
+            
+            const level = levelsData[index];
+            currentLevelSpan.textContent = index + 1;
+            
+            // Update UI Titles and Colors
+            levelTitle.textContent = level.purpose;
+            levelTitle.style.backgroundColor = level.color;
+            topicTitle.textContent = `Topic: ${level.topic}`;
+            
+            // Update Sticker
+            stickerText.textContent = level.sticker;
+            centerSticker.style.backgroundColor = level.color;
+
+            // If the sticker is the yellow one, change text to dark gray for contrast
+            if(level.color === "#eab308") {
+                stickerText.classList.remove('text-white');
+                stickerText.classList.add('text-slate-800');
+            } else {
+                stickerText.classList.add('text-white');
+                stickerText.classList.remove('text-slate-800');
+            }
+
+            const leftItems = level.pairs.map((p, i) => ({ text: p.left, id: `pair-${i}` }));
+            const rightItems = shuffleArray(level.pairs.map((p, i) => ({ text: p.right, id: `pair-${i}` })));
+
+            // Build Left Cards (Sky Blue Theme)
+            leftItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'muffin-card card-left border-2 rounded-2xl p-4 md:p-5 text-lg font-bold shadow-sm relative text-center md:text-left';
+                card.dataset.id = item.id;
+                card.dataset.side = 'left';
+                card.innerHTML = `${item.text} <span class="node-point node-left hidden md:block"></span>`;
+                card.addEventListener('click', () => handleCardClick(card));
+                leftColumn.appendChild(card);
+            });
+
+            // Build Right Cards (Mint Green Theme)
+            rightItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'muffin-card card-right border-2 rounded-2xl p-4 md:p-5 text-lg font-bold shadow-sm relative text-center md:text-left';
+                card.dataset.id = item.id;
+                card.dataset.side = 'right';
+                card.innerHTML = `<span class="node-point node-right hidden md:block"></span> ${item.text}`;
+                card.addEventListener('click', () => handleCardClick(card));
+                rightColumn.appendChild(card);
+            });
+        }
+
+        function handleCardClick(card) {
+            if (card.classList.contains('matched')) return;
+
+            const side = card.dataset.side;
+
+            if (side === 'left') {
+                if (selectedLeft) selectedLeft.classList.remove('selected');
+                selectedLeft = card;
+                selectedLeft.classList.add('selected');
+            } else {
+                if (selectedRight) selectedRight.classList.remove('selected');
+                selectedRight = card;
+                selectedRight.classList.add('selected');
+            }
+
+            if (selectedLeft && selectedRight) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const isMatch = selectedLeft.dataset.id === selectedRight.dataset.id;
+
+            if (isMatch) {
+                const color = '#22c55e'; // Always use success green for correct matches
+                drawLine(selectedLeft, selectedRight, color);
+                
+                // Fun pulse effect on the center sticker!
+                const originalColor = levelsData[currentLevelIndex].color;
+                centerSticker.style.transform = 'scale(1.15) rotate(5deg)';
+                centerSticker.style.backgroundColor = color;
+                
+                setTimeout(() => {
+                    centerSticker.style.transform = 'rotate(-3deg)';
+                    centerSticker.style.backgroundColor = originalColor;
+                }, 400);
+
+                selectedLeft.classList.remove('selected');
+                selectedRight.classList.remove('selected');
+                selectedLeft.classList.add('matched');
+                selectedRight.classList.add('matched');
+
+                // Color the connection nodes
+                const leftNode = selectedLeft.querySelector('.node-point');
+                const rightNode = selectedRight.querySelector('.node-point');
+                if(leftNode) { leftNode.style.backgroundColor = color; leftNode.style.borderColor = color; }
+                if(rightNode) { rightNode.style.backgroundColor = color; rightNode.style.borderColor = color; }
+
+                selectedLeft = null;
+                selectedRight = null;
+                matchedPairs++;
+
+                if (matchedPairs === totalItemsPerLevel) {
+                    setTimeout(() => {
+                        if (currentLevelIndex === levelsData.length - 1) {
+                            nextBtn.textContent = "Play Again! 🔄";
+                        }
+                        levelCompleteOverlay.classList.remove('hidden');
+                    }, 800);
+                }
+            } else {
+                selectedLeft.classList.add('error');
+                selectedRight.classList.add('error');
+                
+                const leftCopy = selectedLeft;
+                const rightCopy = selectedRight;
+
+                setTimeout(() => {
+                    leftCopy.classList.remove('error', 'selected');
+                    rightCopy.classList.remove('error', 'selected');
+                }, 500);
+
+                selectedLeft = null;
+                selectedRight = null;
+            }
+        }
+
+        function drawLine(cardA, cardB, color) {
+            const svgRect = svgCanvas.getBoundingClientRect();
+            const stickerRect = centerSticker.getBoundingClientRect();
+
+            // Calculate exact center of the sticker
+            const cx = stickerRect.left + (stickerRect.width / 2) - svgRect.left;
+            const cy = stickerRect.top + (stickerRect.height / 2) - svgRect.top;
+
+            // Get card positions
+            const rectA = cardA.getBoundingClientRect();
+            const rectB = cardB.getBoundingClientRect();
+
+            // Start point (right edge of left card)
+            const x1 = rectA.right - svgRect.left;
+            const y1 = rectA.top + (rectA.height / 2) - svgRect.top;
+            
+            // End point (left edge of right card)
+            const x2 = rectB.left - svgRect.left;
+            const y2 = rectB.top + (rectB.height / 2) - svgRect.top;
+
+            // Create a gorgeous smooth S-curve that passes EXACTLY through the center sticker
+            const cpOffset1 = Math.abs(cx - x1) * 0.6;
+            const cpOffset2 = Math.abs(x2 - cx) * 0.6;
+            
+            // Path logic: Left -> Center -> Right
+            const pathData = `M ${x1} ${y1} C ${x1 + cpOffset1} ${y1}, ${cx - cpOffset1} ${cy}, ${cx} ${cy} C ${cx + cpOffset2} ${cy}, ${x2 - cpOffset2} ${y2}, ${x2} ${y2}`;
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.setAttribute('d', pathData);
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', '7');
+            line.setAttribute('fill', 'none');
+            line.setAttribute('stroke-linecap', 'round');
+            line.classList.add('line-path');
+            
+            // Save data for resizing
+            line.dataset.leftId = cardA.dataset.id;
+            line.dataset.rightId = cardB.dataset.id;
+            line.dataset.color = color;
+
+            svgCanvas.appendChild(line);
+        }
+
+        window.addEventListener('resize', () => {
+            const existingLines = Array.from(svgCanvas.querySelectorAll('path'));
+            svgCanvas.innerHTML = ''; 
+            
+            existingLines.forEach(oldLine => {
+                const leftCard = document.querySelector(`.muffin-card[data-side="left"][data-id="${oldLine.dataset.leftId}"]`);
+                const rightCard = document.querySelector(`.muffin-card[data-side="right"][data-id="${oldLine.dataset.rightId}"]`);
+                if (leftCard && rightCard) {
+                    drawLine(leftCard, rightCard, oldLine.dataset.color);
+                }
+            });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentLevelIndex++;
+            if (currentLevelIndex >= levelsData.length) {
+                currentLevelIndex = 0; 
+            }
+            loadLevel(currentLevelIndex);
+        });
+
+        // Initialize the game
+        loadLevel(0);
+    </script>
+</body>
+</html>
