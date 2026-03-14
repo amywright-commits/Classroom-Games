@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Unboxing Station</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Friendly Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #fdf4ff; /* Light fuchsia background */
+            background-image: radial-gradient(#fbcfe8 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        /* Hover effect for all clickable words */
+        .hover-word {
+            display: inline-block;
+            transition: all 0.2s;
+            border-radius: 0.375rem;
+            border: 2px solid transparent;
+        }
+        .hover-word:hover {
+            background-color: #fde68a; /* amber-200 */
+            color: #b45309; /* amber-900 */
+            border-color: #fcd34d;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        /* Cardboard Box Style */
+        .cardboard-box {
+            background-color: #dcb788;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23c19b6c' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+            border: 6px solid #b48550;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-error {
+            animation: shake 0.4s ease-in-out;
+            background-color: #fee2e2 !important; /* rose-100 */
+            color: #e11d48 !important; /* rose-600 */
+            border-color: #fda4af !important;
+        }
+
+        @keyframes ripOpen {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5) rotate(10deg); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .rip-animation {
+            animation: ripOpen 0.5s forwards ease-out;
+        }
+
+        @keyframes slideApartLeft {
+            from { transform: translateX(50%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideApartRight {
+            from { transform: translateX(-50%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideApartUp {
+            from { transform: translateY(50%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideApartDown {
+            from { transform: translateY(-50%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .muffin-left { animation: slideApartUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .muffin-right { animation: slideApartDown 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        @media (min-width: 768px) {
+            .muffin-left { animation: slideApartLeft 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+            .muffin-right { animation: slideApartRight 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        }
+
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col pb-10">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md rounded-b-3xl pt-6 pb-4 px-4 mb-6 text-center border-b-4 border-fuchsia-300 max-w-5xl mx-auto w-full">
+        <h1 class="text-4xl md:text-5xl font-bold text-fuchsia-600 mb-2 flex justify-center items-center gap-3">
+            <span class="text-4xl">✂️</span>
+            The Unboxing Station
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 font-medium max-w-2xl mx-auto">
+            Find the "sticker" (the comma+FANBOYS or semicolon) and click it to rip the box apart into two simple muffins! <br>
+            <span class="text-fuchsia-600 font-bold text-base md:text-lg mt-2 inline-block">Warning: The boxes get progressively trickier! Watch out for decoy commas and decoy uses of the glue words.</span>
+        </p>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-grow flex flex-col w-full max-w-5xl mx-auto px-4 gap-6">
+        
+        <!-- Progress Tracker -->
+        <div class="flex justify-between items-center bg-white px-6 py-3 rounded-3xl shadow-sm border-2 border-slate-200">
+            <span class="font-bold text-slate-500 text-lg">Box <span id="current-q" class="text-fuchsia-500">1</span> of <span id="total-q">30</span></span>
+            <div class="flex gap-1 flex-wrap justify-end" id="progress-dots"></div>
+        </div>
+
+        <!-- Notification Area (for hints) -->
+        <div id="notification-area" class="h-10 flex justify-center items-center">
+            <p id="hint-text" class="text-rose-500 font-bold text-lg bg-rose-50 px-4 py-1 rounded-full border border-rose-200 opacity-0 transition-opacity duration-300 shadow-sm">
+                Oops! That's just part of the muffin batter. Find the sticker!
+            </p>
+        </div>
+
+        <!-- The Interactive Area -->
+        <div class="w-full relative min-h-[300px] flex items-center justify-center mt-4">
+            
+            <!-- STATE 1: The Sealed Box -->
+            <div id="sealed-box" class="cardboard-box rounded-2xl p-8 md:p-12 w-full max-w-3xl text-center relative z-20 cursor-default transition-all duration-300">
+                <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-amber-800 text-white px-6 py-1 rounded text-sm font-bold uppercase tracking-widest shadow-md">
+                    Sealed Box
+                </div>
+                
+                <!-- Sentence container -->
+                <p id="sentence-container" class="text-2xl md:text-4xl font-medium text-amber-950 leading-loose flex flex-wrap justify-center gap-y-2">
+                    <!-- Words injected here -->
+                </p>
+            </div>
+
+            <!-- STATE 2: The Split Muffins (Hidden initially) -->
+            <div id="split-muffins" class="hidden flex-col md:flex-row w-full gap-6 absolute inset-0 items-center justify-center z-10">
+                
+                <!-- Muffin 1 -->
+                <div class="muffin-left flex-1 bg-amber-50 p-6 md:p-10 rounded-3xl border-4 border-amber-300 text-center w-full max-w-md shadow-xl relative mt-8 md:mt-0">
+                    <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-2 shadow-md border-2 border-amber-200 flex items-center justify-center">
+                        <svg class="w-12 h-12" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 36L24 60H40L46 36H18Z" fill="#FDE68A" stroke="#D97706" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M24 36L27 60M32 36V60M40 36L37 60" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M10 36C10 12 54 12 54 36C56 36 56 40 52 42C40 44 24 44 12 42C8 40 8 36 10 36Z" fill="#B45309"/>
+                            <circle cx="26" cy="22" r="2.5" fill="#451A03"/>
+                            <circle cx="38" cy="18" r="2" fill="#451A03"/>
+                            <circle cx="46" cy="28" r="2.5" fill="#451A03"/>
+                            <circle cx="18" cy="28" r="2" fill="#451A03"/>
+                            <circle cx="32" cy="30" r="3" fill="#451A03"/>
+                            <circle cx="28" cy="14" r="2" fill="#451A03"/>
+                        </svg>
+                    </div>
+                    <p id="muffin-1-text" class="text-xl md:text-3xl font-medium text-amber-900 mt-4"></p>
+                    <div class="mt-4 inline-block bg-emerald-100 text-emerald-700 text-sm font-bold px-3 py-1 rounded-full border border-emerald-300">
+                        Complete Thought 1
+                    </div>
+                </div>
+
+                <!-- Muffin 2 -->
+                <div class="muffin-right flex-1 bg-amber-50 p-6 md:p-10 rounded-3xl border-4 border-amber-300 text-center w-full max-w-md shadow-xl relative mt-8 md:mt-0">
+                    <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-2 shadow-md border-2 border-amber-200 flex items-center justify-center">
+                        <svg class="w-12 h-12" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 36L24 60H40L46 36H18Z" fill="#FDE68A" stroke="#D97706" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M24 36L27 60M32 36V60M40 36L37 60" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M10 36C10 12 54 12 54 36C56 36 56 40 52 42C40 44 24 44 12 42C8 40 8 36 10 36Z" fill="#B45309"/>
+                            <circle cx="26" cy="22" r="2.5" fill="#451A03"/>
+                            <circle cx="38" cy="18" r="2" fill="#451A03"/>
+                            <circle cx="46" cy="28" r="2.5" fill="#451A03"/>
+                            <circle cx="18" cy="28" r="2" fill="#451A03"/>
+                            <circle cx="32" cy="30" r="3" fill="#451A03"/>
+                            <circle cx="28" cy="14" r="2" fill="#451A03"/>
+                        </svg>
+                    </div>
+                    <p id="muffin-2-text" class="text-xl md:text-3xl font-medium text-amber-900 mt-4"></p>
+                    <div class="mt-4 inline-block bg-emerald-100 text-emerald-700 text-sm font-bold px-3 py-1 rounded-full border border-emerald-300">
+                        Complete Thought 2
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Next Button Area (Hidden initially) -->
+        <div id="next-container" class="hidden flex justify-center mt-4 h-16">
+            <button onclick="nextQuestion()" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-bold py-3 px-12 rounded-full shadow-lg transition-transform active:scale-95 text-xl animate-bounce">
+                Next Box 📦
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center border-4 border-fuchsia-400">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-3xl font-bold mb-2 text-fuchsia-600">Master Unboxer!</h2>
+            <p class="text-lg text-slate-600 mb-6">You successfully ripped open all the boxes and proved that compound sentences are just two complete thoughts!</p>
+            <button onclick="location.reload()" class="bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform active:scale-95 text-xl w-full">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        // 30 Challenges carefully split into Part 1, the Sticker, and Part 2.
+        const allChallenges = [
+            // LEVEL 1: Easy (Super simple compound sentences. No decoys at all for the first 8!)
+            { part1: "I love to read", sticker: ", but", part2: "my brother prefers video games." },
+            { part1: "The sun was shining bright", sticker: ", so", part2: "we went to the beach." },
+            { part1: "We can bake chocolate cookies", sticker: ", or", part2: "we can make a cake." },
+            { part1: "The dog barked loudly", sticker: ";", part2: "the cat hid under the couch." },
+            { part1: "She studied hard for days", sticker: ", and", part2: "she passed the spelling test." },
+            { part1: "Mom cooked a huge dinner", sticker: ", and", part2: "Dad washed all the dishes." },
+            { part1: "I drank two bottles of water", sticker: ", for", part2: "I was very thirsty." },
+            { part1: "The pizza was too hot", sticker: ", so", part2: "we let it cool down." },
+            // Introducing the first minor decoys (Dates and Locations)
+            { part1: "On Friday, July 14, we went to the zoo", sticker: ", and", part2: "we saw the sleeping lions." },
+            { part1: "I live in Paris, Texas", sticker: ", but", part2: "I have never been to France." },
+
+            // LEVEL 2: Medium (Adding Direct Address, Appositives, Interjections, and Intro Phrases)
+            { part1: "Mom, can we go to the park", sticker: ", or", part2: "do we have to stay home?" },
+            { part1: "By the way, the pizza is finally here", sticker: ", and", part2: "it looks absolutely delicious." },
+            { part1: "Before the bell rings, I need a pencil", sticker: ", or", part2: "I will not be able to take the test." },
+            { part1: "Mr. Smith, my favorite teacher, is moving away", sticker: ", so", part2: "we are throwing him a goodbye party." },
+            { part1: "Max, the golden retriever, loves to fetch", sticker: ", but", part2: "he completely hates the water." },
+            { part1: "After the long movie, we got ice cream", sticker: ", and", part2: "I chose the chocolate flavor." },
+            { part1: "My best friend, Sarah, loves to draw", sticker: ", yet", part2: "she never shows anyone her art." },
+            { part1: "In the middle of the night, a noise woke me", sticker: ", so", part2: "I checked the dark hallway." },
+            { part1: "Wow, that was an awesome magic trick", sticker: ", but", part2: "you should be more careful next time." },
+            { part1: "We moved to Denver, Colorado", sticker: ", so", part2: "I had to make a bunch of new friends." },
+
+            // LEVEL 3: Hard (Adding Lists, Multiple Decoys per sentence, and Decoy FANBOYS)
+            { part1: "My mom, dad, and I went shopping for clothes", sticker: ", but", part2: "we totally forgot to buy milk." },
+            { part1: "We can eat burgers, fries, and hot dogs", sticker: ", or", part2: "we can just order a large cheese pizza." },
+            { part1: "She looked under the bed, in the closet, and on the shelf", sticker: ", yet", part2: "she found nothing at all." },
+            { part1: "He bought apples, oranges, and bananas at the store", sticker: ", but", part2: "he didn't eat a single one of them." },
+            { part1: "The cookies, cakes, and brownies look amazing", sticker: ", so", part2: "I want to eat every single one." },
+            { part1: "Running fast, she played hard for the whole game", sticker: ", yet", part2: "she was not tired, sleepy, or bored." },
+            { part1: "The red, blue, and green teams fought hard for the trophy", sticker: ", but", part2: "only one team could actually win." },
+            { part1: "Carefully, the chef mixed salt, pepper, and garlic for the soup", sticker: ", and", part2: "he added fresh herbs to the pot." },
+            { part1: "I wanted a dog, a cat, or a bird for my birthday", sticker: ", yet", part2: "I got a tiny goldfish, sadly." },
+            { part1: "For a snack, you can have water, juice, or milk", sticker: ", and", part2: "you can have a green apple, too." }
+        ];
+
+        let challenges = [];
+        let currentIndex = 0;
+        let isAnimating = false;
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle data in tiers to keep progressive difficulty!
+            const tier1 = allChallenges.slice(0, 10).sort(() => Math.random() - 0.5);
+            const tier2 = allChallenges.slice(10, 20).sort(() => Math.random() - 0.5);
+            const tier3 = allChallenges.slice(20, 30).sort(() => Math.random() - 0.5);
+            challenges = [...tier1, ...tier2, ...tier3];
+            
+            document.getElementById('total-q').textContent = challenges.length;
+            renderProgressDots();
+            loadChallenge();
+        }
+
+        function renderProgressDots() {
+            const container = document.getElementById('progress-dots');
+            container.innerHTML = '';
+            for (let i = 0; i < challenges.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-3 h-3 rounded-full ${i === 0 ? 'bg-fuchsia-500' : 'bg-slate-300'}`;
+                dot.id = `dot-${i}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('current-q').textContent = currentIndex + 1;
+            for (let i = 0; i < challenges.length; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < currentIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-green-400';
+                } else if (i === currentIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-fuchsia-500';
+                } else {
+                    dot.className = 'w-3 h-3 rounded-full bg-slate-300';
+                }
+            }
+        }
+
+        function loadChallenge() {
+            isAnimating = false;
+            const data = challenges[currentIndex];
+            
+            // Reset UI
+            document.getElementById('sealed-box').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('split-muffins').classList.add('hidden');
+            document.getElementById('next-container').classList.add('hidden');
+            document.getElementById('hint-text').classList.remove('opacity-100');
+            document.getElementById('hint-text').classList.add('opacity-0');
+
+            // Render Sentence
+            const container = document.getElementById('sentence-container');
+            container.innerHTML = '';
+
+            // Render Part 1
+            const words1 = data.part1.split(' ');
+            words1.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.className = "hover-word px-1 cursor-pointer";
+                span.onclick = () => handleWrongClick(span);
+                container.appendChild(span);
+                
+                // Add space (except for the last word, so it connects directly to the comma/semicolon)
+                if (index < words1.length - 1) {
+                    container.appendChild(document.createTextNode(' '));
+                }
+            });
+
+            // Render Sticker (The correct target - styling changed to look like normal text)
+            const stickerSpan = document.createElement('span');
+            stickerSpan.textContent = data.sticker;
+            stickerSpan.className = "hover-word px-1 cursor-pointer"; 
+            stickerSpan.onclick = () => handleCorrectClick(stickerSpan, data);
+            container.appendChild(stickerSpan);
+
+            // Space after sticker
+            container.appendChild(document.createTextNode(' '));
+
+            // Render Part 2
+            const words2 = data.part2.split(' ');
+            words2.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.className = "hover-word px-1 cursor-pointer";
+                span.onclick = () => handleWrongClick(span);
+                container.appendChild(span);
+                
+                if (index < words2.length - 1) {
+                    container.appendChild(document.createTextNode(' '));
+                }
+            });
+
+            updateProgress();
+        }
+
+        // --- INTERACTION LOGIC ---
+        function handleWrongClick(element) {
+            if (isAnimating) return;
+            
+            // Show hint
+            const hint = document.getElementById('hint-text');
+            hint.textContent = `Oops! "${element.textContent}" is just part of the muffin. Find the sticker!`;
+            hint.classList.remove('opacity-0');
+            hint.classList.add('opacity-100');
+
+            // Shake element
+            element.classList.add('shake-error');
+            setTimeout(() => {
+                element.classList.remove('shake-error');
+            }, 400);
+        }
+
+        function handleCorrectClick(element, data) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            // Hide hint if it's showing
+            document.getElementById('hint-text').classList.remove('opacity-100');
+            document.getElementById('hint-text').classList.add('opacity-0');
+
+            // 1. Animate the sticker getting ripped off
+            element.classList.add('rip-animation', 'text-rose-500', 'bg-white');
+
+            // 2. Wait a split second, then split the box
+            setTimeout(() => {
+                // Hide Sealed Box
+                document.getElementById('sealed-box').classList.add('opacity-0', 'pointer-events-none');
+                
+                // Set text for muffins (capitalize the second part since it's now its own sentence)
+                document.getElementById('muffin-1-text').textContent = data.part1 + ".";
+                
+                let p2 = data.part2;
+                p2 = p2.charAt(0).toUpperCase() + p2.slice(1);
+                document.getElementById('muffin-2-text').textContent = p2;
+
+                // Show Muffins
+                const muffinsContainer = document.getElementById('split-muffins');
+                muffinsContainer.classList.remove('hidden');
+                
+                // Show Next Button
+                document.getElementById('next-container').classList.remove('hidden');
+
+            }, 500);
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex >= challenges.length) {
+                document.getElementById('victory-modal').classList.remove('hidden');
+            } else {
+                loadChallenge();
+            }
+        }
+
+        // Start game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
