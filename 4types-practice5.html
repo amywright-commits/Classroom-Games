@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Transformer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Nunito:wght@400;700;800;900&display=swap');
+
+        :root {
+            --bg-color: #0f172a;
+            --machine-bg: #1e293b;
+            --machine-border: #475569;
+            --neon-blue: #38bdf8;
+            --neon-purple: #c084fc;
+            --neon-green: #34d399;
+            --neon-red: #fb7185;
+            --text-light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-image: 
+                linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+                repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(56, 189, 248, 0.1) 40px, rgba(56, 189, 248, 0.1) 41px),
+                repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(56, 189, 248, 0.1) 40px, rgba(56, 189, 248, 0.1) 41px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(30, 41, 59, 0.9);
+            padding: 15px 40px;
+            border-radius: 16px;
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--neon-blue);
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* --- Transformer Machine --- */
+        .machine-container {
+            background-color: var(--machine-bg);
+            border: 4px solid var(--machine-border);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Displays */
+        .display-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .screen {
+            background-color: #020617;
+            border: 4px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        }
+
+        .screen::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 2px, transparent 2px, transparent 4px);
+            pointer-events: none;
+        }
+
+        .label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .label-original { color: var(--neon-blue); }
+        .label-target { color: var(--neon-purple); }
+
+        .content-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1.4;
+            position: relative;
+            z-index: 2;
+        }
+
+        .text-original { color: #f8fafc; }
+        .text-target { color: var(--neon-purple); font-size: 1.8rem; text-shadow: 0 0 8px rgba(192, 132, 252, 0.4); }
+        
+        .original-type-badge {
+            display: inline-block;
+            background: #334155;
+            color: var(--neon-blue);
+            font-size: 0.9rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-left: 10px;
+            vertical-align: middle;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .target-hint {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 600;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* Input Area */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 110px;
+            background-color: #f1f5f9;
+            border: 4px solid var(--machine-border);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-family: 'Nunito', sans-serif;
+            color: #0f172a;
+            resize: none;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
+            background-color: #ffffff;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.1s;
+            font-family: 'Share Tech Mono', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-submit {
+            background-color: var(--neon-purple);
+            color: #ffffff;
+            box-shadow: 0 6px 0 #9333ea;
+        }
+        .btn-submit:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+        
+        .btn-skip {
+            background-color: #475569;
+            color: #f8fafc;
+            box-shadow: 0 6px 0 #334155;
+            flex: 0.4;
+        }
+        .btn-skip:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+
+        /* Energy Beam Animation for successful transform */
+        .energy-beam {
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 100px;
+            background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.8), transparent);
+            transform: translateY(-50%) scaleY(0);
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .beam-active {
+            animation: fireBeam 0.8s ease-out forwards;
+        }
+
+        @keyframes fireBeam {
+            0% { transform: translateY(-50%) scaleY(0); opacity: 0; }
+            50% { transform: translateY(-50%) scaleY(1); opacity: 1; }
+            100% { transform: translateY(-50%) scaleY(0); opacity: 0; }
+        }
+
+        /* Feedback */
+        .feedback {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-top: 5px;
+            min-height: 24px;
+            text-align: center;
+        }
+
+        /* --- Logs & Printing --- */
+        .log-container {
+            margin-top: 30px;
+            background: white;
+            color: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            display: none; 
+        }
+
+        .log-container.show { display: block; }
+        
+        .log-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .log-title h2 { font-size: 1.5rem; color: #334155; }
+
+        .print-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2563eb;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.1rem;
+        }
+        .print-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .log-list { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+        .log-item {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .log-row { display: flex; flex-direction: column; gap: 5px; }
+        .log-original { color: #64748b; font-size: 0.95rem; font-style: italic; }
+        .log-transformed { color: #0f172a; font-size: 1.2rem; font-weight: bold; }
+        .log-badge { 
+            display: inline-block; 
+            background: #e2e8f0; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            header, .machine-container { display: none !important; }
+            .log-container { display: block; max-width: 100%; border: none; box-shadow: none; margin: 0; padding: 0;}
+            .print-btn { display: none; }
+            .log-item { break-inside: avoid; }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .content-text { font-size: 1.2rem; }
+            .text-target { font-size: 1.4rem; }
+            .button-row { flex-direction: column; }
+            .btn-skip { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Transformer ⚡</h1>
+        <div class="score-display">Sentences Transformed: <span id="score-val">0</span> / 20</div>
+    </header>
+
+    <div class="machine-container" id="machine">
+        <div class="energy-beam" id="energy-beam"></div>
+
+        <div class="display-panel">
+            <!-- Original Input Screen -->
+            <div class="screen">
+                <div class="label label-original">Original Material:</div>
+                <div class="content-text text-original" id="original-display">
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Target Output Screen -->
+            <div class="screen">
+                <div class="label label-target">Target Transformation Blueprint:</div>
+                <div class="content-text text-target" id="target-display">
+                    Calculating...
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <textarea id="user-input" placeholder="Type your transformed sentence here..." spellcheck="true"></textarea>
+            <div class="button-row">
+                <button class="btn btn-submit" id="submit-btn" onclick="submitSentence()">Transform!</button>
+                <button class="btn btn-skip" id="skip-btn" onclick="generatePrompt()">Skip</button>
+            </div>
+            <div class="feedback" id="feedback-msg"></div>
+        </div>
+    </div>
+
+    <!-- Student Log (For Printing) -->
+    <div class="log-container" id="log-container">
+        <div class="log-title">
+            <h2>Transformation Log</h2>
+            <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        </div>
+        <ul class="log-list" id="log-list">
+            <!-- Approved sentences go here -->
+        </ul>
+    </div>
+
+    <script>
+        // --- Data Bank ---
+        const sentenceBank = [
+            { text: "The dog runs fast.", type: "Declarative" },
+            { text: "Are we eating pizza for dinner?", type: "Interrogative" },
+            { text: "Clean your room right now.", type: "Imperative" },
+            { text: "That was the scariest movie ever!", type: "Exclamatory" },
+            { text: "The sky is very blue today.", type: "Declarative" },
+            { text: "Can you help me with this math problem?", type: "Interrogative" },
+            { text: "Please pass the salt.", type: "Imperative" },
+            { text: "I can't believe we won the championship!", type: "Exclamatory" },
+            { text: "My favorite color is green.", type: "Declarative" },
+            { text: "Where did you hide the treasure?", type: "Interrogative" },
+            { text: "Look both ways before crossing the street.", type: "Imperative" },
+            { text: "This birthday party is amazing!", type: "Exclamatory" },
+            { text: "The cat is sleeping on the couch.", type: "Declarative" },
+            { text: "Why are the clouds turning dark?", type: "Interrogative" },
+            { text: "Don't forget to brush your teeth.", type: "Imperative" },
+            { text: "I am so excited for the field trip!", type: "Exclamatory" }
+        ];
+
+        const types = [
+            { name: "Declarative", hint: "(Make it a statement that ends with a period)", punct: ["."] },
+            { name: "Exclamatory", hint: "(Make it show strong emotion and end with an exclamation mark)", punct: ["!"] },
+            { name: "Interrogative", hint: "(Make it ask a question and end with a question mark)", punct: ["?"] },
+            { name: "Imperative", hint: "(Make it a command starting with a verb, ending with . or !)", punct: [".", "!"] }
+        ];
+
+        // --- State ---
+        let currentBase = null;
+        let targetType = null;
+        let score = 0;
+        const targetScore = 20;
+
+        // --- DOM Elements ---
+        const originalDisplay = document.getElementById('original-display');
+        const targetDisplay = document.getElementById('target-display');
+        const userInput = document.getElementById('user-input');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const scoreVal = document.getElementById('score-val');
+        const logContainer = document.getElementById('log-container');
+        const logList = document.getElementById('log-list');
+        const energyBeam = document.getElementById('energy-beam');
+        const submitBtn = document.getElementById('submit-btn');
+        const skipBtn = document.getElementById('skip-btn');
+
+        // --- Game Logic ---
+        function generatePrompt() {
+            userInput.value = "";
+            feedbackMsg.textContent = "";
+
+            // Pick a random base sentence
+            currentBase = sentenceBank[Math.floor(Math.random() * sentenceBank.length)];
+            
+            // Pick a target type that is DIFFERENT from the base type
+            let availableTypes = types.filter(t => t.name !== currentBase.type);
+            targetType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+            // Update UI
+            originalDisplay.innerHTML = `${currentBase.text} <span class="original-type-badge">${currentBase.type}</span>`;
+            targetDisplay.innerHTML = `${targetType.name} <span class="target-hint">${targetType.hint}</span>`;
+            
+            userInput.focus();
+        }
+
+        function submitSentence() {
+            let text = userInput.value.trim();
+
+            // 1. Check if empty or too short
+            if (text.length < 5) {
+                showError("Error: Sentence is too short to be processed.");
+                return;
+            }
+
+            // 2. Check ending punctuation
+            let lastChar = text.charAt(text.length - 1);
+            let hasCorrectPunctuation = targetType.punct.includes(lastChar);
+
+            if (!hasCorrectPunctuation) {
+                let requiredMarks = targetType.punct.join(" or ");
+                showError(`System Error! A ${targetType.name} sentence must end with: ${requiredMarks}`);
+                return;
+            }
+
+            // 3. Make sure they didn't just type the exact original sentence with new punctuation
+            // Strip punctuation from both to compare core words
+            let cleanOriginal = currentBase.text.replace(/[.!?]/g, '').toLowerCase().trim();
+            let cleanInput = text.replace(/[.!?]/g, '').toLowerCase().trim();
+
+            if (cleanOriginal === cleanInput) {
+                showError("Error: You must change the structure of the words, not just the punctuation!");
+                return;
+            }
+            
+            // If all checks pass:
+            handleSuccess(text);
+        }
+
+        function handleSuccess(text) {
+            feedbackMsg.style.color = "var(--neon-green)";
+            feedbackMsg.textContent = "Transformation Successful!";
+            
+            // Trigger visual effect
+            energyBeam.classList.remove('beam-active');
+            void energyBeam.offsetWidth; // trigger reflow
+            energyBeam.classList.add('beam-active');
+
+            // Add to print log
+            addToLog(text);
+
+            // Update score
+            score++;
+            scoreVal.textContent = score;
+
+            if(score >= targetScore) {
+                setTimeout(() => {
+                    targetDisplay.innerHTML = `<span style="color: var(--neon-green)">All transformations complete!</span>`;
+                    originalDisplay.innerHTML = "System standing by.";
+                    feedbackMsg.textContent = "Scroll down to print your log.";
+                    userInput.disabled = true;
+                    submitBtn.disabled = true;
+                    skipBtn.style.display = 'none';
+                }, 1000);
+            } else {
+                setTimeout(generatePrompt, 1500);
+            }
+        }
+
+        function showError(msg) {
+            feedbackMsg.style.color = "var(--neon-red)";
+            feedbackMsg.textContent = msg;
+            
+            // Shake input box
+            userInput.style.transform = "translateX(-10px)";
+            setTimeout(() => userInput.style.transform = "translateX(10px)", 100);
+            setTimeout(() => userInput.style.transform = "translateX(-10px)", 200);
+            setTimeout(() => userInput.style.transform = "translateX(0)", 300);
+        }
+
+        function addToLog(transformedText) {
+            logContainer.classList.add('show');
+            
+            const li = document.createElement('li');
+            li.className = 'log-item';
+            
+            li.innerHTML = `
+                <div class="log-row">
+                    <div class="log-original">Original <span class="log-badge">${currentBase.type}</span>: ${currentBase.text}</div>
+                    <div class="log-transformed">Transformed to <span class="log-badge" style="background: #c084fc; color: white;">${targetType.name}</span>: ${transformedText}</div>
+                </div>
+            `;
+            
+            logList.appendChild(li);
+        }
+
+        // Run on load
+        window.onload = generatePrompt;
+
+    </script>
+</body>
+</html>
