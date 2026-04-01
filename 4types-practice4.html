@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Factory: Writing Challenge</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Nunito:wght@400;700;800;900&display=swap');
+
+        :root {
+            --bg-color: #1e293b;
+            --machine-bg: #475569;
+            --machine-border: #94a3b8;
+            --screen-bg: #022c22;
+            --screen-text: #34d399;
+            --belt-color: #334155;
+            --box-color: #cd853f;
+            --btn-color: #f59e0b;
+            --btn-hover: #d97706;
+            --text-light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-image: repeating-linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 75%, #1e293b 75%, #1e293b), repeating-linear-gradient(45deg, #1e293b 25%, #0f172a 25%, #0f172a 75%, #1e293b 75%, #1e293b);
+            background-position: 0 0, 20px 20px;
+            background-size: 40px 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 15px 40px;
+            border-radius: 16px;
+            border: 2px solid #334155;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--btn-color);
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* --- Machine Area --- */
+        .machine-container {
+            background-color: var(--machine-bg);
+            border: 8px solid var(--machine-border);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 20px 25px -5px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* Rivets */
+        .machine-container::before, .machine-container::after {
+            content: '●'; position: absolute; color: #1e293b; font-size: 1.5rem;
+        }
+        .machine-container::before { top: 10px; left: 15px; text-shadow: 730px 0 #1e293b, 0 320px #1e293b, 730px 320px #1e293b; }
+
+        /* The Screen */
+        .screen {
+            background-color: var(--screen-bg);
+            border: 6px solid #111827;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .prompt-label {
+            font-family: 'Share Tech Mono', monospace;
+            color: #10b981;
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .prompt-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--screen-text);
+            line-height: 1.4;
+        }
+
+        .highlight-type { color: #fbbf24; text-decoration: underline; }
+        .highlight-topic { color: #38bdf8; font-style: italic; }
+
+        /* Input Area */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background-color: #f8fafc;
+            border: 4px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-family: 'Nunito', sans-serif;
+            color: #1e293b;
+            resize: none;
+            transition: all 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--btn-color);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.1s;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .btn-submit {
+            background-color: var(--btn-color);
+            color: #78350f;
+            box-shadow: 0 6px 0 var(--btn-hover);
+        }
+
+        .btn-submit:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+        
+        .btn-skip {
+            background-color: #94a3b8;
+            color: #1e293b;
+            box-shadow: 0 6px 0 #64748b;
+            flex: 0.5;
+        }
+        .btn-skip:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+
+        /* --- Conveyor Belt Area --- */
+        .factory-floor {
+            max-width: 900px;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        .belt-container {
+            width: 100%;
+            height: 80px;
+            background-color: var(--belt-color);
+            border-top: 5px solid #1e293b;
+            border-bottom: 10px solid #1e293b;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding-bottom: 5px;
+        }
+
+        /* Animated Belt Texture */
+        .belt-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 200%; height: 100%;
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 40px, #1e293b 40px, #1e293b 45px);
+            animation: moveBelt 2s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes moveBelt {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-45px); }
+        }
+
+        .shipping-box {
+            background-color: var(--box-color);
+            border: 3px solid #8b5a2b;
+            width: 70px;
+            height: 60px;
+            position: absolute;
+            left: -80px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fffbeb;
+            font-weight: 900;
+            font-size: 1.5rem;
+            animation: slideBox 5s linear forwards;
+        }
+
+        .shipping-box::after {
+            content: '📦';
+            font-size: 2rem;
+        }
+
+        @keyframes slideBox {
+            0% { left: -80px; }
+            100% { left: 100%; }
+        }
+
+        /* --- Logs & Printing --- */
+        .log-container {
+            margin-top: 30px;
+            background: white;
+            color: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            display: none; /* Hidden until they start writing */
+        }
+
+        .log-container.show { display: block; }
+        
+        .log-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .log-title h2 { font-size: 1.5rem; color: #334155; }
+
+        .print-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2563eb;
+        }
+        .print-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .log-list { list-style: none; }
+        .log-item {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        .log-meta { font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+
+        /* Error Feedback */
+        .feedback {
+            color: #ef4444;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            min-height: 24px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            header, .machine-container, .factory-floor { display: none !important; }
+            .log-container { display: block; max-width: 100%; border: none; box-shadow: none; }
+            .print-btn { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .prompt-text { font-size: 1.3rem; }
+            .button-row { flex-direction: column; }
+            .btn-skip { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sentence Factory ⚙️</h1>
+        <div class="score-display">Sentences Boxed: <span id="score-val">0</span> / 20</div>
+    </header>
+
+    <div class="machine-container">
+        <div class="screen">
+            <div class="prompt-label">System Prompt:</div>
+            <div class="prompt-text" id="prompt-display">
+                Loading production request...
+            </div>
+        </div>
+
+        <div class="input-group">
+            <textarea id="user-input" placeholder="Type your sentence here..." spellcheck="true"></textarea>
+            <div class="button-row">
+                <button class="btn btn-submit" onclick="submitSentence()">Box It Up!</button>
+                <button class="btn btn-skip" onclick="generatePrompt()">New Topic</button>
+            </div>
+            <div class="feedback" id="feedback-msg"></div>
+        </div>
+    </div>
+
+    <div class="factory-floor">
+        <div class="belt-container" id="conveyor-belt">
+            <!-- Boxes will animate here -->
+        </div>
+    </div>
+
+    <!-- Student Log (For Printing) -->
+    <div class="log-container" id="log-container">
+        <div class="log-title">
+            <h2>My Manufactured Sentences</h2>
+            <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        </div>
+        <ul class="log-list" id="log-list">
+            <!-- Approved sentences go here -->
+        </ul>
+    </div>
+
+    <script>
+        // --- Data Bank ---
+        const topics = [
+            "a giant pizza", "a flying dog", "your favorite video game", "a haunted house",
+            "a friendly alien", "the deepest ocean", "a magic wand", "a robot teacher",
+            "your best friend", "a talking monkey", "a secret treasure", "a trip to Mars",
+            "a superhero with a weird power", "a dinosaur in the city", "the best dessert ever",
+            "a time machine", "a magical forest", "your favorite sport", "a crazy roller coaster",
+            "a talking car", "a pet dragon", "an invisible cloak", "the tallest tree"
+        ];
+
+        const types = [
+            { name: "Declarative", hint: "(Statement)", punct: ["."] },
+            { name: "Exclamatory", hint: "(Emotion)", punct: ["!"] },
+            { name: "Interrogative", hint: "(Question)", punct: ["?"] },
+            { name: "Imperative", hint: "(Command/Demand)", punct: [".", "!"] }
+        ];
+
+        // --- State ---
+        let currentTopic = "";
+        let currentType = null;
+        let score = 0;
+        const targetScore = 20;
+
+        // --- DOM Elements ---
+        const promptDisplay = document.getElementById('prompt-display');
+        const userInput = document.getElementById('user-input');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const scoreVal = document.getElementById('score-val');
+        const conveyorBelt = document.getElementById('conveyor-belt');
+        const logContainer = document.getElementById('log-container');
+        const logList = document.getElementById('log-list');
+
+        // --- Game Logic ---
+        function generatePrompt() {
+            // Clear inputs and feedback
+            userInput.value = "";
+            feedbackMsg.textContent = "";
+
+            // Pick randoms
+            currentTopic = topics[Math.floor(Math.random() * topics.length)];
+            currentType = types[Math.floor(Math.random() * types.length)];
+
+            // Display
+            promptDisplay.innerHTML = `Write an <span class="highlight-type">${currentType.name}</span> sentence ${currentType.hint} about <span class="highlight-topic">${currentTopic}</span>.`;
+            
+            userInput.focus();
+        }
+
+        function submitSentence() {
+            let text = userInput.value.trim();
+
+            // 1. Check if empty or too short
+            if (text.length < 5 || text.split(" ").length < 3) {
+                showError("Sentence rejected! You need to write at least 3 words.");
+                return;
+            }
+
+            // 2. Check ending punctuation
+            let lastChar = text.charAt(text.length - 1);
+            let hasCorrectPunctuation = currentType.punct.includes(lastChar);
+
+            if (!hasCorrectPunctuation) {
+                let requiredMarks = currentType.punct.join(" or ");
+                showError(`System Error! An ${currentType.name} sentence must end with: ${requiredMarks}`);
+                return;
+            }
+
+            // 3. Extra manual check note for Imperative
+            // Since we can't easily auto-check if they used a bossy verb, we rely on the teacher reviewing the printed log.
+            
+            // If passed:
+            handleSuccess(text);
+        }
+
+        function handleSuccess(text) {
+            feedbackMsg.style.color = "#34d399";
+            feedbackMsg.textContent = "Sentence Accepted! Boxing it up...";
+            
+            // Send box down the belt
+            createBox();
+
+            // Add to log
+            addToLog(text);
+
+            // Update score
+            score++;
+            scoreVal.textContent = score;
+
+            // Check if done
+            if(score === targetScore) {
+                setTimeout(() => {
+                    promptDisplay.innerHTML = `<span style="color: #fbbf24">Production Complete!</span> You boxed 20 sentences. Scroll down to print your work!`;
+                    userInput.disabled = true;
+                    document.querySelector('.btn-submit').disabled = true;
+                    document.querySelector('.btn-skip').style.display = 'none';
+                }, 1000);
+            } else {
+                // Generate next after short delay
+                setTimeout(generatePrompt, 1500);
+            }
+        }
+
+        function showError(msg) {
+            feedbackMsg.style.color = "#ef4444";
+            feedbackMsg.textContent = msg;
+            
+            // Shake input box
+            userInput.style.transform = "translateX(-10px)";
+            setTimeout(() => userInput.style.transform = "translateX(10px)", 100);
+            setTimeout(() => userInput.style.transform = "translateX(-10px)", 200);
+            setTimeout(() => userInput.style.transform = "translateX(0)", 300);
+        }
+
+        function createBox() {
+            const box = document.createElement('div');
+            box.className = 'shipping-box';
+            conveyorBelt.appendChild(box);
+
+            // Remove box after animation completes (5 seconds)
+            setTimeout(() => {
+                if(box.parentNode) {
+                    box.parentNode.removeChild(box);
+                }
+            }, 5000);
+        }
+
+        function addToLog(text) {
+            logContainer.classList.add('show');
+            
+            const li = document.createElement('li');
+            li.className = 'log-item';
+            
+            const meta = document.createElement('div');
+            meta.className = 'log-meta';
+            meta.textContent = `Type: ${currentType.name} | Topic: ${currentTopic}`;
+            
+            const content = document.createElement('div');
+            content.textContent = text;
+
+            li.appendChild(meta);
+            li.appendChild(content);
+            logList.appendChild(li);
+        }
+
+        // Initialize first prompt
+        window.onload = generatePrompt;
+
+    </script>
+</body>
+</html>
