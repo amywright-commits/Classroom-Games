@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Builder: Skyscraper Challenge</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Nunito:wght@400;700;800&display=swap');
+
+        :root {
+            --sky: #38bdf8;
+            --sky-light: #e0f2fe;
+            --steel: #64748b;
+            --steel-dark: #334155;
+            --beam: #fb923c;
+            --beam-dark: #c2410c;
+            --btn-decl: #3b82f6;
+            --btn-excl: #ef4444;
+            --btn-inter: #10b981;
+            --btn-imper: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--sky-light);
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            background-color: #f8fafc;
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 5px solid #cbd5e1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            color: #1e293b;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-tracker {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #475569;
+            margin-top: 5px;
+        }
+
+        /* --- Main Layout --- */
+        .game-layout {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* --- Left Column: Construction Site --- */
+        .construction-site {
+            flex: 1;
+            background: linear-gradient(to bottom, var(--sky), var(--sky-light));
+            border-radius: 16px;
+            border: 4px solid #bae6fd;
+            display: flex;
+            flex-direction: column-reverse; /* Stacks floors from bottom up */
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+            min-height: 600px;
+            padding-bottom: 20px;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background-color: #475569;
+            border-top: 4px solid #1e293b;
+        }
+
+        .floor {
+            width: 180px;
+            height: 20px;
+            background-color: var(--steel);
+            border: 2px solid var(--steel-dark);
+            border-bottom: none;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            box-shadow: inset 0 5px 10px rgba(255,255,255,0.2);
+            animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+            z-index: 2;
+        }
+
+        .window {
+            width: 15px;
+            height: 12px;
+            background-color: #fef08a; /* lit window */
+            border: 2px solid #334155;
+            border-radius: 2px;
+        }
+
+        .window.dark {
+            background-color: #334155; /* unlit window */
+        }
+
+        @keyframes dropIn {
+            0% { transform: translateY(-200px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* --- Right Column: Question Area --- */
+        .controls-area {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .crane-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: sway 4s ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+
+        @keyframes sway {
+            0% { transform: rotate(-2deg); }
+            100% { transform: rotate(2deg); }
+        }
+
+        .crane-cable {
+            width: 4px;
+            height: 40px;
+            background-color: #1e293b;
+        }
+
+        .sentence-beam {
+            background-color: var(--beam);
+            border: 4px solid var(--beam-dark);
+            border-radius: 8px;
+            padding: 20px 30px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Rivet details for the beam */
+        .sentence-beam::before, .sentence-beam::after {
+            content: '● ●';
+            position: absolute;
+            color: var(--beam-dark);
+            font-size: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .sentence-beam::before { left: 10px; }
+        .sentence-beam::after { right: 10px; }
+
+        .sentence-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            line-height: 1.4;
+        }
+
+        .blank-space {
+            display: inline-block;
+            width: 40px;
+            border-bottom: 4px solid white;
+            margin-left: 5px;
+        }
+
+        /* --- Buttons --- */
+        .blueprint-title {
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            color: #334155;
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .blueprint-btn {
+            background-color: white;
+            border: 4px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 0 #cbd5e1;
+        }
+
+        .blueprint-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .blueprint-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 transparent;
+        }
+
+        .bp-type { font-size: 1.2rem; font-weight: 800; }
+        .bp-punct { font-size: 1.8rem; font-weight: 900; font-family: 'Montserrat', sans-serif; }
+        .bp-hint { font-size: 0.85rem; color: #64748b; font-weight: 700; }
+
+        #btn-decl { border-color: var(--btn-decl); box-shadow: 0 4px 0 var(--btn-decl); color: var(--btn-decl); }
+        #btn-excl { border-color: var(--btn-excl); box-shadow: 0 4px 0 var(--btn-excl); color: var(--btn-excl); }
+        #btn-inter { border-color: var(--btn-inter); box-shadow: 0 4px 0 var(--btn-inter); color: var(--btn-inter); }
+        #btn-imper { border-color: var(--btn-imper); box-shadow: 0 4px 0 var(--btn-imper); color: var(--btn-imper); }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 { color: var(--btn-decl); font-family: 'Montserrat'; font-size: 2rem; margin-bottom: 15px; }
+        .modal-content p { font-size: 1.1rem; color: #475569; margin-bottom: 15px; line-height: 1.5; }
+        
+        .rule-box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .rule-item { font-size: 0.95rem; }
+        .rule-item strong { color: #1e293b; }
+
+        .start-btn {
+            background-color: var(--btn-inter);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #059669;
+            transition: all 0.2s;
+        }
+
+        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #059669; }
+        .start-btn:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+
+        /* Error Shake */
+        .shake { animation: shakeError 0.5s; }
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .feedback-toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+            text-align: center;
+        }
+
+        .feedback-toast.show { bottom: 30px; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .game-layout { flex-direction: column; }
+            .construction-site { min-height: 450px; border-width: 2px; }
+            .floor { height: 15px; width: 120px; }
+            .window { height: 8px; width: 10px; }
+            .sentence-text { font-size: 1.2rem; }
+            .button-grid { grid-template-columns: 1fr 1fr; }
+            .rule-box { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Grammar Builder 🏗️</h1>
+        <div class="score-tracker" id="score-tracker">Floors Built: 0 / 25</div>
+    </header>
+
+    <div class="game-layout">
+        <!-- Construction Site -->
+        <div class="construction-site" id="construction-site">
+            <div class="ground"></div>
+            <!-- Floors will be appended here -->
+        </div>
+
+        <!-- Question Controls -->
+        <div class="controls-area">
+            <div class="crane-container" id="crane">
+                <div class="crane-cable"></div>
+                <div class="sentence-beam" id="beam">
+                    <div class="sentence-text" id="sentence-text">
+                        Waiting for materials... <span class="blank-space"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blueprint-title">Select the Correct Blueprint:</div>
+            
+            <div class="button-grid">
+                <button class="blueprint-btn" id="btn-decl" onclick="checkAnswer('Declarative')">
+                    <span class="bp-type">Declarative</span>
+                    <span class="bp-punct">.</span>
+                    <span class="bp-hint">Statement</span>
+                </button>
+                <button class="blueprint-btn" id="btn-excl" onclick="checkAnswer('Exclamatory')">
+                    <span class="bp-type">Exclamatory</span>
+                    <span class="bp-punct">!</span>
+                    <span class="bp-hint">Emotion</span>
+                </button>
+                <button class="blueprint-btn" id="btn-inter" onclick="checkAnswer('Interrogative')">
+                    <span class="bp-type">Interrogative</span>
+                    <span class="bp-punct">?</span>
+                    <span class="bp-hint">Question</span>
+                </button>
+                <button class="blueprint-btn" id="btn-imper" onclick="checkAnswer('Imperative')">
+                    <span class="bp-type">Imperative</span>
+                    <span class="bp-punct">. or !</span>
+                    <span class="bp-hint">Demand/Command</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Toast for incorrect answers -->
+    <div id="feedback-toast" class="feedback-toast">Hint goes here!</div>
+
+    <!-- Intro / Outro Modal -->
+    <div class="modal-overlay active" id="game-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Welcome to the Job Site!</h2>
+            <p id="modal-desc">We need to build a skyscraper that is exactly <strong>25 floors tall</strong>. Read the sentence on the steel beam, then click the correct Blueprint to add the missing punctuation and secure the floor!</p>
+            
+            <div class="rule-box" id="modal-rules">
+                <div class="rule-item"><strong>Declarative (.):</strong> Stating something.</div>
+                <div class="rule-item"><strong>Exclamatory (!):</strong> Showing strong emotion.</div>
+                <div class="rule-item"><strong>Interrogative (?):</strong> Wondering/Asking.</div>
+                <div class="rule-item"><strong>Imperative (. or !):</strong> Demanding something. Starts with a verb!</div>
+            </div>
+
+            <button class="start-btn" id="modal-btn" onclick="startGame()">Start Building</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Data Bank (40 Brand New Sentences) ---
+        const sentenceBank = [
+            // Declarative
+            { text: "The tallest mountain in the world is Mount Everest", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "My family is traveling to Florida for summer vacation", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "A piano has eighty-eight black and white keys", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "The caterpillar will eventually turn into a butterfly", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "The library is closed on Sundays and holidays", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "We are making homemade pizza for dinner tonight", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "The Pacific Ocean is the largest ocean on Earth", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "Apples and bananas are my favorite types of fruit", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "A hexagon is a shape with exactly six sides", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            { text: "Our school won the district spelling bee last year", type: "Declarative", hint: "Statements state a fact or declare something, and they end with a period." },
+            
+            // Exclamatory
+            { text: "That was the most amazing magic show ever", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "I am so terrified of riding the giant roller coaster", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "We won the first place trophy in the soccer tournament", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "This is the best birthday present I have ever received", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "The fireworks in the sky are incredibly bright", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "I cannot believe we get to go to the water park today", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "That sudden lightning strike was so loud and scary", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "What a spectacular performance by the marching band", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "I am absolutely thrilled to meet my favorite singer", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+            { text: "That huge dog jumping on me was a massive surprise", type: "Exclamatory", hint: "Exclamations show strong emotion or excitement, and they end with an exclamation point!" },
+
+            // Interrogative
+            { text: "How many cups of flour do we need for this recipe", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Have you ever seen a shooting star in the night sky", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Who left their red jacket on the playground swings", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "When does the next train arrive at the station", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Why is the sky blue instead of green or purple", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Can you show me how to do this math problem", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Are you planning to try out for the school play", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "What is the name of the longest river in the United States", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Would you rather eat chocolate or vanilla ice cream", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+            { text: "Where did you hide the clues for the scavenger hunt", type: "Interrogative", hint: "Questions wonder or interrogate, and they always end with a question mark." },
+
+            // Imperative
+            { text: "Put your backpacks in your cubby before sitting down", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Always look both ways before you cross the busy street", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Tell me the truth about what happened to the vase", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Please close the front door so the bugs stay outside", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Go brush your teeth and get ready for bed immediately", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Don't touch the hot stove while we are cooking dinner", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Listen to the principal when she makes an announcement", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Finish eating your vegetables before you ask for dessert", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Bring your permission slip back to school by tomorrow", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." },
+            { text: "Stop jumping on the living room furniture right now", type: "Imperative", hint: "Demands command you to do something and usually start with a verb. They end with a period or exclamation point." }
+        ];
+
+        // --- Game State ---
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let floorsBuilt = 0;
+        const targetFloors = 25;
+        let isProcessing = false;
+
+        // --- DOM Elements ---
+        const sentenceText = document.getElementById('sentence-text');
+        const scoreTracker = document.getElementById('score-tracker');
+        const constructionSite = document.getElementById('construction-site');
+        const modalOverlay = document.getElementById('game-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalRules = document.getElementById('modal-rules');
+        const modalBtn = document.getElementById('modal-btn');
+        const beam = document.getElementById('beam');
+        const toast = document.getElementById('feedback-toast');
+
+        // --- Utility ---
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // --- Game Logic ---
+        function startGame() {
+            modalOverlay.classList.remove('active');
+            floorsBuilt = 0;
+            currentQuestionIndex = 0;
+            updateScore();
+            
+            // Remove old floors
+            const oldFloors = document.querySelectorAll('.floor');
+            oldFloors.forEach(f => f.remove());
+
+            // Prepare question bank
+            currentQuestions = shuffle([...sentenceBank]);
+            
+            loadNextSentence();
+        }
+
+        function loadNextSentence() {
+            isProcessing = false;
+            
+            // If we run out of questions before hitting 10 (shouldn't happen with 40, but just in case)
+            if (currentQuestionIndex >= currentQuestions.length) {
+                currentQuestions = shuffle([...sentenceBank]);
+                currentQuestionIndex = 0;
+            }
+
+            const q = currentQuestions[currentQuestionIndex];
+            sentenceText.innerHTML = `${q.text}<span class="blank-space"></span>`;
+            
+            // Reset beam styles
+            beam.style.backgroundColor = "var(--beam)";
+            beam.style.borderColor = "var(--beam-dark)";
+        }
+
+        function checkAnswer(selectedType) {
+            if (isProcessing) return; // Prevent double clicks
+            
+            const currentQ = currentQuestions[currentQuestionIndex];
+
+            if (selectedType === currentQ.type) {
+                // Correct!
+                isProcessing = true;
+                handleCorrectAnswer(currentQ);
+            } else {
+                // Incorrect
+                handleIncorrectAnswer(currentQ);
+            }
+        }
+
+        function handleCorrectAnswer(question) {
+            // Flash the beam green
+            beam.style.backgroundColor = "var(--btn-inter)";
+            beam.style.borderColor = "#059669";
+            
+            // Add correct punctuation to beam visually
+            let punct = ".";
+            if (question.type === "Exclamatory") punct = "!";
+            if (question.type === "Interrogative") punct = "?";
+            if (question.type === "Imperative") punct = ". / !"; // Since the button says this, it reinforces it
+            
+            sentenceText.innerHTML = `${question.text}<span style="color: #fef08a; font-weight: 900; margin-left: 5px;">${punct}</span>`;
+
+            // Build floor
+            floorsBuilt++;
+            updateScore();
+            createFloorElement();
+
+            // Check win condition
+            if (floorsBuilt >= targetFloors) {
+                setTimeout(showWinScreen, 1200);
+            } else {
+                currentQuestionIndex++;
+                setTimeout(loadNextSentence, 1200);
+            }
+        }
+
+        function handleIncorrectAnswer(question) {
+            // Shake beam and flash red
+            beam.classList.add('shake');
+            beam.style.backgroundColor = "var(--btn-excl)";
+            beam.style.borderColor = "#991b1b";
+            
+            // Show hint toast
+            toast.textContent = "Oops! " + question.hint;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                beam.classList.remove('shake');
+                beam.style.backgroundColor = "var(--beam)";
+                beam.style.borderColor = "var(--beam-dark)";
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function createFloorElement() {
+            const floor = document.createElement('div');
+            floor.classList.add('floor');
+            
+            // Add some windows to the floor
+            for (let i = 0; i < 4; i++) {
+                const window = document.createElement('div');
+                window.classList.add('window');
+                // Randomly make some windows dark
+                if (Math.random() > 0.7) window.classList.add('dark');
+                floor.appendChild(window);
+            }
+            
+            constructionSite.appendChild(floor);
+        }
+
+        function updateScore() {
+            scoreTracker.textContent = `Floors Built: ${floorsBuilt} / ${targetFloors}`;
+        }
+
+        function showWinScreen() {
+            modalTitle.textContent = "Skyscraper Complete! 🌇";
+            modalDesc.textContent = "Incredible job! You mastered the 4 types of sentences and built a beautiful 25-story building.";
+            modalRules.style.display = 'none'; // Hide rules on win screen
+            modalBtn.textContent = "Build Another One";
+            modalOverlay.classList.add('active');
+        }
+
+    </script>
+</body>
+</html>
