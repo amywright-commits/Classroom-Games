@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Sleuths: 4 Types of Sentences</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #10b981;
+            --secondary-hover: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --background: #e0f2fe;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(#bae6fd 20%, transparent 20%), radial-gradient(#bae6fd 20%, transparent 20%);
+            background-color: #e0f2fe;
+            background-position: 0 0, 25px 25px;
+            background-size: 50px 50px;
+        }
+
+        .game-container {
+            background-color: var(--surface);
+            max-width: 800px;
+            width: 100%;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 4px dashed #bae6fd;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px #c7d2fe;
+        }
+
+        .score-board {
+            background-color: #fef3c7;
+            padding: 10px 20px;
+            border-radius: 16px;
+            border: 3px solid #fde68a;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #b45309;
+        }
+
+        .sentence-display {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 40px 0;
+            line-height: 1.4;
+            color: #334155;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .blank {
+            display: inline-block;
+            width: 50px;
+            border-bottom: 4px solid var(--primary);
+            margin-left: 5px;
+            color: var(--primary);
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .step-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+        }
+
+        .btn-decl { background-color: var(--info); }
+        .btn-excl { background-color: var(--warning); }
+        .btn-inter { background-color: var(--primary); }
+        .btn-imper { background-color: var(--secondary); }
+        
+        .btn-punct {
+            background-color: #cbd5e1;
+            color: #334155;
+            font-size: 2rem;
+            padding: 10px;
+        }
+        
+        .btn-punct.active-punct {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .feedback-box {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feedback-box.show {
+            opacity: 1;
+        }
+
+        .feedback-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 2px solid #a7f3d0;
+        }
+
+        .feedback-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #fecaca;
+        }
+
+        .next-btn {
+            margin-top: 20px;
+            background-color: var(--secondary);
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .rule-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .rule-card h3 {
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .rule-card.decl h3 { color: var(--info); }
+        .rule-card.excl h3 { color: var(--warning); }
+        .rule-card.inter h3 { color: var(--primary); }
+        .rule-card.imper h3 { color: var(--secondary); }
+
+        .rule-card p {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .rule-example {
+            font-style: italic;
+            color: var(--text-light);
+            background: #e2e8f0;
+            padding: 5px 8px;
+            border-radius: 6px;
+            display: block;
+        }
+
+        .start-btn {
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            background-color: var(--primary);
+            margin-top: 10px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .sentence-display { font-size: 1.5rem; }
+            .button-grid { grid-template-columns: 1fr 1fr; }
+            .game-container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container fade-in">
+        <header>
+            <h1>Sentence Sleuths! 🔍</h1>
+            <div class="score-board" id="score-board-container" style="display: none;">
+                ⭐ Score: <span id="score-display">0</span>
+            </div>
+        </header>
+
+        <div id="intro-screen" class="fade-in">
+            <h2>Ready to be a Sentence Sleuth?</h2>
+            <p style="font-size: 1.2rem; margin: 15px 0; color: #475569;">Review the 4 types of sentences below. When you start the game, you'll need to identify the sentence type and choose the missing punctuation!</p>
+            
+            <div class="rules-grid">
+                <div class="rule-card decl">
+                    <h3>Declarative (.)</h3>
+                    <p><strong>Statement:</strong> You are stating or declaring something.</p>
+                    <span class="rule-example">"The heart of a shrimp is located in its head."</span>
+                </div>
+                <div class="rule-card excl">
+                    <h3>Exclamatory (!)</h3>
+                    <p><strong>Exclamation:</strong> You are stating or exclaiming with emotion.</p>
+                    <span class="rule-example">"That birthday party was so much fun!"</span>
+                </div>
+                <div class="rule-card inter">
+                    <h3>Interrogative (?)</h3>
+                    <p><strong>Question:</strong> You are wondering or interrogating.</p>
+                    <span class="rule-example">"Why do I always forget where I put my car?"</span>
+                </div>
+                <div class="rule-card imper">
+                    <h3>Imperative (. or !)</h3>
+                    <p><strong>Demand:</strong> You are demanding something. It starts with a verb.</p>
+                    <span class="rule-example">"Come fold your laundry."</span>
+                </div>
+            </div>
+            
+            <button class="btn start-btn" onclick="startGame()">Start Playing ➔</button>
+        </div>
+
+        <div id="game-over-screen" class="hidden">
+            <h2>Amazing Job, Sleuth! 🎉</h2>
+            <p class="sentence-display">You have completed all the sentences!</p>
+            <button class="btn btn-secondary" onclick="startGame()" style="font-size: 1.5rem; padding: 15px 30px; background-color: var(--secondary); color: white;">Play Again</button>
+        </div>
+
+        <div id="play-area" class="hidden">
+            <div class="sentence-display" id="sentence-display">
+                Loading sentence<span class="blank"></span>
+            </div>
+
+            <!-- Step 1: Identify Type -->
+            <div id="step-1" class="step-container">
+                <div class="step-title">Step 1: What type of sentence is this?</div>
+                <div class="button-grid">
+                    <button class="btn btn-decl" onclick="checkType('Declarative')">Declarative</button>
+                    <button class="btn btn-excl" onclick="checkType('Exclamatory')">Exclamatory</button>
+                    <button class="btn btn-inter" onclick="checkType('Interrogative')">Interrogative</button>
+                    <button class="btn btn-imper" onclick="checkType('Imperative')">Imperative</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Choose Punctuation -->
+            <div id="step-2" class="step-container hidden">
+                <div class="step-title">Step 2: Choose the correct end punctuation</div>
+                <div class="button-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <button class="btn btn-punct active-punct" onclick="checkPunctuation('.')">.</button>
+                    <button class="btn btn-punct active-punct" onclick="checkPunctuation('?')">?</button>
+                    <button class="btn btn-punct active-punct" onclick="checkPunctuation('!')">!</button>
+                </div>
+            </div>
+
+            <div id="feedback" class="feedback-box"></div>
+            
+            <button id="next-btn" class="btn next-btn" onclick="nextQuestion()">Next Sentence ➔</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Data (Content Bank) ---
+        // Imperative sentences can accept either a period (.) or an exclamation point (!).
+        const sentenceBank = [
+            // Declarative Sentences
+            { text: "The Amazon River is the second longest river in the world", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "My older brother plays the trombone in the marching band", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "Earth revolves around the sun once every year", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "The school library just got a huge shipment of new graphic novels", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "A chef needs to use sharp knives to chop vegetables safely", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "The cheetah is widely known as the fastest land animal", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "Water freezes at thirty-two degrees Fahrenheit", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            { text: "Our family is driving to the mountains for winter break", type: "Declarative", punct: ["."], hint: "Remember, a declarative sentence states or declares something." },
+            
+            // Exclamatory Sentences
+            { text: "We just won tickets to the best amusement park in the state", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "I can't believe I got a perfect score on my spelling test", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "That roller coaster drop was absolutely terrifying", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "I just met my favorite author at the bookstore", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "It is freezing cold outside today", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "What an incredible magic trick that was", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "The fireworks display was the most beautiful thing I've ever seen", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            { text: "I am so excited for our camping trip this weekend", type: "Exclamatory", punct: ["!"], hint: "Remember, an exclamatory sentence states or exclaims with strong emotion!" },
+            
+            // Interrogative Sentences
+            { text: "Have you ever tried putting pineapple on your pizza", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "Where did you leave your soccer cleats after practice", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "Who is the main character of the book you are reading", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "Can you help me carry these heavy boxes up the stairs", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "How long does it take to drive to the Grand Canyon", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "What is the capital city of your home state", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "Why did the teacher ask us to bring markers tomorrow", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            { text: "Are we having macaroni and cheese for dinner again", type: "Interrogative", punct: ["?"], hint: "Remember, an interrogative sentence wonders or interrogates (asks a question)." },
+            
+            // Imperative Sentences
+            { text: "Please wash your hands before you sit down for dinner", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Bring me the remote control from the coffee table", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Don't forget to walk the dog after you finish your homework", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Open your science textbook to chapter four", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Put your dirty dishes in the dishwasher right now", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Listen carefully to the instructions before you begin the test", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Hand me that blue marker from the art bin", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." },
+            { text: "Leave your muddy boots on the porch outside", type: "Imperative", punct: [".", "!"], hint: "Remember, an imperative sentence demands something, and it usually starts with a verb." }
+        ];
+
+        // --- Game State Variables ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentSentence = null;
+        let step = 1;
+
+        // --- DOM Elements ---
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const scoreDisplay = document.getElementById('score-display');
+        const step1Container = document.getElementById('step-1');
+        const step2Container = document.getElementById('step-2');
+        const feedbackBox = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const playArea = document.getElementById('play-area');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const introScreen = document.getElementById('intro-screen');
+        const scoreBoardContainer = document.getElementById('score-board-container');
+
+        // --- Utility Functions ---
+        // Fisher-Yates shuffle algorithm to randomize questions
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showFeedback(message, isSuccess) {
+            feedbackBox.textContent = message;
+            feedbackBox.className = 'feedback-box show';
+            if (isSuccess) {
+                feedbackBox.classList.add('feedback-success');
+                feedbackBox.classList.remove('feedback-error');
+            } else {
+                feedbackBox.classList.add('feedback-error');
+                feedbackBox.classList.remove('feedback-success');
+            }
+        }
+
+        function hideFeedback() {
+            feedbackBox.className = 'feedback-box';
+        }
+
+        // --- Core Game Flow ---
+        function showIntro() {
+            introScreen.classList.remove('hidden');
+            playArea.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            scoreBoardContainer.style.display = 'none';
+        }
+
+        function startGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            scoreDisplay.textContent = score;
+            
+            // Create a shuffled copy of the question bank
+            questions = [...sentenceBank];
+            shuffleArray(questions);
+            
+            introScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            playArea.classList.remove('hidden');
+            scoreBoardContainer.style.display = 'block';
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endGame();
+                return;
+            }
+
+            currentSentence = questions[currentQuestionIndex];
+            step = 1;
+            
+            // Reset UI for new question
+            sentenceDisplay.innerHTML = `${currentSentence.text}<span class="blank" id="blank-space">___</span>`;
+            
+            step1Container.classList.remove('hidden');
+            step1Container.classList.add('fade-in');
+            
+            step2Container.classList.add('hidden');
+            nextBtn.style.display = 'none';
+            hideFeedback();
+        }
+
+        // Triggered when a Sentence Type button is clicked
+        function checkType(selectedType) {
+            if (step !== 1) return;
+
+            if (selectedType === currentSentence.type) {
+                // Correct Type
+                showFeedback(`Correct! It is a ${currentSentence.type} sentence. Now for Step 2!`, true);
+                
+                // Move to Step 2
+                step = 2;
+                setTimeout(() => {
+                    step1Container.classList.add('hidden');
+                    step2Container.classList.remove('hidden');
+                    step2Container.classList.add('fade-in');
+                    hideFeedback();
+                }, 1500);
+
+            } else {
+                // Incorrect Type - Show specific hint based on the actual answer
+                showFeedback(`Not quite! ${currentSentence.hint}`, false);
+            }
+        }
+
+        // Triggered when a Punctuation button is clicked
+        function checkPunctuation(selectedPunct) {
+            if (step !== 2) return;
+
+            // currentSentence.punct is an array (e.g., ["."] or [".", "!"])
+            if (currentSentence.punct.includes(selectedPunct)) {
+                // Correct Punctuation
+                score += 10;
+                scoreDisplay.textContent = score;
+                
+                // Fill in the blank
+                const blankSpace = document.getElementById('blank-space');
+                blankSpace.textContent = selectedPunct;
+                blankSpace.style.borderBottom = 'none';
+                
+                showFeedback("Great job! You completed the sentence perfectly! 🎉", true);
+                
+                // Hide punctuation buttons and show Next button
+                step2Container.classList.add('hidden');
+                nextBtn.style.display = 'block';
+                nextBtn.classList.add('fade-in');
+                step = 3; // Prevent further clicks
+
+            } else {
+                // Incorrect Punctuation
+                let punctHint = "Try again! ";
+                if (currentSentence.type === "Declarative") punctHint += "Statements end with a period (.).";
+                if (currentSentence.type === "Exclamatory") punctHint += "Exclamations end with an exclamation point (!).";
+                if (currentSentence.type === "Interrogative") punctHint += "Questions end with a question mark (?).";
+                if (currentSentence.type === "Imperative") punctHint += "Demands end with a period (.) or exclamation point (!).";
+                
+                showFeedback(punctHint, false);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function endGame() {
+            playArea.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            gameOverScreen.classList.add('fade-in');
+        }
+
+        // Initialize game on load
+        window.onload = showIntro;
+
+    </script>
+</body>
+</html>
