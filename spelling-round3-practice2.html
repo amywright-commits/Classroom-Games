@@ -134,7 +134,7 @@
             user-select: none;
             text-transform: lowercase;
             transition: transform 0.1s, box-shadow 0.1s;
-            touch-action: none; /* Prevents scrolling while dragging on mobile */
+            touch-action: none;
         }
 
         .tile:active {
@@ -151,6 +151,19 @@
 
         .tile.dragging {
             opacity: 0.5;
+        }
+
+        /* Locked Tile (Hinted) */
+        .slot.locked-slot {
+            border-color: var(--success);
+            background-color: #D5F5E3;
+        }
+
+        .tile.locked {
+            background-color: var(--success);
+            box-shadow: 0 4px 0 #27AE60;
+            cursor: default;
+            transform: none !important;
         }
 
         /* Buttons */
@@ -204,17 +217,6 @@
             min-height: 30px;
         }
 
-        .hint-text {
-            margin-top: 15px;
-            font-size: 1.1em;
-            color: var(--primary-dark);
-            background-color: #F4ECF7;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px dashed var(--primary);
-            display: none;
-        }
-
         /* Animations */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -251,7 +253,7 @@
         <!-- Main Game Area -->
         <div id="game-screen">
             <h1>Tile Scramble! 🧩</h1>
-            <p class="instruction">Drag the letters into the boxes (or tap to move them) to spell the word.</p>
+            <p class="instruction">Drag the letters into the boxes to spell the word.</p>
             
             <div class="play-area" id="play-area">
                 <!-- Drop Zones -->
@@ -265,7 +267,6 @@
                 <button class="btn-hint" id="hint-btn" onclick="showHint()">Get a Hint 💡</button>
             </div>
 
-            <div class="hint-text" id="hint-text"></div>
             <div class="feedback" id="feedback-msg"></div>
         </div>
 
@@ -280,31 +281,21 @@
 
     <script>
         const wordList = [
-            { word: "laugh", hint: "You do this when someone tells a funny joke. (Hint: Think of 'a' and 'u' doing it together!)" },
-            { word: "embarrass", hint: "To make someone's face turn red because they feel awkward. (Hint: Double trouble! Two R's and two S's.)" },
-            { word: "separate", hint: "To pull things apart so they aren't together anymore. (Hint: There is a 'rat' in the middle.)" },
-            { word: "decide", hint: "When you have to pick between two things, you must do this. (Hint: Ends with the sound 'ide'.)" },
-            { word: "ignore", hint: "When you pretend you don't hear someone talking to you. (Hint: Ends with the word 'ore'.)" },
-            { word: "believe", hint: "To think that something is absolutely true. (Hint: Remember the rule: 'i' before 'e'!)" },
-            { word: "bought", hint: "The past tense of 'buy'. I ____ a candy bar yesterday. (Hint: Uses the tricky 'ough' ending.)" },
-            { word: "thought", hint: "An idea that pops into your head. (Hint: Uses the tricky 'ough' ending.)" },
-            { word: "favorite", hint: "The one you like the very most out of all the options. (Hint: Ends with 'ite' (i-t-e).)" },
-            { word: "different", hint: "The opposite of 'the same'. (Hint: Don't forget the double 'f' and the 'er' in the middle!)" },
-            { word: "beautiful", hint: "Something that is very, very pretty to look at. (Hint: Remember the vowel pattern: e-a-u.)" },
-            { word: "interesting", hint: "Something that holds your attention because it's cool to learn about. (Hint: Don't skip the 'er' in the middle: int-er-esting.)" },
-            { word: "terrible", hint: "Something that is extremely bad or awful. (Hint: Has a double 'r' in the middle.)" },
-            { word: "excited", hint: "How you feel right before going to an amusement park! (Hint: Starts with 'ex' and hides a 'c' before the 'i'.)" },
-            { word: "weird", hint: "Something very strange or unusual. (Hint: Rule breaker! It's 'e' before 'i' for this word.)" },
-            { word: "quiet", hint: "Shhh... making zero noise. (Hint: Ends with 'iet' (i-e-t).)" }
+            "laugh", "embarrass", "separate", "decide", "ignore", 
+            "believe", "bought", "thought", "favorite", "different", 
+            "beautiful", "interesting", "terrible", "excited", "weird", "quiet"
         ];
 
         let currentWords = [];
         let currentIndex = 0;
         let selectedTile = null;
 
+        // Hint tracking
+        let hintSequence = [];
+        let currentHintStep = 0;
+
         const slotsContainer = document.getElementById('slots-container');
         const poolContainer = document.getElementById('pool-container');
-        const hintText = document.getElementById('hint-text');
         const feedbackMsg = document.getElementById('feedback-msg');
         const progressBar = document.getElementById('progress-bar');
         const gameScreen = document.getElementById('game-screen');
@@ -324,7 +315,6 @@
         function scrambleString(word) {
             let arr = word.split('');
             let isDifferent = false;
-            // Ensure the scrambled version is not exactly the same as the original
             while (!isDifferent && arr.length > 1) {
                 arr = shuffle(arr);
                 if (arr.join('') !== word) isDifferent = true;
@@ -343,18 +333,26 @@
         }
 
         function loadWord() {
-            const currentObj = currentWords[currentIndex];
-            hintText.style.display = 'none';
-            hintText.textContent = currentObj.hint;
+            const targetWord = currentWords[currentIndex];
             feedbackMsg.textContent = '';
             selectedTile = null;
+            currentHintStep = 0;
 
             slotsContainer.innerHTML = '';
             poolContainer.innerHTML = '';
             playArea.classList.remove('shake');
 
-            const wordLength = currentObj.word.length;
-            const scrambledLetters = scrambleString(currentObj.word);
+            const wordLength = targetWord.length;
+            const scrambledLetters = scrambleString(targetWord);
+
+            // Generate Hint Sequence: 1st, Last, 2nd, 3rd, 4th...
+            hintSequence = [0];
+            if (wordLength > 1) {
+                hintSequence.push(wordLength - 1);
+                for (let i = 1; i < wordLength - 1; i++) {
+                    hintSequence.push(i);
+                }
+            }
 
             // Create Slots
             for (let i = 0; i < wordLength; i++) {
@@ -375,7 +373,6 @@
                 poolContainer.appendChild(tile);
             });
             
-            // Setup pool to receive tiles back
             setupPoolEvents();
         }
 
@@ -384,11 +381,114 @@
             progressBar.style.width = percentage + '%';
         }
 
+        // --- Hint Logic ---
+        function showHint() {
+            const targetWord = currentWords[currentIndex];
+            const slots = document.querySelectorAll('.slot');
+            let hintProvided = false;
+
+            while (currentHintStep < hintSequence.length && !hintProvided) {
+                const targetIndex = hintSequence[currentHintStep];
+                const targetLetter = targetWord[targetIndex];
+                const slot = slots[targetIndex];
+
+                // Check if the correct tile is already here but not locked
+                if (slot.children.length > 0 && slot.children[0].textContent === targetLetter) {
+                    if (!slot.classList.contains('locked-slot')) {
+                        lockTileInSlot(slot.children[0], slot);
+                        feedbackMsg.textContent = "Locked a correct letter! 🔒";
+                        feedbackMsg.style.color = "var(--success)";
+                        hintProvided = true;
+                    }
+                } 
+                // Check if a wrong tile is here
+                else if (slot.children.length > 0 && slot.children[0].textContent !== targetLetter) {
+                    poolContainer.appendChild(slot.children[0]); // Kick to pool
+                    
+                    let foundTile = findTileWithLetter(targetLetter, targetIndex);
+                    if (foundTile) {
+                        slot.appendChild(foundTile);
+                        lockTileInSlot(foundTile, slot);
+                        feedbackMsg.textContent = "Here's a letter! 💡";
+                        feedbackMsg.style.color = "var(--secondary-dark)";
+                        hintProvided = true;
+                    }
+                } 
+                // Slot is empty
+                else {
+                    let foundTile = findTileWithLetter(targetLetter, targetIndex);
+                    if (foundTile) {
+                        slot.appendChild(foundTile);
+                        lockTileInSlot(foundTile, slot);
+                        feedbackMsg.textContent = "Here's a letter! 💡";
+                        feedbackMsg.style.color = "var(--secondary-dark)";
+                        hintProvided = true;
+                    }
+                }
+                
+                currentHintStep++;
+            }
+
+            // If we've shown all hints, tell the user or automatically finish the puzzle
+            if (!hintProvided && currentHintStep >= hintSequence.length) {
+                checkAnswer();
+                if (feedbackMsg.textContent !== "Awesome job! 🌟") {
+                    feedbackMsg.textContent = "No more hints available! 🧠";
+                    feedbackMsg.style.color = "var(--secondary-dark)";
+                }
+            }
+        }
+
+        function findTileWithLetter(letter, targetIndex) {
+            // 1. Check pool
+            let tilesInPool = Array.from(poolContainer.children);
+            let found = tilesInPool.find(t => t.textContent === letter);
+            if (found) return found;
+
+            // 2. Check slots (don't take locked ones, prefer taking from wrong slots)
+            const slots = document.querySelectorAll('.slot');
+            const targetWord = currentWords[currentIndex];
+            
+            for (let i = 0; i < slots.length; i++) {
+                if (i === targetIndex) continue;
+                const slot = slots[i];
+                if (slot.children.length > 0) {
+                    const tile = slot.children[0];
+                    if (tile.textContent === letter && !tile.classList.contains('locked')) {
+                        // Return it if it's currently placed in the wrong spot
+                        if (targetWord[i] !== letter) return tile;
+                    }
+                }
+            }
+
+            // 3. Fallback: Take any unlocked tile with that letter
+            for (let i = 0; i < slots.length; i++) {
+                if (i === targetIndex) continue;
+                const slot = slots[i];
+                if (slot.children.length > 0) {
+                    const tile = slot.children[0];
+                    if (tile.textContent === letter && !tile.classList.contains('locked')) {
+                        return tile;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function lockTileInSlot(tile, slot) {
+            tile.draggable = false;
+            tile.classList.add('locked');
+            tile.classList.remove('selected');
+            slot.classList.add('locked-slot');
+            if (selectedTile === tile) selectedTile = null;
+        }
+
         // --- Drag & Drop / Click Logic ---
 
         function handleTileClick(tile) {
+            if (tile.classList.contains('locked')) return;
+
             if (selectedTile === tile) {
-                // Deselect if clicked again
                 tile.classList.remove('selected');
                 selectedTile = null;
             } else {
@@ -399,8 +499,11 @@
         }
 
         function setupTileEvents(tile) {
-            // Drag Events
             tile.addEventListener('dragstart', (e) => {
+                if (tile.classList.contains('locked')) {
+                    e.preventDefault();
+                    return;
+                }
                 selectedTile = tile;
                 tile.classList.add('selected');
                 e.dataTransfer.setData('text/plain', tile.id);
@@ -409,14 +512,16 @@
 
             tile.addEventListener('dragend', () => {
                 tile.classList.remove('dragging');
-                if (selectedTile) selectedTile.classList.remove('selected');
+                if (selectedTile && !selectedTile.classList.contains('locked')) {
+                    selectedTile.classList.remove('selected');
+                }
                 selectedTile = null;
             });
 
-            // Click Fallback for touch/accessibility
             tile.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // If it's in a slot and no other tile is selected, send back to pool
+                if (tile.classList.contains('locked')) return;
+
                 if (tile.parentElement.classList.contains('slot') && !selectedTile) {
                     poolContainer.appendChild(tile);
                     return;
@@ -427,6 +532,7 @@
 
         function setupSlotEvents(slot) {
             slot.addEventListener('dragover', e => {
+                if (slot.classList.contains('locked-slot')) return;
                 e.preventDefault();
                 slot.classList.add('drag-over');
             });
@@ -436,17 +542,17 @@
             });
 
             slot.addEventListener('drop', e => {
+                if (slot.classList.contains('locked-slot')) return;
                 e.preventDefault();
                 slot.classList.remove('drag-over');
                 placeTileInSlot(slot);
             });
 
-            // Click Fallback
             slot.addEventListener('click', () => {
+                if (slot.classList.contains('locked-slot')) return;
                 if (selectedTile) {
                     placeTileInSlot(slot);
                 } else if (slot.children.length > 0) {
-                    // Send tile back to pool if slot is clicked
                     poolContainer.appendChild(slot.children[0]);
                 }
             });
@@ -469,8 +575,9 @@
 
         function placeTileInSlot(slot) {
             if (!selectedTile) return;
+            if (slot.classList.contains('locked-slot')) return;
             
-            // If slot already has a tile, swap it back to pool
+            // If slot already has an unlocked tile, swap it back to pool
             if (slot.children.length > 0) {
                 poolContainer.appendChild(slot.children[0]);
             }
@@ -495,7 +602,7 @@
                 }
             });
 
-            const targetWord = currentWords[currentIndex].word;
+            const targetWord = currentWords[currentIndex];
 
             if (!allFilled) {
                 feedbackMsg.textContent = "Oops! Fill all the boxes first. 📦";
@@ -504,7 +611,6 @@
             }
 
             if (currentSpelling === targetWord) {
-                // Correct
                 feedbackMsg.textContent = "Awesome job! 🌟";
                 feedbackMsg.style.color = "var(--success)";
                 slots.forEach(slot => slot.classList.add('correct'));
@@ -520,19 +626,19 @@
                 }, 1200);
 
             } else {
-                // Incorrect
                 feedbackMsg.textContent = "Not quite right! Try rearranging. ❌";
                 feedbackMsg.style.color = "var(--danger)";
-                slots.forEach(slot => slot.classList.add('error'));
+                slots.forEach(slot => {
+                    // Don't red-highlight locked hints
+                    if (!slot.classList.contains('locked-slot')) {
+                        slot.classList.add('error');
+                    }
+                });
                 
                 playArea.classList.remove('shake');
-                void playArea.offsetWidth; // trigger reflow
+                void playArea.offsetWidth; 
                 playArea.classList.add('shake');
             }
-        }
-
-        function showHint() {
-            hintText.style.display = 'block';
         }
 
         function endGame() {
