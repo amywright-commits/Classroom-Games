@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Choice Spelling</title>
+    <style>
+        /* Encapsulating styles for Canvas LMS */
+        .mcq-activity-wrapper {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7fb;
+            padding: 20px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            color: #2c3e50;
+        }
+
+        .mcq-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-top: 6px solid #e67e22;
+            text-align: center;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .progress-text {
+            font-size: 1em;
+            color: #7f8c8d;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-display {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #e67e22;
+            background-color: #fdf3e9;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .clue-display {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #34495e;
+            padding: 20px;
+            background-color: #fcfcfc;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 2px solid #bdc3c7;
+            padding: 18px 20px;
+            font-size: 1.25em;
+            font-weight: 600;
+            color: #2c3e50;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            text-transform: lowercase;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #e67e22;
+            background-color: #fdf3e9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(230, 126, 34, 0.15);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        /* State Classes */
+        .option-correct {
+            background-color: #2ecc71 !important;
+            border-color: #27ae60 !important;
+            color: white !important;
+        }
+
+        .option-incorrect {
+            background-color: #e74c3c !important;
+            border-color: #c0392b !important;
+            color: white !important;
+            opacity: 0.8;
+        }
+
+        .option-dimmed {
+            opacity: 0.5;
+        }
+
+        .feedback-message {
+            min-height: 35px;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .btn-next {
+            background-color: #34495e;
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: none;
+            margin: 0 auto;
+        }
+
+        .btn-next:hover {
+            background-color: #2c3e50;
+        }
+
+        .completion-screen {
+            display: none;
+        }
+
+        .completion-screen h2 {
+            color: #e67e22;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .final-score {
+            font-size: 1.5em;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .btn-restart {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-restart:hover {
+            background-color: #27ae60;
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .clue-display {
+                font-size: 1.1em;
+                padding: 15px;
+            }
+            .option-btn {
+                padding: 15px;
+                font-size: 1.15em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="mcq-activity-wrapper">
+    <div class="mcq-container" id="game-container">
+        
+        <!-- Main Game Area -->
+        <div id="play-area">
+            <div class="header-bar">
+                <div class="progress-text" id="progress-text">Question 1 of 13</div>
+                <div class="score-display" id="score-display">Score: 0</div>
+            </div>
+
+            <div class="clue-display" id="clue-text">
+                <!-- Clue goes here -->
+            </div>
+
+            <div class="options-grid" id="options-grid">
+                <!-- Buttons injected via JS -->
+            </div>
+
+            <div class="feedback-message" id="feedback-message"></div>
+
+            <button class="btn-next" id="next-btn" onclick="nextQuestion()">Next Question &#8594;</button>
+        </div>
+
+        <!-- Completion Screen -->
+        <div class="completion-screen" id="completion-screen">
+            <h2>🎉 Quiz Complete! 🎉</h2>
+            <div class="final-score" id="final-score-text">You scored X out of Y</div>
+            <p>Great job practicing your spelling words!</p>
+            <button class="btn-restart" onclick="initGame()">Play Again</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // The 13 Spelling Words, Clues, and Common Misspellings (Distractors)
+    const quizData = [
+        { word: "calendar", clue: "I marked my birthday on the _____ so I wouldn't forget.", distractors: ["calender", "calandar", "calandor"] },
+        { word: "school", clue: "Every morning, I take the bus to _____.", distractors: ["skool", "scool", "shool"] },
+        { word: "question", clue: "If you don't understand, ask a _____.", distractors: ["qwestion", "queston", "kwestion"] },
+        { word: "answer", clue: "I raised my hand because I knew the _____ to the math problem.", distractors: ["anser", "anwser", "answar"] },
+        { word: "annotate", clue: "The teacher asked us to _____ the text by highlighting key phrases.", distractors: ["anottate", "anote", "annotat"] },
+        { word: "rhyme", clue: "\"Cat\" and \"hat\" are two words that _____.", distractors: ["rime", "ryme", "rhime"] },
+        { word: "character", clue: "My favorite _____ in the book is the brave knight.", distractors: ["caracter", "charactor", "charecter"] },
+        { word: "jewelry", clue: "She wore a beautiful silver necklace and other fine _____.", distractors: ["jewlery", "jewelery", "juelry"] },
+        { word: "library", clue: "We went to the _____ to borrow some new books to read.", distractors: ["libary", "librery", "liberry"] },
+        { word: "people", clue: "There were a lot of _____ waiting in line for the concert.", distractors: ["peaple", "peple", "poeple"] },
+        { word: "friend", clue: "I like to play at the park with my best _____.", distractors: ["freind", "frend", "frind"] },
+        { word: "neighbor", clue: "The person who lives next door to me is a very kind _____.", distractors: ["nieghbor", "naybor", "neighber"] },
+        { word: "doctor", clue: "When I was feeling sick, my mom took me to see the _____.", distractors: ["docter", "docktor", "doctar"] }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let isAnswered = false;
+
+    // DOM Elements
+    const progressText = document.getElementById('progress-text');
+    const scoreDisplay = document.getElementById('score-display');
+    const clueText = document.getElementById('clue-text');
+    const optionsGrid = document.getElementById('options-grid');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const nextBtn = document.getElementById('next-btn');
+    const playArea = document.getElementById('play-area');
+    const completionScreen = document.getElementById('completion-screen');
+    const finalScoreText = document.getElementById('final-score-text');
+
+    // Utility to shuffle arrays (Fisher-Yates)
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function initGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        playArea.style.display = 'block';
+        completionScreen.style.display = 'none';
+        
+        // Shuffle the questions order so it's fresh every time
+        shuffleArray(quizData);
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        isAnswered = false;
+        const currentData = quizData[currentQuestionIndex];
+
+        // Update UI
+        progressText.innerText = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+        scoreDisplay.innerText = `Score: ${score}`;
+        clueText.innerHTML = currentData.clue.replace('_____', '<strong>_____</strong>');
+        feedbackMessage.innerText = "";
+        nextBtn.style.display = "none";
+        optionsGrid.innerHTML = "";
+
+        // Prepare options
+        let options = [currentData.word, ...currentData.distractors];
+        options = shuffleArray(options);
+
+        // Create buttons
+        options.forEach(optionText => {
+            const btn = document.createElement('button');
+            btn.classList.add('option-btn');
+            btn.innerText = optionText;
+            btn.onclick = () => handleAnswer(btn, optionText, currentData.word);
+            optionsGrid.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(selectedBtn, selectedText, correctText) {
+        if (isAnswered) return; // Prevent clicking multiple answers
+        isAnswered = true;
+
+        const allButtons = optionsGrid.querySelectorAll('.option-btn');
+
+        if (selectedText === correctText) {
+            // Correct Answer
+            score++;
+            scoreDisplay.innerText = `Score: ${score}`;
+            selectedBtn.classList.add('option-correct');
+            feedbackMessage.innerText = "✅ Correct!";
+            feedbackMessage.style.color = "#27ae60";
+        } else {
+            // Incorrect Answer
+            selectedBtn.classList.add('option-incorrect');
+            feedbackMessage.innerText = `❌ Incorrect. The correct spelling is "${correctText}".`;
+            feedbackMessage.style.color = "#e74c3c";
+            
+            // Highlight the correct one
+            allButtons.forEach(btn => {
+                if (btn.innerText === correctText) {
+                    btn.classList.add('option-correct');
+                }
+            });
+        }
+
+        // Dim and disable all buttons
+        allButtons.forEach(btn => {
+            btn.disabled = true;
+            if (btn.innerText !== correctText && btn.innerText !== selectedText) {
+                btn.classList.add('option-dimmed');
+            }
+        });
+
+        // Show Next button
+        nextBtn.style.display = "block";
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        playArea.style.display = 'none';
+        completionScreen.style.display = 'block';
+        finalScoreText.innerText = `You scored ${score} out of ${quizData.length}`;
+    }
+
+    // Start game on load
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>
