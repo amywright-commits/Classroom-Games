@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Letters Spelling</title>
+    <style>
+        /* Encapsulating styles for Canvas LMS */
+        .missing-letters-wrapper {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7fb;
+            padding: 20px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            color: #2c3e50;
+        }
+
+        .activity-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-top: 6px solid #16a085;
+            text-align: center;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .progress-text {
+            font-size: 1em;
+            color: #7f8c8d;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .instructions {
+            font-size: 0.9em;
+            color: #16a085;
+            font-weight: bold;
+        }
+
+        .clue-display {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            color: #34495e;
+            padding: 20px;
+            background-color: #fcfcfc;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+        }
+
+        .word-display {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .letter-static {
+            width: 45px;
+            height: 55px;
+            background-color: #eaf2fb;
+            border: 2px solid #dcdde1;
+            border-radius: 8px;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .letter-input {
+            width: 45px;
+            height: 55px;
+            background-color: #ffffff;
+            border: 3px dashed #bdc3c7;
+            border-radius: 8px;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            transition: all 0.2s ease;
+            padding: 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .letter-input:focus {
+            border-color: #16a085;
+            border-style: solid;
+            background-color: #f0fdfa;
+        }
+
+        /* Validation States */
+        .input-correct {
+            border-color: #27ae60 !important;
+            border-style: solid !important;
+            background-color: #eafaf1 !important;
+            color: #27ae60 !important;
+        }
+
+        .input-incorrect {
+            border-color: #e74c3c !important;
+            border-style: solid !important;
+            background-color: #fdedec !important;
+            color: #e74c3c !important;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-check, .btn-next {
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+
+        .btn-check {
+            background-color: #16a085;
+            box-shadow: 0 4px 6px rgba(22, 160, 133, 0.3);
+        }
+
+        .btn-check:hover { background-color: #12876f; }
+        .btn-check:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(22, 160, 133, 0.3); }
+
+        .btn-next {
+            background-color: #34495e;
+            box-shadow: 0 4px 6px rgba(52, 73, 94, 0.3);
+            display: none;
+        }
+
+        .btn-next:hover { background-color: #2c3e50; }
+
+        .feedback-message {
+            min-height: 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .completion-screen {
+            display: none;
+        }
+
+        .completion-screen h2 {
+            color: #16a085;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .btn-restart {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        .btn-restart:hover { background-color: #27ae60; }
+
+        /* Mobile tweaks */
+        @media (max-width: 600px) {
+            .letter-static, .letter-input {
+                width: 35px;
+                height: 45px;
+                font-size: 1.4em;
+            }
+            .clue-display {
+                font-size: 1.1em;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="missing-letters-wrapper">
+    <div class="activity-container" id="game-container">
+        
+        <!-- Main Game Area -->
+        <div id="play-area">
+            <div class="header-bar">
+                <div class="progress-text" id="progress-text">Word 1 of 13</div>
+                <div class="instructions">Fill in the missing letters</div>
+            </div>
+
+            <div class="clue-display" id="clue-text">
+                <!-- Clue goes here -->
+            </div>
+
+            <div class="word-display" id="word-display">
+                <!-- Inputs and static letters injected here via JS -->
+            </div>
+
+            <div class="feedback-message" id="feedback-message"></div>
+
+            <div class="controls">
+                <button class="btn-check" id="check-btn" onclick="checkAnswers()">Check Answer</button>
+                <button class="btn-next" id="next-btn" onclick="nextWord()">Next Word &#8594;</button>
+            </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div class="completion-screen" id="completion-screen">
+            <h2>🎉 Fantastic Work! 🎉</h2>
+            <p>You have successfully completed the missing letters practice.</p>
+            <button class="btn-restart" onclick="initGame()">Play Again</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // The 13 Spelling Words and Clues
+    const quizData = [
+        { word: "calendar", clue: "I marked my birthday on the _____ so I wouldn't forget." },
+        { word: "school", clue: "Every morning, I take the bus to _____." },
+        { word: "question", clue: "If you don't understand, ask a _____." },
+        { word: "answer", clue: "I raised my hand because I knew the _____ to the math problem." },
+        { word: "annotate", clue: "The teacher asked us to _____ the text by highlighting key phrases." },
+        { word: "rhyme", clue: "\"Cat\" and \"hat\" are two words that _____." },
+        { word: "character", clue: "My favorite _____ in the book is the brave knight." },
+        { word: "jewelry", clue: "She wore a beautiful silver necklace and other fine _____." },
+        { word: "library", clue: "We went to the _____ to borrow some new books to read." },
+        { word: "people", clue: "There were a lot of _____ waiting in line for the concert." },
+        { word: "friend", clue: "I like to play at the park with my best _____." },
+        { word: "neighbor", clue: "The person who lives next door to me is a very kind _____." },
+        { word: "doctor", clue: "When I was feeling sick, my mom took me to see the _____." }
+    ];
+
+    let currentWordIndex = 0;
+    let inputsArray = [];
+
+    // DOM Elements
+    const progressText = document.getElementById('progress-text');
+    const clueText = document.getElementById('clue-text');
+    const wordDisplay = document.getElementById('word-display');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const checkBtn = document.getElementById('check-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const playArea = document.getElementById('play-area');
+    const completionScreen = document.getElementById('completion-screen');
+
+    function initGame() {
+        currentWordIndex = 0;
+        playArea.style.display = 'block';
+        completionScreen.style.display = 'none';
+        loadWord();
+    }
+
+    function loadWord() {
+        const currentData = quizData[currentWordIndex];
+        const word = currentData.word.toLowerCase();
+        
+        // Update UI
+        progressText.innerText = `Word ${currentWordIndex + 1} of ${quizData.length}`;
+        clueText.innerHTML = currentData.clue.replace('_____', '<strong>_____</strong>');
+        feedbackMessage.innerText = "";
+        checkBtn.style.display = "block";
+        nextBtn.style.display = "none";
+        wordDisplay.innerHTML = "";
+        inputsArray = [];
+
+        // Determine which letters to hide (approx 30-40% of the word)
+        let numToHide = Math.max(2, Math.floor(word.length * 0.4));
+        let indicesToHide = [];
+        
+        // Ensure we don't hide the very first letter to give them a head start
+        let possibleIndices = Array.from({length: word.length - 1}, (_, i) => i + 1);
+        
+        // Shuffle and pick indices
+        for (let i = possibleIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [possibleIndices[i], possibleIndices[j]] = [possibleIndices[j], possibleIndices[i]];
+        }
+        indicesToHide = possibleIndices.slice(0, numToHide);
+
+        // Render Word
+        for (let i = 0; i < word.length; i++) {
+            if (indicesToHide.includes(i)) {
+                // Render an input field for missing letter
+                const input = document.createElement('input');
+                input.type = "text";
+                input.maxLength = "1";
+                input.classList.add('letter-input');
+                input.dataset.correctChar = word[i];
+                
+                // Add auto-focus progression event
+                input.addEventListener('input', function() {
+                    this.classList.remove('input-incorrect', 'input-correct'); // Clear errors on type
+                    if (this.value.length === 1) {
+                        const nextInputIndex = inputsArray.indexOf(this) + 1;
+                        if (nextInputIndex < inputsArray.length) {
+                            inputsArray[nextInputIndex].focus();
+                        }
+                    }
+                });
+
+                // Handle backspace to move focus backwards
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === "Backspace" && this.value === "") {
+                        const prevInputIndex = inputsArray.indexOf(this) - 1;
+                        if (prevInputIndex >= 0) {
+                            inputsArray[prevInputIndex].focus();
+                        }
+                    } else if (e.key === "Enter") {
+                        checkAnswers();
+                    }
+                });
+
+                wordDisplay.appendChild(input);
+                inputsArray.push(input);
+            } else {
+                // Render static visible letter
+                const span = document.createElement('div');
+                span.classList.add('letter-static');
+                span.innerText = word[i];
+                wordDisplay.appendChild(span);
+            }
+        }
+        
+        // Auto-focus the first input
+        if (inputsArray.length > 0) {
+            setTimeout(() => inputsArray[0].focus(), 100);
+        }
+    }
+
+    function checkAnswers() {
+        let allCorrect = true;
+
+        inputsArray.forEach(input => {
+            const userChar = input.value.trim().toLowerCase();
+            const correctChar = input.dataset.correctChar;
+
+            // Reset classes
+            input.classList.remove('input-correct', 'input-incorrect');
+
+            if (userChar === correctChar) {
+                input.classList.add('input-correct');
+                input.disabled = true; // Lock it in
+            } else {
+                // Force a reflow to restart shake animation if they check multiple times
+                void input.offsetWidth; 
+                input.classList.add('input-incorrect');
+                allCorrect = false;
+            }
+        });
+
+        if (allCorrect) {
+            feedbackMessage.innerText = "✅ Excellent!";
+            feedbackMessage.style.color = "#27ae60";
+            checkBtn.style.display = "none";
+            nextBtn.style.display = "block";
+            nextBtn.focus();
+        } else {
+            feedbackMessage.innerText = "❌ Some letters are incorrect or missing. Try again!";
+            feedbackMessage.style.color = "#e74c3c";
+        }
+    }
+
+    function nextWord() {
+        currentWordIndex++;
+        if (currentWordIndex < quizData.length) {
+            loadWord();
+        } else {
+            // End of Game
+            playArea.style.display = 'none';
+            completionScreen.style.display = 'block';
+        }
+    }
+
+    // Start game on load
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>
