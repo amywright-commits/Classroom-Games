@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Nursery Rhyme Escape Room</title>
+    <!-- Tailwind CSS for layout and styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for antique storybook feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            /* Vintage parchment with faded nursery rhyme icons (stars, moons) and leaves */
+            background-color: #fcf9f2;
+            background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4af37' fill-opacity='0.15'%3E%3Cpath d='M30 15 L33 25 L43 25 L35 31 L38 41 L30 35 L22 41 L25 31 L17 25 L27 25 Z'/%3E%3Cpath d='M110 90 A 15 15 0 1 1 125 105 A 18 18 0 0 0 110 90 Z'/%3E%3C/g%3E%3Cg fill='%2381c784' fill-opacity='0.15'%3E%3Cpath d='M130 20 C 130 35, 145 35, 145 20 C 145 5, 130 5, 130 20 Z'/%3E%3Cpath d='M15 110 C 15 125, 30 125, 30 110 C 30 95, 15 95, 15 110 Z'/%3E%3C/g%3E%3C/svg%3E");
+            color: #3e2723;
+            font-family: 'Lora', serif;
+        }
+
+        h1, h2, h3, .title-font {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Ornate Gold border with soft green accents */
+        .storybook-border {
+            border: 8px double #d4af37;
+            border-radius: 16px;
+            background: rgba(255, 253, 248, 0.95);
+            box-shadow: 0 12px 35px rgba(129, 199, 132, 0.25);
+            position: relative;
+        }
+
+        /* Little soft green leaves in the corners */
+        .storybook-border::before, .storybook-border::after {
+            content: "🌿";
+            position: absolute;
+            font-size: 2.2rem;
+            opacity: 0.85;
+            z-index: 10;
+        }
+        .storybook-border::before {
+            top: -18px;
+            left: -14px;
+        }
+        .storybook-border::after {
+            bottom: -18px;
+            right: -14px;
+            transform: scaleX(-1);
+        }
+
+        .lock-btn {
+            transition: all 0.3s ease;
+            border: 4px double #d4af37;
+            background-color: #fdfbf7;
+        }
+        
+        .lock-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(129, 199, 132, 0.4);
+            background-color: #f4fbf4;
+            border-color: #81c784;
+        }
+
+        .lock-locked {
+            color: #5d4037;
+        }
+
+        .lock-unlocked {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border-color: #4caf50;
+            pointer-events: none;
+        }
+
+        /* Modal animations */
+        .modal-enter {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f4ebd8; }
+        ::-webkit-scrollbar-thumb { background: #8d6e63; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center relative">
+
+    <!-- MAIN DASHBOARD -->
+    <div id="main-dashboard" class="storybook-border max-w-6xl w-full mx-auto p-6 md:p-10 relative hidden">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl text-[#2e7d32] mb-4 drop-shadow-sm">The Nursery Rhyme Escape Room</h1>
+            <p class="text-lg italic text-[#5d4037]">Unlock all 20 childhood memories to escape.</p>
+            <div class="mt-4 text-xl font-bold title-font text-[#d4af37]">Locks Opened: <span id="progress-text" class="text-[#3e2723]">0 / 20</span></div>
+            <div class="w-full bg-[#f4ebd8] h-4 rounded-full mt-2 border border-[#d4af37]">
+                <div id="progress-bar" class="bg-[#81c784] h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div id="locks-container" class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-4 md:gap-6">
+            <!-- Locks will be injected here via JavaScript -->
+        </div>
+    </div>
+
+    <!-- INTRO MODAL -->
+    <div id="intro-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="storybook-border max-w-3xl w-full p-8 md:p-12 text-center modal-enter">
+            <h1 class="text-4xl md:text-5xl text-[#2e7d32] mb-6 border-b-2 border-[#d4af37] pb-4">A Nursery Rhyme Escape Room</h1>
+            <h2 class="text-2xl font-bold mb-6 text-[#d4af37]">Hello, Breck Student!</h2>
+            
+            <div class="text-left space-y-4 text-lg mb-8 leading-relaxed">
+                <p>
+                    Your challenge today is to escape this room by unlocking <strong>20 puzzling nursery rhyme locks</strong>. 
+                </p>
+                <p>
+                    Nursery rhymes are the stuff of early childhood. As a 5th grader, you are coming of age and leaving these simple tales behind. However, your past is the key to your future! To escape, you must revisit the rhymes of your youth.
+                </p>
+                <p class="bg-[#e7e0ce] p-4 rounded-md border border-[#c1b49a]">
+                    <strong>Who was Mother Goose?</strong> <br>
+                    "Mother Goose" isn't a real person, but a fictional author associated with French fairy tales and English nursery rhymes. The name dates back to the 1600s! These silly, strange, and sometimes dark poems were passed down orally for hundreds of years before ever being written in a book. 
+                </p>
+                <p>
+                    <strong>Directions:</strong> Click on a lock, open the magical link to read the rhyme, and hunt for the answer. Type your answer to unlock the padlock. Good luck!
+                </p>
+            </div>
+
+            <button onclick="startGame()" class="title-font bg-[#81c784] hover:bg-[#66bb6a] text-[#1b5e20] text-xl py-3 px-8 rounded border-2 border-[#2e7d32] shadow-lg transition-colors">
+                I Am Ready To Escape
+            </button>
+        </div>
+    </div>
+
+    <!-- CHALLENGE MODAL -->
+    <div id="challenge-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="storybook-border max-w-2xl w-full p-8 relative modal-enter">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-[#2e7d32] hover:text-red-700 font-bold text-2xl">&times;</button>
+            
+            <h2 id="challenge-title" class="text-3xl text-center text-[#2e7d32] mb-2 font-bold title-font">Rhyme Title</h2>
+            <div class="text-center mb-6">
+                <a id="challenge-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-block bg-[#d4af37] hover:bg-[#b8972e] text-[#3e2723] font-bold px-4 py-2 rounded shadow transition-colors">
+                    📖 Open Rhyme (Opens in new tab)
+                </a>
+            </div>
+
+            <div class="bg-[#fcf9f2] p-6 rounded-lg border border-[#d4af37] mb-6">
+                <h3 class="font-bold text-xl mb-3 text-[#2e7d32]">Your Hunt:</h3>
+                <p id="challenge-question" class="text-lg"></p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <label for="answer-input" class="font-bold text-[#5d4037]">Enter your answer:</label>
+                <input type="text" id="answer-input" class="w-full p-3 border-2 border-[#d4af37] rounded focus:outline-none focus:border-[#81c784] bg-white text-lg" placeholder="Type answer here...">
+                
+                <div id="feedback-msg" class="hidden font-bold p-3 rounded text-center"></div>
+
+                <button onclick="checkAnswer()" class="mt-2 bg-[#81c784] hover:bg-[#66bb6a] text-[#1b5e20] border-2 border-[#2e7d32] font-bold py-3 px-6 rounded shadow-lg transition-colors text-lg">
+                    Attempt to Unlock
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY MODAL -->
+    <div id="victory-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="storybook-border max-w-3xl w-full p-12 text-center modal-enter bg-[#fdf6e3]">
+            <h1 class="text-5xl text-[#2e7d32] mb-6 title-font">Congratulations!</h1>
+            <p class="text-2xl mb-8">You have successfully unlocked all 20 memories and escaped the Nursery Rhyme Room!</p>
+            <p class="text-lg italic mb-8">You are now ready to leave your childhood tales behind and conquer the rest of 5th grade.</p>
+            <button onclick="location.reload()" class="bg-[#5d4037] hover:bg-[#3e2723] text-white py-3 px-8 rounded shadow-lg text-xl font-bold">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data for the 20 Challenges
+        const rhymes = [
+            { id: 1, title: "Old Mother Goose", url: "https://www.mamalisa.com/?t=es&p=1484", q: "What did Mother Goose ride upon through the air?", answers: ["gander", "fine gander"] },
+            { id: 2, title: "Twinkle, Twinkle, Little Star", url: "https://www.poetryfoundation.org/poems/45316/the-star-56d224c697fbe", q: "Who does the little star light the way for in the dark?", answers: ["traveler", "traveller", "trav'ller"] },
+            { id: 3, title: "Old Mother Hubbard", url: "https://www.bbc.co.uk/teach/school-radio/articles/zdsmd6f", q: "What did Old Mother Hubbard hope to find in the cupboard for her poor dog?", answers: ["bone"] },
+            { id: 4, title: "Little Jack Horner", url: "https://www.poetryfoundation.org/poems/46973/little-jack-horner-56d2271c5917a", q: "What specific piece of fruit did Jack pull out of his pie with his thumb?", answers: ["plum"] },
+            { id: 5, title: "Pat-a-Cake", url: "https://www.poetryfoundation.org/poems/46962/pat-a-cake-pat-a-cake-bakers-man", q: "What specific letter does the baker mark the cake with?", answers: ["b"] },
+            { id: 6, title: "The Muffin Man", url: "https://wordsforlife.org.uk/activities/do-you-know-the-muffin-man/", q: "What is the name of the lane where the Muffin Man lives?", answers: ["drury"] },
+            { id: 7, title: "Sing a Song of Sixpence", url: "https://www.poetryfoundation.org/poems/42900/sing-a-song-of-sixpence", q: "How many blackbirds were baked in the pie? (Write the number or words)", answers: ["24", "four and twenty", "twenty four", "twenty-four"] },
+            { id: 8, title: "Humpty Dumpty", url: "https://www.poetryfoundation.org/poems/46951/humpty-dumpty-sat-on-a-wall", q: "Who tried, but failed, to put Humpty together again? (Name either group)", answers: ["horses", "men", "king"] },
+            { id: 9, title: "Baa, Baa, Black Sheep", url: "https://www.poetryfoundation.org/poems/46945/baa-baa-black-sheep", q: "How many bags full of wool does the sheep have?", answers: ["3", "three"] },
+            { id: 10, title: "Mary Had a Little Lamb", url: "https://www.poetryfoundation.org/poems/44322/marys-lamb", q: "What place did the lamb go to that was 'against the rule'?", answers: ["school"] },
+            { id: 11, title: "Jack and Jill", url: "https://www.poetryfoundation.org/poems/46974/jack-and-jill-56d2271cb3535", q: "What other liquid besides brown paper did Dame Dob use to patch Jack up?", answers: ["vinegar"] },
+            { id: 12, title: "Hey Diddle Diddle", url: "https://www.poetryfoundation.org/poems/46952/hey-diddle-diddle", q: "Which animal laughed to see such sport?", answers: ["dog"] },
+            { id: 13, title: "Hickory Dickory Dock", url: "https://www.poetryfoundation.org/poems/46964/hickory-dickory-dock", q: "What number did the clock strike before the mouse ran down?", answers: ["1", "one"] },
+            { id: 14, title: "Little Miss Muffet", url: "https://www.poetryfoundation.org/poems/46957/little-miss-muffet", q: "What frightened Miss Muffet away?", answers: ["spider"] },
+            { id: 15, title: "This Little Piggy", url: "https://www.poetryfoundation.org/poems/46943/this-little-piggy", q: "What food did the third little piggy eat?", answers: ["roast beef", "beef"] },
+            { id: 16, title: "Three Blind Mice", url: "https://nurseryrhymescollections.com/songs/three-blind-mice/", q: "What tool did the farmer's wife use to cut off their tails?", answers: ["carving knife", "knife"] },
+            { id: 17, title: "This Old Man", url: "https://kidsongs.com/song/this-old-man/", q: "When he played number four, where did he play knick-knack?", answers: ["door"] },
+            { id: 18, title: "Jack be Nimble", url: "https://www.poetryfoundation.org/poems/46975/jack-be-nimble", q: "What object did Jack jump over?", answers: ["candlestick", "candle stick"] },
+            { id: 19, title: "Mary Mary Quite Contrary", url: "https://www.poetryfoundation.org/poems/46959/mary-mary-quite-contrary", q: "Besides silver bells and pretty maids, what kind of shells grow in her garden?", answers: ["cockle"] },
+            { id: 20, title: "Queen of Hearts", url: "https://americanliterature.com/author/mother-goose/nursery-rhyme/the-queen-of-hearts", q: "Who stole the tarts that the Queen made?", answers: ["knave", "knave of hearts"] }
+        ];
+
+        let unlockedLocks = [];
+        let currentChallengeId = null;
+
+        // SVG Icons
+        const lockedSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+        const unlockedSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
+
+        function startGame() {
+            document.getElementById('intro-modal').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            renderLocks();
+        }
+
+        function renderLocks() {
+            const container = document.getElementById('locks-container');
+            container.innerHTML = ''; 
+
+            rhymes.forEach((rhyme, index) => {
+                const isUnlocked = unlockedLocks.includes(rhyme.id);
+                
+                const btn = document.createElement('button');
+                btn.className = `lock-btn p-4 rounded-xl flex flex-col items-center justify-center gap-2 h-32 ${isUnlocked ? 'lock-unlocked' : 'lock-locked cursor-pointer'}`;
+                btn.onclick = () => openChallenge(rhyme.id);
+                
+                btn.innerHTML = `
+                    <div>${isUnlocked ? unlockedSVG : lockedSVG}</div>
+                    <div class="font-bold title-font">Lock ${index + 1}</div>
+                    <div class="text-xs truncate w-full text-center">${isUnlocked ? 'UNLOCKED' : rhyme.title}</div>
+                `;
+                
+                container.appendChild(btn);
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const count = unlockedLocks.length;
+            const total = rhymes.length;
+            document.getElementById('progress-text').innerText = `${count} / ${total}`;
+            document.getElementById('progress-bar').style.width = `${(count / total) * 100}%`;
+
+            if (count === total) {
+                setTimeout(() => {
+                    document.getElementById('victory-modal').classList.remove('hidden');
+                }, 500);
+            }
+        }
+
+        function openChallenge(id) {
+            currentChallengeId = id;
+            const rhyme = rhymes.find(r => r.id === id);
+            
+            document.getElementById('challenge-title').innerText = rhyme.title;
+            document.getElementById('challenge-question').innerText = rhyme.q;
+            document.getElementById('challenge-link').href = rhyme.url;
+            
+            document.getElementById('answer-input').value = '';
+            const feedbackMsg = document.getElementById('feedback-msg');
+            feedbackMsg.classList.add('hidden');
+            feedbackMsg.className = 'hidden font-bold p-3 rounded text-center';
+
+            document.getElementById('challenge-modal').classList.remove('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('answer-input').focus();
+            }, 100);
+        }
+
+        function closeModal() {
+            document.getElementById('challenge-modal').classList.add('hidden');
+            currentChallengeId = null;
+        }
+
+        function checkAnswer() {
+            const rhyme = rhymes.find(r => r.id === currentChallengeId);
+            const inputEl = document.getElementById('answer-input');
+            const feedbackMsg = document.getElementById('feedback-msg');
+            
+            const userAnswer = inputEl.value.trim().toLowerCase();
+            
+            if (userAnswer === '') {
+                showFeedback("Please type an answer before unlocking.", false);
+                return;
+            }
+
+            let isCorrect = false;
+            for (let i = 0; i < rhyme.answers.length; i++) {
+                if (userAnswer.includes(rhyme.answers[i].toLowerCase())) {
+                    isCorrect = true;
+                    break;
+                }
+            }
+
+            if (isCorrect) {
+                showFeedback("Correct! The lock clicks open...", true);
+                if (!unlockedLocks.includes(currentChallengeId)) {
+                    unlockedLocks.push(currentChallengeId);
+                }
+                
+                setTimeout(() => {
+                    closeModal();
+                    renderLocks();
+                }, 1500);
+            } else {
+                showFeedback("Incorrect. Re-read the poem carefully and try again!", false);
+            }
+        }
+
+        function showFeedback(text, isSuccess) {
+            const feedbackMsg = document.getElementById('feedback-msg');
+            feedbackMsg.innerText = text;
+            feedbackMsg.classList.remove('hidden');
+            
+            if (isSuccess) {
+                feedbackMsg.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-300');
+                feedbackMsg.classList.remove('bg-red-100', 'text-red-800', 'border-red-300');
+            } else {
+                feedbackMsg.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-300');
+                feedbackMsg.classList.remove('bg-green-100', 'text-green-800', 'border-green-300');
+            }
+        }
+
+        document.getElementById('answer-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
