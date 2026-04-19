@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Missing Decoration: Context Clues</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f3e5f5; /* Soft Purple */
+            --card-bg: #ffffff;
+            --accent-color: #ce93d8; /* Purple Accent */
+            --accent-hover: #ab47bc;
+            --text-color: #4a148c;
+            --correct-bg: #81c784; /* Soft Green */
+            --correct-text: #1b5e20;
+            --incorrect-bg: #ef9a9a; /* Soft Red */
+            --incorrect-text: #b71c1c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #7b1fa2;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 900;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f3e5f5;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: 2px solid #e1bee7;
+        }
+
+        .level-badge {
+            background-color: #8e24aa;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #ab47bc;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question-area {
+            margin: 30px 0;
+            min-height: 150px;
+        }
+
+        .instructions {
+            font-size: 1.3rem;
+            color: #7b1fa2;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .sentence {
+            font-size: 28px;
+            line-height: 1.8;
+            color: #37474f;
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #ce93d8;
+            margin-bottom: 30px;
+        }
+
+        .blank-line {
+            display: inline-block;
+            min-width: 100px;
+            border-bottom: 4px solid #7b1fa2;
+            margin: 0 5px;
+            color: transparent;
+        }
+
+        .filled-word {
+            display: inline-block;
+            color: #2e7d32;
+            font-weight: 900;
+            border-bottom: 4px solid #4caf50;
+            margin: 0 5px;
+            padding: 0 10px;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 3px solid #e1bee7;
+            color: #4a148c;
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: #f3e5f5;
+            border-color: #ba68c8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-bg);
+            border-color: #4caf50;
+            color: var(--correct-text);
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--incorrect-bg);
+            border-color: #f44336;
+            color: var(--incorrect-text);
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .feedback-msg {
+            font-size: 1.5rem;
+            font-weight: bold;
+            height: 40px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .feedback-msg.show {
+            opacity: 1;
+        }
+        .text-green { color: #2e7d32; }
+        .text-red { color: #c62828; }
+
+        .btn-next {
+            background-color: #8e24aa;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #4a148c;
+            transition: all 0.1s ease;
+            display: none;
+            margin: 20px auto 0;
+            font-family: inherit;
+        }
+
+        .btn-next:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+
+        .btn-next:hover {
+            background-color: #ab47bc;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+            display: none;
+            text-align: center;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .modal-title {
+            font-size: 3rem;
+            color: #7b1fa2;
+            margin-bottom: 10px;
+        }
+
+        .modal-scroll-area {
+            max-height: 75vh;
+            overflow-y: auto;
+            padding: 0 15px;
+            width: 100%;
+            max-width: 650px;
+        }
+
+        .modal-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn-start {
+            background-color: #8e24aa;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #4a148c;
+            transition: all 0.1s ease;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+        
+        .btn-start:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+
+        #startScreen {
+            display: flex;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            h1 { font-size: 2rem; }
+            .sentence { font-size: 22px; padding: 15px; }
+            .options-grid { grid-template-columns: 1fr; }
+            .stats-bar { font-size: 1rem; flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Start Screen -->
+        <div id="startScreen" class="modal-overlay">
+            <h2 class="modal-title">The Missing Decoration 🧁</h2>
+            
+            <div class="modal-scroll-area">
+                <!-- SVG Cupcake Graphic -->
+                <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 15px;">
+                    <path d="M 30 90 L 70 90 L 80 50 L 20 50 Z" fill="#ffb300" stroke="#3e2723" stroke-width="3"/>
+                    <line x1="35" y1="50" x2="40" y2="90" stroke="#3e2723" stroke-width="2"/>
+                    <line x1="50" y1="50" x2="50" y2="90" stroke="#3e2723" stroke-width="2"/>
+                    <line x1="65" y1="50" x2="60" y2="90" stroke="#3e2723" stroke-width="2"/>
+                    <!-- Missing Frosting Outline -->
+                    <path d="M 15 50 C 15 30, 30 30, 35 25 C 40 10, 60 10, 65 25 C 70 30, 85 30, 85 50 Z" fill="transparent" stroke="#ce93d8" stroke-width="4" stroke-dasharray="6,6"/>
+                </svg>
+
+                <p class="modal-text">
+                    Oh no! Our sentences are missing their <strong>adjectives</strong>. A sentence only <em>needs</em> a subject and a verb as ingredients, but adjectives are the <strong>decorations</strong>—like frosting on a cupcake!
+                </p>
+
+                <div style="background-color: #f3e5f5; border: 2px solid #ce93d8; border-radius: 12px; padding: 15px; text-align: left; margin-bottom: 20px;">
+                    <strong style="color: #7b1fa2; font-size: 1.2rem;">Your Mission:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px; font-size: 1.1rem; line-height: 1.6; color: #4a148c;">
+                        <li>Read the sentence carefully and look for <strong>context clues</strong>.</li>
+                        <li>Look at the multiple-choice options. <strong>They are ALL adjectives!</strong></li>
+                        <li>Pick the adjective decoration that makes the most sense to complete the story in the sentence.</li>
+                    </ul>
+                </div>
+                
+                <p class="modal-text" style="color: #c62828; font-weight: bold;">
+                    Pay attention! The missing decoration might be at the beginning, middle, or end of the sentence.
+                </p>
+            </div>
+            
+            <button class="btn-start" onclick="startGame()">Start Decorating!</button>
+        </div>
+
+        <!-- Level Up / End Screen -->
+        <div id="messageScreen" class="modal-overlay">
+            <h2 id="messageTitle" class="modal-title">Level Up!</h2>
+            <p id="messageText" class="modal-text">You've unlocked the next level.</p>
+            <button id="messageBtn" class="btn-start" style="display: block; margin: 0 auto;" onclick="continueGame()">Continue</button>
+        </div>
+
+        <!-- Main Game Interface -->
+        <header>
+            <h1>The Missing Decoration</h1>
+            <div class="stats-bar">
+                <div class="level-badge" id="levelDisplay">Level 1</div>
+                <div>Question: <span id="questionNum">1</span> / 25</div>
+                <div>Score: <span id="scoreDisplay">0</span></div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </header>
+
+        <main>
+            <div class="question-area">
+                <p class="instructions">Choose the correct adjective to fill in the blank:</p>
+                
+                <div id="sentenceDisplay" class="sentence">
+                    <!-- Sentence injects here -->
+                </div>
+
+                <div id="optionsContainer" class="options-grid">
+                    <!-- Buttons inject here -->
+                </div>
+            </div>
+            
+            <div id="feedback" class="feedback-msg">Great job!</div>
+            <button id="nextBtn" class="btn-next" onclick="nextQuestion()">Next Sentence ➜</button>
+        </main>
+    </div>
+
+    <script>
+        // Data structure for context clues and multiple choice.
+        // The blank is represented by "_____"
+        // ALL options are now adjectives, forcing students to use context clues.
+        const questions = [
+            // Level 1 (Simple, varied placement)
+            { 
+                text: "The _____ apple tasted sweet and delicious.", 
+                options: ["juicy", "loud", "square", "furry"], 
+                answer: "juicy" 
+            },
+            { 
+                text: "_____, the dog waited by the door for his owner.", 
+                options: ["Patient", "Spicy", "Purple", "Crispy"], 
+                answer: "Patient" 
+            },
+            { 
+                text: "The movie was so _____ that we all fell asleep in the theater.", 
+                options: ["boring", "fast", "salty", "bright"], 
+                answer: "boring" 
+            },
+            { 
+                text: "She carefully carried the _____ vase across the living room.", 
+                options: ["fragile", "hungry", "brave", "sleepy"], 
+                answer: "fragile" 
+            },
+            { 
+                text: "The runner felt _____ after finishing the long marathon.", 
+                options: ["exhausted", "wooden", "frozen", "tiny"], 
+                answer: "exhausted" 
+            },
+            
+            // Level 2 (Compound/Complex, harder vocab)
+            { 
+                text: "_____, the stars filled the night sky above the camp.", 
+                options: ["Bright", "Sour", "Heavy", "Fuzzy"], 
+                answer: "Bright" 
+            },
+            { 
+                text: "The children played in the _____ snow all afternoon until they froze.", 
+                options: ["fluffy", "hot", "spicy", "dry"], 
+                answer: "fluffy" 
+            },
+            { 
+                text: "The detective found a _____ clue hidden underneath the rug.", 
+                options: ["mysterious", "tasty", "cheerful", "cloudy"], 
+                answer: "mysterious" 
+            },
+            { 
+                text: "Because of the _____ weather, the outdoor picnic was canceled.", 
+                options: ["stormy", "delicious", "polite", "curly"], 
+                answer: "stormy" 
+            },
+            { 
+                text: "_____, the old house creaked every time the wind blew.", 
+                options: ["Eerie", "Joyful", "Sweet", "Smooth"], 
+                answer: "Eerie" 
+            },
+            
+            // Level 3 (6th-7th Grade Vocab, Tricky Context)
+            { 
+                text: "The magician's final illusion was completely _____.", 
+                options: ["baffling", "nutritious", "itchy", "liquid"], 
+                answer: "baffling" 
+            },
+            { 
+                text: "The royal chef prepared an _____ meal for the visiting king.", 
+                options: ["extravagant", "angry", "broken", "flimsy"], 
+                answer: "extravagant" 
+            },
+            { 
+                text: "The _____ student always double-checked her answers before submitting.", 
+                options: ["meticulous", "clumsy", "reckless", "fuzzy"], 
+                answer: "meticulous" 
+            },
+            { 
+                text: "After the long hike through the swamp, my boots were completely _____.", 
+                options: ["filthy", "arrogant", "transparent", "melodic"], 
+                answer: "filthy" 
+            },
+            { 
+                text: "_____, the hero stepped forward to face the terrifying dragon.", 
+                options: ["Courageous", "Delicious", "Plastic", "Timid"], 
+                answer: "Courageous" 
+            },
+            
+            // Level 3 Continued (10 More 6th-7th Grade Context Clues)
+            { 
+                text: "The _____ mountain peaked through the thick, gray clouds.", 
+                options: ["majestic", "salty", "talkative", "liquid"], 
+                answer: "majestic" 
+            },
+            { 
+                text: "After the long drought, the once _____ fields turned brown and brittle.", 
+                options: ["lush", "arrogant", "metallic", "deafening"], 
+                answer: "lush" 
+            },
+            { 
+                text: "The _____ kitten hid behind the sofa when the doorbell rang loudly.", 
+                options: ["timid", "spicy", "rectangular", "boiling"], 
+                answer: "timid" 
+            },
+            { 
+                text: "_____, the old man told stories of his youth to anyone who would listen.", 
+                options: ["Nostalgic", "Crunchy", "Plastic", "Invisible"], 
+                answer: "Nostalgic" 
+            },
+            { 
+                text: "The artist used _____ colors to paint the sunset over the ocean.", 
+                options: ["vibrant", "furious", "clumsy", "wooden"], 
+                answer: "vibrant" 
+            },
+            { 
+                text: "No one wanted to cross the _____ bridge that swayed dangerously in the wind.", 
+                options: ["rickety", "polite", "delicious", "cheerful"], 
+                answer: "rickety" 
+            },
+            { 
+                text: "The _____ ruins of the castle stood as a reminder of the distant past.", 
+                options: ["ancient", "jealous", "fluorescent", "tasty"], 
+                answer: "ancient" 
+            },
+            { 
+                text: "With a _____ sigh, the student finally finished the difficult math test.", 
+                options: ["weary", "shiny", "frozen", "geometric"], 
+                answer: "weary" 
+            },
+            { 
+                text: "The _____ jewelry sparkled brightly under the display lights.", 
+                options: ["dazzling", "grumpy", "itchy", "musical"], 
+                answer: "dazzling" 
+            },
+            { 
+                text: "_____, the judge slammed his gavel and demanded silence in the courtroom.", 
+                options: ["Stern", "Fluffy", "Sweet", "Transparent"], 
+                answer: "Stern" 
+            }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let madeMistakeOnCurrent = false;
+
+        // DOM Elements
+        const sentenceDisplay = document.getElementById('sentenceDisplay');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const nextBtn = document.getElementById('nextBtn');
+        const feedbackMsg = document.getElementById('feedback');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const questionNum = document.getElementById('questionNum');
+        const progressBar = document.getElementById('progressBar');
+        const levelDisplay = document.getElementById('levelDisplay');
+        
+        const startScreen = document.getElementById('startScreen');
+        const messageScreen = document.getElementById('messageScreen');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageText = document.getElementById('messageText');
+        const messageBtn = document.getElementById('messageBtn');
+
+        // Helper function to shuffle options so the answer isn't always in the same spot
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            currentIndex = 0;
+            score = 0;
+            levelDisplay.innerText = "Level 1";
+            updateStats();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // Reset state
+            nextBtn.style.display = 'none';
+            feedbackMsg.className = 'feedback-msg';
+            feedbackMsg.innerHTML = '';
+            madeMistakeOnCurrent = false;
+            optionsContainer.innerHTML = '';
+            
+            const currentQ = questions[currentIndex];
+            
+            // Format sentence with a span for the blank
+            const formattedSentence = currentQ.text.replace("_____", "<span id='blankSpot' class='blank-line'>_____</span>");
+            sentenceDisplay.innerHTML = formattedSentence;
+
+            // Shuffle and render options
+            const shuffledOptions = shuffleArray([...currentQ.options]);
+            
+            shuffledOptions.forEach(optionText => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = optionText;
+                
+                btn.onclick = () => checkAnswer(btn, optionText, currentQ.answer);
+                
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(btnElement, selectedWord, targetAnswer) {
+            const allButtons = document.querySelectorAll('.option-btn');
+            
+            if (selectedWord === targetAnswer) {
+                // Correct!
+                btnElement.classList.add('correct');
+                
+                // Disable all buttons
+                allButtons.forEach(b => b.disabled = true);
+                
+                // Fill in the blank visually
+                const blankSpot = document.getElementById('blankSpot');
+                blankSpot.outerHTML = `<span class="filled-word">${selectedWord}</span>`;
+                
+                feedbackMsg.innerHTML = "Perfect! You found the missing decoration! 🧁";
+                feedbackMsg.className = 'feedback-msg show text-green';
+                
+                if (!madeMistakeOnCurrent) {
+                    score++;
+                }
+                
+                nextBtn.style.display = 'block';
+                updateStats();
+
+            } else {
+                // Incorrect
+                btnElement.classList.add('incorrect');
+                btnElement.disabled = true; // Disable just the wrong one
+                
+                feedbackMsg.innerHTML = "Oops! Read the sentence again. Is that the right decoration?";
+                feedbackMsg.className = 'feedback-msg show text-red';
+                madeMistakeOnCurrent = true;
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            
+            // Check for Level Ups
+            if (currentIndex === 5) {
+                showModal("Level Up! 🚀", "Great job! Get ready for Level 2 vocabulary.", "Start Level 2");
+                levelDisplay.innerText = "Level 2";
+            } else if (currentIndex === 10) {
+                showModal("Level Up! 🔥", "You are an Adjective Master! Get ready for the hardest context clues.", "Start Level 3");
+                levelDisplay.innerText = "Level 3";
+            } else if (currentIndex === 25) {
+                showModal("Game Over! 🏆", `You completed The Missing Decoration!\nFinal Score: ${score} out of 25.`, "Play Again");
+            } else {
+                updateStats();
+                loadQuestion();
+            }
+        }
+
+        function showModal(title, text, btnText) {
+            messageTitle.innerText = title;
+            messageText.innerText = text;
+            messageBtn.innerText = btnText;
+            messageScreen.style.display = 'flex';
+        }
+
+        function continueGame() {
+            messageScreen.style.display = 'none';
+            if (currentIndex === 25) {
+                // Reset Game
+                startGame();
+            } else {
+                updateStats();
+                loadQuestion();
+            }
+        }
+
+        function updateStats() {
+            questionNum.innerText = Math.min(currentIndex + 1, 25);
+            scoreDisplay.innerText = score;
+            
+            const progressPercentage = (currentIndex / 25) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+
+    </script>
+</body>
+</html>
