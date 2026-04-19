@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cupcake Decorator: Adjective Practice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fce4ec; /* Soft Pink Bakery Theme */
+            --card-bg: #ffffff;
+            --accent-color: #f06292; /* Pink Accent */
+            --accent-hover: #e91e63;
+            --text-color: #4a148c;
+            --correct-bg: #81c784;
+            --incorrect-bg: #ef9a9a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; /* Prevent text selection while dragging */
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden; /* Prevent scrolling on mobile while dragging */
+            touch-action: none;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        header {
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            color: #d81b60;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8bbd0;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #880e4f;
+        }
+
+        /* Game Area Layout */
+        .game-area {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            position: relative;
+            min-height: 0;
+        }
+
+        /* Cupcake Drop Zone */
+        .cupcake-zone {
+            flex: 1;
+            background-color: #fff3e0;
+            border: 4px dashed #ffb74d;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .cupcake-graphic {
+            width: 250px;
+            height: 250px;
+            z-index: 1;
+        }
+
+        /* Tray (Draggable Items) */
+        .tray-zone {
+            flex: 1;
+            background-color: #e1f5fe;
+            border: 4px solid #81d4fa;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 15px;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .tray-title {
+            width: 100%;
+            font-size: 1.5rem;
+            color: #0277bd;
+            margin-bottom: 10px;
+        }
+
+        /* Draggable Decorations */
+        .decoration {
+            padding: 10px 20px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            cursor: grab;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+            transition: transform 0.1s;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .decoration:active {
+            cursor: grabbing;
+        }
+
+        /* Shapes for decorations */
+        .shape-sprinkle {
+            border-radius: 40px;
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            color: white;
+            padding: 10px 25px;
+            box-shadow: inset 4px 4px 6px rgba(255,255,255,0.4), inset -4px -4px 6px rgba(0,0,0,0.2);
+        }
+        
+        .shape-cherry {
+            border-radius: 40px;
+            background: radial-gradient(circle at 30% 30%, #ff8a80, #e53935 40%, #b71c1c);
+            color: white;
+            padding: 15px 25px;
+            text-align: center;
+        }
+        .shape-cherry::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            width: 20px;
+            height: 25px;
+            border-left: 4px solid #388e3c;
+            border-top-left-radius: 20px;
+            transform: translateX(-50%);
+            z-index: -1;
+        }
+
+        .shape-candy {
+            background: linear-gradient(to right, #ffca28, #ffb300);
+            border-radius: 20px;
+            color: #3e2723;
+            padding: 12px 25px;
+        }
+        .shape-candy::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            width: 0; height: 0;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            border-right: 18px solid #ffca28;
+            transform: translateY(-50%);
+            z-index: -1;
+        }
+        .shape-candy::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            width: 0; height: 0;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            border-left: 18px solid #ffb300;
+            transform: translateY(-50%);
+            z-index: -1;
+        }
+
+        .shape-frosting {
+            background: #e1bee7; /* Fluffy light purple */
+            color: #4a148c;
+            border-radius: 30px;
+            padding: 15px 30px;
+        }
+        .shape-frosting::before {
+            content: '';
+            position: absolute;
+            top: -15px; left: 15%;
+            width: 40px; height: 40px;
+            background: #e1bee7;
+            border-radius: 50%;
+            z-index: -1;
+        }
+        .shape-frosting::after {
+            content: '';
+            position: absolute;
+            top: -20px; right: 20%;
+            width: 50px; height: 50px;
+            background: #e1bee7;
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .feedback-msg {
+            font-size: 1.5rem;
+            font-weight: bold;
+            height: 40px;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            flex-shrink: 0;
+        }
+        .feedback-msg.show { opacity: 1; }
+        .text-green { color: #2e7d32; }
+        .text-red { color: #c62828; }
+
+        /* Modals */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 100;
+            display: none;
+            text-align: center;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .modal-title {
+            font-size: 3rem;
+            color: #d81b60;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #c2185b;
+            transition: all 0.1s ease;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+
+        #startScreen { display: flex; }
+
+        @media (max-width: 768px) {
+            .game-area { flex-direction: column; }
+            .cupcake-zone { min-height: 300px; flex: none; }
+            .tray-zone { flex: 1; min-height: 200px; }
+            .cupcake-graphic { width: 180px; height: 180px; }
+            h1 { font-size: 1.8rem; }
+            .decoration { font-size: 1.1rem; padding: 8px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        
+        <!-- Start Screen -->
+        <div id="startScreen" class="modal-overlay">
+            <h2 class="modal-title">Cupcake Decorator! 🧁</h2>
+            
+            <p class="modal-text">
+                Sentences need <em>subjects</em> and <em>verbs</em> to bake the cake, but <strong>adjectives</strong> are the decorations!<br><br>
+                Look in the tray for sprinkles, cherries, and candies. <br>
+                <strong style="color: #c62828;">Drag ONLY the adjectives onto your cupcake to decorate it.</strong><br><br>
+                If you try to decorate with a noun or a verb, it will bounce right off!
+            </p>
+            
+            <button class="btn" onclick="startGame()">Start Baking!</button>
+        </div>
+
+        <!-- Level Complete Screen -->
+        <div id="messageScreen" class="modal-overlay">
+            <h2 id="messageTitle" class="modal-title">Beautiful Cupcake!</h2>
+            <p id="messageText" class="modal-text">You found all the adjectives!</p>
+            <button id="messageBtn" class="btn" onclick="nextRound()">Next Cupcake</button>
+        </div>
+
+        <!-- Main Game Interface -->
+        <header>
+            <h1>Cupcake Decorator</h1>
+            <div class="stats-bar">
+                <div id="levelDisplay">Cupcake: <span id="roundNum">1</span> / 10</div>
+                <div>Score: <span id="scoreDisplay">0</span></div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <!-- Left Side: Cupcake Drop Zone -->
+            <div class="cupcake-zone" id="cupcakeZone">
+                <div style="font-size: 1.5rem; color: #f57c00; font-weight: bold; position: absolute; top: 10px; width: 100%; text-align: center; pointer-events: none;">
+                    Drop Adjectives Here!
+                </div>
+                <!-- Plain Cupcake SVG -->
+                <svg class="cupcake-graphic" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Wrapper -->
+                    <path d="M 25 90 L 75 90 L 85 50 L 15 50 Z" fill="#ffd54f" stroke="#ff8f00" stroke-width="2"/>
+                    <line x1="30" y1="50" x2="35" y2="90" stroke="#ff8f00" stroke-width="2"/>
+                    <line x1="45" y1="50" x2="45" y2="90" stroke="#ff8f00" stroke-width="2"/>
+                    <line x1="60" y1="50" x2="55" y2="90" stroke="#ff8f00" stroke-width="2"/>
+                    <line x1="75" y1="50" x2="65" y2="90" stroke="#ff8f00" stroke-width="2"/>
+                    
+                    <!-- Cake Dome (Plain) -->
+                    <path d="M 15 50 C 15 20, 40 10, 50 10 C 60 10, 85 20, 85 50 Z" fill="#d7ccc8" stroke="#8d6e63" stroke-width="2"/>
+                </svg>
+            </div>
+
+            <!-- Right Side: Tray for dragging items -->
+            <div class="tray-zone" id="trayZone">
+                <div class="tray-title">Decoration Tray</div>
+                <!-- Draggables inject here -->
+            </div>
+        </div>
+        
+        <div id="feedback" class="feedback-msg">Great job!</div>
+    </div>
+
+    <script>
+        // Game Data: 10 Rounds of increasing difficulty
+        // Each round has a mix of adjectives (targets) and nouns/verbs (decoys)
+        const rounds = [
+            {
+                targets: ["sweet", "pink", "tiny"], // Adjectives
+                decoys: ["dog", "run"] // Nouns & Verbs
+            },
+            {
+                targets: ["fuzzy", "loud", "huge"],
+                decoys: ["jump", "car", "apple"]
+            },
+            {
+                targets: ["delicious", "bright", "soft"],
+                decoys: ["sing", "tree", "slept"]
+            },
+            {
+                targets: ["shiny", "heavy", "cold"],
+                decoys: ["read", "book", "water"]
+            },
+            {
+                targets: ["mysterious", "fragile", "brave"],
+                decoys: ["ocean", "explore", "ship"]
+            },
+            {
+                targets: ["enormous", "ancient", "creepy"],
+                decoys: ["castle", "ghost", "hide"]
+            },
+            {
+                targets: ["vibrant", "cheerful", "clumsy"],
+                decoys: ["dancer", "leap", "stage"]
+            },
+            {
+                targets: ["boisterous", "meticulous", "weary"],
+                decoys: ["student", "write", "pencil"]
+            },
+            {
+                targets: ["formidable", "ominous", "fierce"],
+                decoys: ["dragon", "roared", "mountain"]
+            },
+            {
+                targets: ["ubiquitous", "ephemeral", "ostentatious"],
+                decoys: ["smartphone", "scroll", "attention"]
+            }
+        ];
+
+        // Shapes array to randomly assign to words
+        const shapes = ['shape-sprinkle', 'shape-cherry', 'shape-candy', 'shape-frosting'];
+
+        let currentRound = 0;
+        let score = 0;
+        let adjectivesPlaced = 0;
+        let totalAdjectives = 0;
+
+        // DOM Elements
+        const trayZone = document.getElementById('trayZone');
+        const cupcakeZone = document.getElementById('cupcakeZone');
+        const feedbackMsg = document.getElementById('feedback');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const roundNum = document.getElementById('roundNum');
+        const startScreen = document.getElementById('startScreen');
+        const messageScreen = document.getElementById('messageScreen');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageText = document.getElementById('messageText');
+
+        // Dragging State Variables
+        let draggedElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let startX = 0;
+        let startY = 0;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            currentRound = 0;
+            score = 0;
+            loadRound();
+        }
+
+        function loadRound() {
+            // Reset state
+            trayZone.innerHTML = '<div class="tray-title">Decoration Tray</div>';
+            
+            // Remove previous decorations from cupcake, keep the SVG graphic
+            const oldDecorations = cupcakeZone.querySelectorAll('.decoration');
+            oldDecorations.forEach(el => el.remove());
+
+            feedbackMsg.className = 'feedback-msg';
+            feedbackMsg.innerHTML = '';
+            adjectivesPlaced = 0;
+
+            const roundData = rounds[currentRound];
+            totalAdjectives = roundData.targets.length;
+
+            // Combine and shuffle words
+            const allWords = [];
+            roundData.targets.forEach(word => allWords.push({ text: word, isTarget: true }));
+            roundData.decoys.forEach(word => allWords.push({ text: word, isTarget: false }));
+            
+            const shuffledWords = shuffleArray(allWords);
+
+            // Create DOM elements
+            shuffledWords.forEach((wordObj, index) => {
+                const dec = document.createElement('div');
+                dec.innerText = wordObj.text;
+                dec.dataset.isTarget = wordObj.isTarget;
+                
+                // Assign a random shape
+                const randomShape = shapes[index % shapes.length];
+                dec.className = `decoration ${randomShape}`;
+
+                // Setup Pointer Events for Mobile-Friendly Drag & Drop
+                dec.addEventListener('pointerdown', pointerDownHandler);
+                
+                trayZone.appendChild(dec);
+            });
+
+            updateHUD();
+        }
+
+        // --- Drag and Drop Logic using Pointer Events ---
+
+        function pointerDownHandler(e) {
+            if (e.button !== 0 && e.type !== 'touchstart') return; // Only left click or touch
+            
+            draggedElement = e.target;
+            
+            // Prevent default touch behaviors (like scrolling) while dragging
+            draggedElement.setPointerCapture(e.pointerId);
+
+            // Get initial position
+            const rect = draggedElement.getBoundingClientRect();
+            
+            // Calculate offset of pointer inside the element
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            // Save original position in case it snaps back
+            startX = draggedElement.style.left;
+            startY = draggedElement.style.top;
+
+            // Move element to the body so it can drag over everything freely
+            // But first, record its absolute position so it doesn't jump
+            draggedElement.style.position = 'absolute';
+            draggedElement.style.left = rect.left + 'px';
+            draggedElement.style.top = rect.top + 'px';
+            draggedElement.style.zIndex = 1000;
+            draggedElement.style.margin = '0'; // Remove grid/flex margins
+            document.body.appendChild(draggedElement);
+
+            // Add move and up listeners
+            document.addEventListener('pointermove', pointerMoveHandler);
+            document.addEventListener('pointerup', pointerUpHandler);
+        }
+
+        function pointerMoveHandler(e) {
+            if (!draggedElement) return;
+
+            // Update position based on pointer
+            const newX = e.clientX - offsetX;
+            const newY = e.clientY - offsetY;
+
+            draggedElement.style.left = newX + 'px';
+            draggedElement.style.top = newY + 'px';
+        }
+
+        function pointerUpHandler(e) {
+            if (!draggedElement) return;
+
+            document.removeEventListener('pointermove', pointerMoveHandler);
+            document.removeEventListener('pointerup', pointerUpHandler);
+
+            // Check collision with Cupcake Zone
+            const zoneRect = cupcakeZone.getBoundingClientRect();
+            const pointerX = e.clientX;
+            const pointerY = e.clientY;
+
+            // Is pointer inside the cupcake zone?
+            if (pointerX >= zoneRect.left && pointerX <= zoneRect.right &&
+                pointerY >= zoneRect.top && pointerY <= zoneRect.bottom) {
+                
+                // Dropped on the cupcake! Check if it's correct.
+                const isCorrect = draggedElement.dataset.isTarget === 'true';
+                
+                if (isCorrect) {
+                    // Success!
+                    handleCorrectDrop(e, zoneRect);
+                } else {
+                    // Failure! (Noun or Verb)
+                    handleIncorrectDrop();
+                }
+
+            } else {
+                // Dropped outside the cupcake, return to tray
+                returnToTray();
+            }
+
+            draggedElement.releasePointerCapture(e.pointerId);
+            draggedElement = null;
+        }
+
+        function handleCorrectDrop(e, zoneRect) {
+            // It's an adjective! Let it stick to the cupcake zone.
+            
+            // Make it relative to the cupcake zone now
+            const newLeft = e.clientX - offsetX - zoneRect.left;
+            const newTop = e.clientY - offsetY - zoneRect.top;
+            
+            draggedElement.style.position = 'absolute';
+            draggedElement.style.left = newLeft + 'px';
+            draggedElement.style.top = newTop + 'px';
+            draggedElement.style.zIndex = 10;
+            
+            // Remove pointer events so they can't drag it again
+            draggedElement.style.cursor = 'default';
+            draggedElement.removeEventListener('pointerdown', pointerDownHandler);
+            
+            // Add a little pop animation
+            draggedElement.style.transform = 'scale(1.2)';
+            setTimeout(() => { draggedElement.style.transform = 'scale(1)'; }, 200);
+
+            cupcakeZone.appendChild(draggedElement);
+
+            // Update Game State
+            score += 10;
+            adjectivesPlaced++;
+            
+            feedbackMsg.innerHTML = "Great adjective! 🧁";
+            feedbackMsg.className = 'feedback-msg show text-green';
+            updateHUD();
+
+            // Check if round is over
+            if (adjectivesPlaced === totalAdjectives) {
+                setTimeout(endRound, 500);
+            }
+        }
+
+        function handleIncorrectDrop() {
+            // It's a noun or verb! Bounce it back.
+            feedbackMsg.innerHTML = "Oops! That's not an adjective! It bounced off.";
+            feedbackMsg.className = 'feedback-msg show text-red';
+            
+            score = Math.max(0, score - 5); // Small penalty, don't go below 0
+            updateHUD();
+            
+            returnToTray();
+        }
+
+        function returnToTray() {
+            // Remove absolute positioning and put back in tray
+            draggedElement.style.position = 'relative';
+            draggedElement.style.left = 'auto';
+            draggedElement.style.top = 'auto';
+            draggedElement.style.zIndex = 10;
+            draggedElement.style.margin = ''; // restore flex gap handling
+            trayZone.appendChild(draggedElement);
+        }
+
+        // --- Game Flow ---
+
+        function endRound() {
+            messageTitle.innerText = "Beautiful Cupcake!";
+            messageText.innerText = `You decorated it perfectly. Score: ${score}`;
+            messageScreen.style.display = 'flex';
+        }
+
+        function nextRound() {
+            messageScreen.style.display = 'none';
+            currentRound++;
+            
+            if (currentRound >= rounds.length) {
+                // Game Over
+                messageTitle.innerText = "Master Baker! 🏆";
+                messageText.innerText = `You finished all 10 cupcakes!\nFinal Score: ${score}`;
+                
+                // Change button to restart
+                const btn = document.getElementById('messageBtn');
+                btn.innerText = "Play Again";
+                btn.onclick = () => location.reload();
+                
+                messageScreen.style.display = 'flex';
+            } else {
+                loadRound();
+            }
+        }
+
+        function updateHUD() {
+            roundNum.innerText = Math.min(currentRound + 1, 10);
+            scoreDisplay.innerText = score;
+        }
+
+    </script>
+</body>
+</html>
