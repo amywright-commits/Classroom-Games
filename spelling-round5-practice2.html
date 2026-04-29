@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5th Grade Missing Letters</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            background-color: #e0e7ff;
+            background-image: radial-gradient(#a5b4fc 2px, transparent 2px);
+            background-size: 30px 30px;
+            font-family: 'Nunito', sans-serif;
+            color: #312e81;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(67, 56, 202, 0.2), 0 8px 10px -6px rgba(67, 56, 202, 0.2);
+            border: 4px solid #818cf8;
+        }
+
+        /* The blocks for letters */
+        .word-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 2rem 0;
+        }
+
+        .letter-block {
+            width: 60px;
+            height: 70px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Static provided letters */
+        .static-letter {
+            background: #e0e7ff;
+            color: #4f46e5;
+            border: 3px solid #c7d2fe;
+            box-shadow: inset 0 -4px 0 rgba(199, 210, 254, 0.5);
+        }
+
+        /* Input fields for missing letters */
+        .letter-input {
+            background: #fff;
+            color: #4338ca;
+            border: 4px dashed #a5b4fc;
+            outline: none;
+            text-align: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            cursor: text;
+        }
+
+        .letter-input:focus {
+            border-color: #4f46e5;
+            border-style: solid;
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            z-index: 10;
+        }
+
+        .letter-input.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+            border-style: solid;
+            color: #059669;
+        }
+
+        .letter-input.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            border-style: solid;
+            color: #b91c1c;
+        }
+
+        /* Buttons */
+        .btn {
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s ease-out;
+        }
+
+        /* Context Sentence Blank */
+        .sentence-blank {
+            display: inline-block;
+            min-width: 100px;
+            border-bottom: 3px solid #6366f1;
+            margin: 0 5px;
+            color: #4f46e5;
+            font-weight: 900;
+            text-align: center;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-12">
+
+    <main class="game-card w-full max-w-3xl p-6 md:p-10 text-center relative overflow-hidden">
+        
+        <!-- Header & Progress -->
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl md:text-4xl font-black text-indigo-600 drop-shadow-sm uppercase tracking-wider">
+                Missing Letters
+            </h1>
+            <div class="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-full font-bold text-lg border-2 border-indigo-200">
+                Word <span id="current-word-num">1</span> of <span id="total-words-num">14</span>
+            </div>
+        </header>
+
+        <!-- Sentence Context -->
+        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mb-8 shadow-inner">
+            <p id="sentence-display" class="text-2xl font-bold text-indigo-900 leading-relaxed">
+                <!-- Sentence injected by JS -->
+            </p>
+        </div>
+
+        <!-- Word Puzzle Area -->
+        <div id="word-container" class="word-container">
+            <!-- Letter blocks injected by JS -->
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="feedback-message" class="text-2xl font-bold mb-6 h-8 text-transparent transition-colors">
+            Good Job!
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <button id="btn-check" class="btn bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-black py-4 px-10 rounded-2xl uppercase tracking-wide text-xl">
+                Check Answer
+            </button>
+            <button id="btn-next" class="hidden btn bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white font-black py-4 px-10 rounded-2xl uppercase tracking-wide text-xl">
+                Next Word ➔
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- GAME DATA ---
+        // 'missing' array contains the specific index (0-based) of the tricky letters to hide.
+        const wordData = [
+            { word: "every", missing: [2], sentence: "I brush my teeth [BLANK] single day." }, // ev_ry (often misspelled evry)
+            { word: "very", missing: [1], sentence: "Thank you [BLANK] much for the gift!" }, // v_ry
+            { word: "finally", missing: [3, 4], sentence: "We [BLANK] arrived at the beach after a long drive." }, // fin__ly (often misspelled finoly or finaly)
+            { word: "probably", missing: [4, 5], sentence: "It will [BLANK] rain tomorrow afternoon." }, // prob__ly (often misspelled probly)
+            { word: "definite", missing: [3, 5], sentence: "We need a [BLANK] answer by tomorrow." }, // def_n_te (often misspelled definate)
+            { word: "because", missing: [3, 4], sentence: "I am wearing a coat [BLANK] it is freezing." }, // bec__se (often misspelled becuse)
+            { word: "often", missing: [2], sentence: "How [BLANK] do you practice playing the piano?" }, // of_en (silent t)
+            { word: "before", missing: [3], sentence: "Always wash your hands [BLANK] eating dinner." }, // bef_re
+            { word: "after", missing: [3], sentence: "We can play video games [BLANK] we finish homework." }, // aft_r
+            { word: "since", missing: [1], sentence: "I have lived in this town [BLANK] I was a baby." }, // s_nce
+            { word: "always", missing: [3], sentence: "She is [BLANK] kind and helpful to her friends." }, // alw_ys (often misspelled allways)
+            { word: "beginning", missing: [4, 5], sentence: "The [BLANK] of the movie was very exciting." }, // begi__ing (double n is tricky!)
+            { word: "again", missing: [2, 3], sentence: "Can you please play that song [BLANK]?" }, // ag__n (ai vowel team)
+            { word: "until", missing: [4], sentence: "We have to wait [BLANK] the light turns green." } // unti_ (often misspelled untill)
+        ];
+        
+        let words = [];
+        let currentIndex = 0;
+
+        // --- DOM ELEMENTS ---
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const wordContainer = document.getElementById('word-container');
+        const btnCheck = document.getElementById('btn-check');
+        const btnNext = document.getElementById('btn-next');
+        const feedbackMsg = document.getElementById('feedback-message');
+        const currentNumEl = document.getElementById('current-word-num');
+        const totalNumEl = document.getElementById('total-words-num');
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle the word list
+            words = [...wordData].sort(() => Math.random() - 0.5);
+            totalNumEl.innerText = words.length;
+            currentIndex = 0;
+            loadWord();
+        }
+
+        function loadWord() {
+            const currentData = words[currentIndex];
+            currentNumEl.innerText = currentIndex + 1;
+            
+            // Reset UI
+            wordContainer.innerHTML = '';
+            feedbackMsg.classList.remove('text-emerald-500', 'text-red-500');
+            feedbackMsg.classList.add('text-transparent');
+            feedbackMsg.innerText = "Placeholder";
+            
+            btnCheck.classList.remove('hidden');
+            btnNext.classList.add('hidden');
+
+            // Render Sentence
+            const sentenceHTML = currentData.sentence.replace("[BLANK]", `<span class="sentence-blank"> ? </span>`);
+            sentenceDisplay.innerHTML = sentenceHTML;
+
+            // Render Word Blocks
+            const wordLetters = currentData.word.split('');
+            wordLetters.forEach((letter, index) => {
+                if (currentData.missing.includes(index)) {
+                    // Create an input for the missing letter
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.className = 'letter-block letter-input';
+                    input.dataset.correct = letter.toLowerCase();
+                    input.dataset.index = index;
+                    
+                    // Auto-advance logic
+                    input.addEventListener('input', handleInput);
+                    input.addEventListener('keydown', handleKeyDown);
+                    
+                    wordContainer.appendChild(input);
+                } else {
+                    // Create a static block for provided letters
+                    const span = document.createElement('span');
+                    span.className = 'letter-block static-letter';
+                    span.innerText = letter;
+                    wordContainer.appendChild(span);
+                }
+            });
+
+            // Auto-focus the first input
+            setTimeout(() => {
+                const firstInput = document.querySelector('.letter-input');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+
+        // --- TYPING MECHANICS ---
+        function handleInput(e) {
+            const input = e.target;
+            input.value = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase(); // Only allow letters
+            
+            // Remove error styles if they start typing again
+            input.classList.remove('incorrect', 'animate-shake');
+
+            if (input.value.length === 1) {
+                // Find next input and focus it
+                const inputs = Array.from(document.querySelectorAll('.letter-input'));
+                const currentIdx = inputs.indexOf(input);
+                if (currentIdx < inputs.length - 1) {
+                    inputs[currentIdx + 1].focus();
+                }
+            }
+        }
+
+        function handleKeyDown(e) {
+            const input = e.target;
+            // If they press Backspace on an empty input, go back to the previous one
+            if (e.key === 'Backspace' && input.value === '') {
+                const inputs = Array.from(document.querySelectorAll('.letter-input'));
+                const currentIdx = inputs.indexOf(input);
+                if (currentIdx > 0) {
+                    inputs[currentIdx - 1].focus();
+                    inputs[currentIdx - 1].value = ''; // clear it
+                }
+            }
+            // Allow "Enter" to check the answer
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        }
+
+        // --- GAME LOGIC ---
+        function checkAnswer() {
+            const currentData = words[currentIndex];
+            const inputs = document.querySelectorAll('.letter-input');
+            let allCorrect = true;
+            let missingAny = false;
+
+            inputs.forEach(input => {
+                // Reset classes
+                input.classList.remove('incorrect', 'correct', 'animate-shake', 'animate-pop');
+
+                if (input.value === '') {
+                    missingAny = true;
+                    input.classList.add('incorrect', 'animate-shake');
+                } else if (input.value.toLowerCase() === input.dataset.correct) {
+                    input.classList.add('correct');
+                } else {
+                    allCorrect = false;
+                    input.classList.add('incorrect', 'animate-shake');
+                }
+            });
+
+            if (missingAny) {
+                showFeedback("Fill in all the blanks!", "error");
+                return;
+            }
+
+            if (allCorrect) {
+                // Success!
+                showFeedback("Perfect spelling!", "success");
+                
+                // Pop animation for the whole word
+                Array.from(wordContainer.children).forEach((child, i) => {
+                    setTimeout(() => child.classList.add('animate-pop'), i * 50);
+                });
+
+                // Update the sentence to show the full word
+                sentenceDisplay.innerHTML = currentData.sentence.replace("[BLANK]", `<span class="text-emerald-500 uppercase">${currentData.word}</span>`);
+
+                // Disable inputs
+                inputs.forEach(input => {
+                    input.readOnly = true;
+                    input.style.cursor = 'default';
+                });
+
+                // Swap buttons
+                btnCheck.classList.add('hidden');
+                btnNext.classList.remove('hidden');
+                btnNext.focus(); // focus the next button so they can just hit enter
+
+            } else {
+                // Error
+                showFeedback("Check the red letters and try again!", "error");
+            }
+        }
+
+        function showFeedback(text, type) {
+            feedbackMsg.innerText = text;
+            feedbackMsg.classList.remove('text-transparent', 'text-red-500', 'text-emerald-500');
+            if (type === "success") {
+                feedbackMsg.classList.add('text-emerald-500');
+            } else {
+                feedbackMsg.classList.add('text-red-500');
+            }
+        }
+
+        function nextWord() {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                loadWord();
+            } else {
+                // Game Over
+                wordContainer.innerHTML = '';
+                sentenceDisplay.innerHTML = "You mastered all the tricky letters!";
+                btnNext.classList.add('hidden');
+                feedbackMsg.innerText = "Amazing Job!";
+                feedbackMsg.classList.remove('text-transparent');
+                feedbackMsg.classList.add('text-indigo-600', 'text-3xl');
+                
+                const playAgainBtn = document.createElement('button');
+                playAgainBtn.className = 'btn bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black py-4 px-10 rounded-2xl uppercase tracking-wide text-xl mt-4';
+                playAgainBtn.innerText = 'Play Again';
+                playAgainBtn.onclick = () => {
+                    playAgainBtn.remove();
+                    initGame();
+                };
+                document.querySelector('.flex-wrap').appendChild(playAgainBtn);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        btnCheck.addEventListener('click', checkAnswer);
+        btnNext.addEventListener('click', nextWord);
+
+        // Start the game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
