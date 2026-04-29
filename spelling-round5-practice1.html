@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5th Grade Spelling Scramble</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+        body {
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#bbf7d0 2px, transparent 2px);
+            background-size: 30px 30px;
+            font-family: 'Fredoka', sans-serif;
+            color: #334155;
+            touch-action: manipulation; /* Improves touch behavior */
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 4px solid #86efac;
+        }
+
+        /* The draggable letter tiles */
+        .letter-tile {
+            width: 60px;
+            height: 65px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 0 #1d4ed8, 0 8px 10px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background 0.2s, box-shadow 0.1s;
+            text-transform: uppercase;
+        }
+
+        .letter-tile:active {
+            cursor: grabbing;
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #1d4ed8, 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .letter-tile.dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+            z-index: 50;
+        }
+
+        /* The empty slots where letters go */
+        .drop-slot {
+            width: 65px;
+            height: 70px;
+            background: #f8fafc;
+            border: 3px dashed #cbd5e1;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .drop-slot.drag-over {
+            background: #e0f2fe;
+            border-color: #3b82f6;
+            border-style: solid;
+            transform: scale(1.05);
+        }
+
+        /* The bank where letters start */
+        .letter-bank {
+            min-height: 100px;
+            background: #f1f5f9;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 0 #047857;
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #047857;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 4px 0 #b45309;
+        }
+        .btn-secondary:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #b45309;
+        }
+
+        /* Animations for correct/incorrect */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .error-shake .letter-tile {
+            animation: shake 0.4s ease-in-out;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 4px 0 #991b1b;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .success-bounce .letter-tile {
+            animation: bounce 0.6s ease-in-out infinite;
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 0 #047857;
+        }
+        .success-bounce .letter-tile:nth-child(odd) {
+            animation-delay: 0.1s;
+        }
+        .success-bounce .letter-tile:nth-child(even) {
+            animation-delay: 0.2s;
+        }
+
+        .hint-locked {
+            background: linear-gradient(135deg, #a855f7, #7e22ce) !important;
+            box-shadow: 0 4px 0 #581c87 !important;
+            cursor: default !important;
+            transform: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-12">
+
+    <main class="game-container w-full max-w-3xl p-6 md:p-10 text-center">
+        
+        <!-- Header & Progress -->
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-emerald-600 drop-shadow-sm">
+                Spelling Scramble
+            </h1>
+            <div class="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full font-bold text-lg border-2 border-emerald-200">
+                Word <span id="current-word-num">1</span> of <span id="total-words-num">14</span>
+            </div>
+        </header>
+
+        <!-- Instructions -->
+        <p class="text-slate-500 mb-6 font-semibold text-lg">
+            Drag the letters (or click them) to put the word back together!
+        </p>
+
+        <!-- Drop Zones (Target Slots) -->
+        <div id="drop-zones" class="flex flex-wrap justify-center gap-2 mb-8 min-h-[75px]">
+            <!-- Slots injected by JS -->
+        </div>
+
+        <!-- Letter Bank (Source) -->
+        <div id="letter-bank" class="letter-bank mb-8 transition-colors">
+            <!-- Draggable letters injected by JS -->
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="feedback-message" class="text-2xl font-bold mb-6 h-8 text-transparent transition-colors">
+            Good Job!
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <button id="btn-hint" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl transition-transform uppercase tracking-wide shadow-[0_4px_0_#7e22ce] active:translate-y-[4px] active:shadow-none">
+                Get a Hint
+            </button>
+            <button id="btn-reset" class="btn-secondary text-white font-bold py-3 px-6 rounded-xl transition-transform uppercase tracking-wide">
+                Reset Letters
+            </button>
+            <button id="btn-check" class="btn-primary text-white font-bold py-3 px-8 rounded-xl transition-transform uppercase tracking-wide text-lg">
+                Check Answer
+            </button>
+            <button id="btn-next" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-transform uppercase tracking-wide text-lg shadow-[0_4px_0_#1e40af] active:translate-y-[4px] active:shadow-none">
+                Next Word ➔
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- GAME DATA ---
+        const wordList = [
+            "every", "very", "finally", "probably", "definite", 
+            "because", "often", "before", "after", "since", 
+            "always", "beginning", "again", "until"
+        ];
+        
+        let words = [];
+        let currentIndex = 0;
+        let draggedTile = null;
+        let hintSequence = [];
+        let currentHintIndex = 0;
+
+        // --- DOM ELEMENTS ---
+        const dropZonesContainer = document.getElementById('drop-zones');
+        const letterBank = document.getElementById('letter-bank');
+        const btnCheck = document.getElementById('btn-check');
+        const btnReset = document.getElementById('btn-reset');
+        const btnNext = document.getElementById('btn-next');
+        const btnHint = document.getElementById('btn-hint');
+        const feedbackMsg = document.getElementById('feedback-message');
+        const currentNumEl = document.getElementById('current-word-num');
+        const totalNumEl = document.getElementById('total-words-num');
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle the word list so it's a new order every time they play
+            words = [...wordList].sort(() => Math.random() - 0.5);
+            totalNumEl.innerText = words.length;
+            currentIndex = 0;
+            loadWord();
+        }
+
+        function loadWord() {
+            const currentWord = words[currentIndex];
+            currentNumEl.innerText = currentIndex + 1;
+            
+            // Reset UI
+            dropZonesContainer.innerHTML = '';
+            letterBank.innerHTML = '';
+            dropZonesContainer.classList.remove('success-bounce');
+            feedbackMsg.classList.remove('text-emerald-500', 'text-red-500');
+            feedbackMsg.classList.add('text-transparent');
+            feedbackMsg.innerText = "Placeholder";
+            
+            btnCheck.classList.remove('hidden');
+            btnReset.classList.remove('hidden');
+            btnHint.classList.remove('hidden');
+            btnHint.disabled = false;
+            btnHint.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnNext.classList.add('hidden');
+
+            // Generate Hint Sequence (0, N-1, 1, N-2, 2, N-3...)
+            hintSequence = [];
+            currentHintIndex = 0;
+            let left = 0;
+            let right = currentWord.length - 1;
+            while (left <= right) {
+                hintSequence.push(left);
+                if (left !== right) {
+                    hintSequence.push(right);
+                }
+                left++;
+                right--;
+            }
+
+            // Scramble the word (ensure it doesn't match original)
+            let scrambled;
+            do {
+                scrambled = currentWord.split('').sort(() => Math.random() - 0.5).join('');
+            } while (scrambled === currentWord && currentWord.length > 1);
+
+            // Create Drop Slots
+            for (let i = 0; i < currentWord.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'drop-slot';
+                slot.dataset.index = i;
+                
+                // Drag & Drop Listeners for Slots
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('dragenter', handleDragEnter);
+                slot.addEventListener('dragleave', handleDragLeave);
+                slot.addEventListener('drop', handleDrop);
+                
+                dropZonesContainer.appendChild(slot);
+            }
+
+            // Create Draggable Letter Tiles
+            scrambled.split('').forEach((letter, i) => {
+                const tile = document.createElement('div');
+                tile.className = 'letter-tile';
+                tile.innerText = letter;
+                tile.dataset.id = `letter-${i}`;
+                tile.draggable = true;
+
+                // Drag Listeners
+                tile.addEventListener('dragstart', handleDragStart);
+                tile.addEventListener('dragend', handleDragEnd);
+                
+                // Click Listener (for touch screens / easy move)
+                tile.addEventListener('click', handleTileClick);
+
+                letterBank.appendChild(tile);
+            });
+
+            // Drag listeners for the bank itself (so they can drag letters back)
+            letterBank.addEventListener('dragover', handleDragOver);
+            letterBank.addEventListener('drop', handleBankDrop);
+        }
+
+        // --- CLICK TO MOVE MECHANIC (Great for iPads) ---
+        function handleTileClick(e) {
+            const tile = e.target;
+            
+            // Remove error styling if they start moving things
+            clearErrors();
+
+            if (tile.parentElement === letterBank) {
+                // Move from bank to first empty slot
+                const emptySlots = Array.from(dropZonesContainer.children).filter(slot => slot.children.length === 0);
+                if (emptySlots.length > 0) {
+                    emptySlots[0].appendChild(tile);
+                }
+            } else {
+                // Move from slot back to bank
+                letterBank.appendChild(tile);
+            }
+        }
+
+        // --- DRAG AND DROP MECHANICS ---
+        function handleDragStart(e) {
+            draggedTile = this;
+            setTimeout(() => this.classList.add('dragging'), 0);
+            clearErrors();
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedTile = null;
+            
+            // Cleanup any stuck highlight classes
+            document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); // Necessary to allow dropping
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (this.classList.contains('drop-slot')) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            if (this.classList.contains('drop-slot')) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (this.classList.contains('drop-slot')) {
+                // If slot already has a letter, send that letter back to the bank
+                if (this.children.length > 0) {
+                    letterBank.appendChild(this.children[0]);
+                }
+                this.appendChild(draggedTile);
+            }
+        }
+
+        function handleBankDrop(e) {
+            e.preventDefault();
+            letterBank.appendChild(draggedTile);
+        }
+
+        // --- GAME LOGIC ---
+        function checkAnswer() {
+            const targetWord = words[currentIndex];
+            const slots = dropZonesContainer.children;
+            let currentSpelling = '';
+            let hasEmptySlot = false;
+
+            // Gather letters from slots
+            for (let slot of slots) {
+                if (slot.children.length === 0) {
+                    hasEmptySlot = true;
+                    break;
+                }
+                currentSpelling += slot.children[0].innerText.toLowerCase();
+            }
+
+            if (hasEmptySlot || letterBank.children.length > 0) {
+                showFeedback("Use all the letters!", "error");
+                return;
+            }
+
+            if (currentSpelling === targetWord) {
+                // Correct!
+                showFeedback("Great Job!", "success");
+                dropZonesContainer.classList.add('success-bounce');
+                
+                // Disable tiles
+                document.querySelectorAll('.letter-tile').forEach(t => {
+                    t.draggable = false;
+                    t.removeEventListener('click', handleTileClick);
+                    t.style.cursor = 'default';
+                });
+
+                // Swap buttons
+                btnCheck.classList.add('hidden');
+                btnReset.classList.add('hidden');
+                btnNext.classList.remove('hidden');
+
+            } else {
+                // Incorrect
+                showFeedback("Not quite! Try again.", "error");
+                
+                // Highlight incorrect letters
+                const targetLetters = targetWord.split('');
+                for (let i = 0; i < slots.length; i++) {
+                    const tile = slots[i].children[0];
+                    if (tile.innerText.toLowerCase() !== targetLetters[i]) {
+                        slots[i].classList.add('error-shake');
+                    }
+                }
+            }
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('error-shake'));
+            feedbackMsg.classList.remove('text-red-500', 'text-emerald-500');
+            feedbackMsg.classList.add('text-transparent');
+        }
+
+        function showFeedback(text, type) {
+            clearErrors();
+            feedbackMsg.innerText = text;
+            feedbackMsg.classList.remove('text-transparent');
+            if (type === "success") {
+                feedbackMsg.classList.add('text-emerald-500');
+            } else {
+                feedbackMsg.classList.add('text-red-500');
+            }
+        }
+
+        function useHint() {
+            const currentWord = words[currentIndex];
+            if (currentHintIndex >= hintSequence.length) return;
+
+            const targetSlotIndex = hintSequence[currentHintIndex];
+            const targetChar = currentWord[targetSlotIndex];
+            const targetSlot = document.querySelector(`.drop-slot[data-index="${targetSlotIndex}"]`);
+
+            // 1. If there's a tile in the target slot, is it correct?
+            if (targetSlot.children.length > 0) {
+                const existingTile = targetSlot.children[0];
+                if (existingTile.innerText.toLowerCase() === targetChar) {
+                    // Already correct. Just lock it.
+                    lockTile(existingTile);
+                    advanceHint();
+                    return;
+                } else {
+                    // Incorrect tile in the slot. Move it back to the bank.
+                    letterBank.appendChild(existingTile);
+                }
+            }
+
+            // 2. Find the correct tile from the bank OR from other unlocked slots
+            const availableTiles = Array.from(document.querySelectorAll('.letter-tile:not(.hint-locked)'))
+                                        .filter(t => t.innerText.toLowerCase() === targetChar);
+
+            if (availableTiles.length > 0) {
+                const tileToMove = availableTiles[0];
+                targetSlot.appendChild(tileToMove);
+                lockTile(tileToMove);
+            }
+
+            advanceHint();
+        }
+
+        function lockTile(tile) {
+            tile.classList.add('hint-locked');
+            tile.draggable = false;
+            tile.removeEventListener('click', handleTileClick);
+        }
+
+        function advanceHint() {
+            currentHintIndex++;
+            if (currentHintIndex >= hintSequence.length) {
+                btnHint.disabled = true;
+                btnHint.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function resetLetters() {
+            clearErrors();
+            // Only reset letters that haven't been locked by hints
+            const tiles = document.querySelectorAll('.letter-tile:not(.hint-locked)');
+            tiles.forEach(tile => letterBank.appendChild(tile));
+        }
+
+        function nextWord() {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                loadWord();
+            } else {
+                // Game Over
+                dropZonesContainer.innerHTML = '';
+                letterBank.innerHTML = '';
+                btnNext.classList.add('hidden');
+                feedbackMsg.innerText = "You spelled all the words! Amazing!";
+                feedbackMsg.classList.remove('text-transparent');
+                feedbackMsg.classList.add('text-emerald-600', 'text-3xl');
+                
+                const playAgainBtn = document.createElement('button');
+                playAgainBtn.className = 'btn-primary text-white font-bold py-3 px-8 rounded-xl mt-4 uppercase';
+                playAgainBtn.innerText = 'Play Again';
+                playAgainBtn.onclick = () => {
+                    playAgainBtn.remove();
+                    initGame();
+                };
+                document.querySelector('.flex-wrap').appendChild(playAgainBtn);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        btnCheck.addEventListener('click', checkAnswer);
+        btnReset.addEventListener('click', resetLetters);
+        btnNext.addEventListener('click', nextWord);
+        btnHint.addEventListener('click', useHint);
+
+        // Start the game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
