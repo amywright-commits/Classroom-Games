@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jackson and Sam's Apostrophe Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:wght@400;700&display=swap');
+
+        body {
+            background-color: #F8FAFC;
+            color: #334155;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .neon-blue-text {
+            color: #0284C7;
+            font-weight: 800;
+        }
+
+        .neon-green-text {
+            color: #16A34A;
+            font-weight: 800;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #0284C7, #0ea5e9);
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+        }
+        
+        .btn-check:disabled {
+            background: #94A3B8;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sticky-header {
+            background: rgba(248, 250, 252, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #E2E8F0;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- Sticky Score Header -->
+    <header class="sticky-header fixed top-0 w-full z-50 p-4 shadow-sm">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-wider">
+                <span class="neon-blue-text">JACKSON</span> & <span class="neon-green-text">SAM'S</span> <br class="md:hidden"/> APOSTROPHE PRACTICE
+            </h1>
+            <div class="flex gap-6 items-center bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm">
+                <div class="text-lg font-bold">
+                    SCORE: <span id="total-score" class="text-3xl neon-green-text ml-2">0</span> <span class="text-sm text-slate-500">/ 150</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto pt-32 px-4" id="app-container">
+        <!-- Sections will be injected here by JavaScript -->
+    </main>
+
+    <script>
+        // Game State
+        let totalScore = 0;
+
+        // Shuffle helper function for multiple choice options
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Data Structure for Rules and Questions
+        const rulesData = [
+            {
+                ruleNumber: 1,
+                title: "Contractions",
+                description: "Use the apostrophe with contractions to replace missing letters.",
+                examples: ["She isn't here.", "You're my best friend."],
+                questions: [
+                    { text: "I ___ going to let that stop me.", options: ["wasn't", "wasnt", "was'nt"], answer: "wasn't" },
+                    { text: "We ___ finished eating dinner yet.", options: ["haven't", "havent", "have'nt"], answer: "haven't" },
+                    { text: "She ___ know how to ride a skateboard.", options: ["doesn't", "doesnt", "does'nt"], answer: "doesn't" },
+                    { text: "They ___ planning to stay at the party for long.", options: ["aren't", "arent", "are'nt"], answer: "aren't" },
+                    { text: "___ time to go home and get some sleep.", options: ["It's", "Its", "Its'"], answer: "It's" },
+                    { text: "You ___ be walking there all alone in the dark.", options: ["shouldn't", "shouldnt", "should'nt"], answer: "shouldn't" },
+                    { text: "He ___ been feeling well lately.", options: ["hasn't", "hasnt", "has'nt"], answer: "hasn't" },
+                    { text: "I simply ___ believe my own eyes!", options: ["couldn't", "couldnt", "could'nt"], answer: "couldn't" },
+                    { text: "Let me know if ___ coming to the basketball game.", options: ["they're", "their", "there"], answer: "they're" },
+                    { text: "___ go to the amusement park tomorrow.", options: ["Let's", "Lets", "Lets'"], answer: "Let's" },
+                    { text: "___ the best player on your soccer team?", options: ["Who's", "Whose", "Whos"], answer: "Who's" },
+                    { text: "I promise I ___ tell anyone your secret.", options: ["won't", "wont", "wo'nt"], answer: "won't" },
+                    { text: "She ___ have said that to her best friend.", options: ["wouldn't", "wouldnt", "would'nt"], answer: "wouldn't" },
+                    { text: "___ a giant bird sitting on the roof!", options: ["There's", "Theres", "Theirs"], answer: "There's" },
+                    { text: "My little brother ___ reach the top shelf.", options: ["can't", "cant", "ca'nt"], answer: "can't" }
+                ]
+            },
+            {
+                ruleNumber: 2,
+                title: "Singular Possession",
+                description: "Use the apostrophe to show possession for a singular noun. (Usually add 's, even if it ends in s or x).",
+                examples: ["The dog's collar is red.", "Charles's car is new."],
+                questions: [
+                    { text: "The ___ tires need to be replaced soon.", options: ["car's", "cars", "cars'"], answer: "car's" },
+                    { text: "___ presentation in history class was excellent.", options: ["Silas's", "Silases", "Silas'"], answer: "Silas's", alternate: "Silas'" },
+                    { text: "The ___ tail wagged happily when I got home.", options: ["puppy's", "puppys", "puppies'"], answer: "puppy's" },
+                    { text: "I found the ___ wallet lying on the floor.", options: ["manager's", "managers", "managers'"], answer: "manager's" },
+                    { text: "___ hair is getting really long.", options: ["Thomas's", "Thomases", "Thomas'"], answer: "Thomas's", alternate: "Thomas'" },
+                    { text: "The ___ screen cracked when it hit the ground.", options: ["phone's", "phones", "phones'"], answer: "phone's" },
+                    { text: "___ lunchbox was left in the cafeteria.", options: ["Marcus's", "Marcuses", "Marcus'"], answer: "Marcus's", alternate: "Marcus'" },
+                    { text: "The ___ wheels were squeaking loudly.", options: ["bicycle's", "bicycles", "bicycles'"], answer: "bicycle's" },
+                    { text: "___ new shoes are incredibly bright.", options: ["Felix's", "Felixes", "Felix'"], answer: "Felix's", alternate: "Felix'" },
+                    { text: "The ___ pages were torn and yellowed.", options: ["book's", "books", "books'"], answer: "book's" },
+                    { text: "We followed the ___ tracks in the snow.", options: ["bear's", "bears", "bears'"], answer: "bear's" },
+                    { text: "___ favorite color is neon green.", options: ["Miles's", "Mileses", "Miles'"], answer: "Miles's", alternate: "Miles'" },
+                    { text: "The ___ engine sputtered and died.", options: ["boat's", "boats", "boats'"], answer: "boat's" },
+                    { text: "I completely forgot my ___ name.", options: ["dentist's", "dentists", "dentists'"], answer: "dentist's" },
+                    { text: "The ___ branches scraped against the window.", options: ["tree's", "trees", "trees'"], answer: "tree's" }
+                ]
+            },
+            {
+                ruleNumber: 3,
+                title: "Implied Nouns",
+                description: "Use the apostrophe where the noun that should follow is implied (left out but understood).",
+                examples: ["We went to my uncle's [house].", "This coat is John's [coat]."],
+                questions: [
+                    { text: "My test score was much higher than ___.", options: ["Maya's", "Mayas", "Mayas'"], answer: "Maya's" },
+                    { text: "Is this heavy backpack ___?", options: ["Leo's", "Leos", "Leos'"], answer: "Leo's" },
+                    { text: "I thought the keys were mine, but they are ___.", options: ["Dad's", "Dads", "Dads'"], answer: "Dad's" },
+                    { text: "We are having a sleepover at ___ this weekend.", options: ["Chloe's", "Chloes", "Chloes'"], answer: "Chloe's" },
+                    { text: "That clever idea was entirely ___.", options: ["Noah's", "Noahs", "Noahs'"], answer: "Noah's" },
+                    { text: "The silver car in the driveway is ___.", options: ["Harper's", "Harpers", "Harpers'"], answer: "Harper's" },
+                    { text: "I accidentally grabbed ___ instead of mine.", options: ["Logan's", "Logans", "Logans'"], answer: "Logan's" },
+                    { text: "Is that water bottle ___?", options: ["Avery's", "Averys", "Averys'"], answer: "Avery's" },
+                    { text: "No, the water bottle over there is ___.", options: ["Ella's", "Ellas", "Ellas'"], answer: "Ella's" },
+                    { text: "We studied at ___ after school.", options: ["Mason's", "Masons", "Masons'"], answer: "Mason's" },
+                    { text: "I didn't have a calculator, so I borrowed ___.", options: ["Ethan's", "Ethans", "Ethans'"], answer: "Ethan's" },
+                    { text: "That sandwich on the counter has to be ___.", options: ["Olivia's", "Olivias", "Olivias'"], answer: "Olivia's" },
+                    { text: "The black jacket is mine, but the blue one is ___.", options: ["Jack's", "Jacks", "Jacks'"], answer: "Jack's" },
+                    { text: "If that is your phone, whose is ___?", options: ["Mia's", "Mias", "Mias'"], answer: "Mia's" },
+                    { text: "The bakery's cake tasted better than the ___.", options: ["supermarket's", "supermarkets", "supermarkets'"], answer: "supermarket's" }
+                ]
+            },
+            {
+                ruleNumber: 4,
+                title: "Plural Possession",
+                description: "Make the noun plural first. If it ends in s, just add '. If it does not end in s, add 's.",
+                examples: ["The girls' locker room.", "The children's toys."],
+                questions: [
+                    { text: "The ___ bathroom is currently closed for cleaning. (plural)", options: ["girls'", "girl's", "girls"], answer: "girls'" },
+                    { text: "The ___ boots were covered in mud. (plural)", options: ["workers'", "worker's", "workers"], answer: "workers'" },
+                    { text: "The ___ howls echoed through the forest. (plural)", options: ["wolves'", "wolf's", "wolfs"], answer: "wolves'" },
+                    { text: "We bought clothes in the ___ department. (plural)", options: ["men's", "mens'", "mens"], answer: "men's" },
+                    { text: "The ___ uniforms were bright yellow. (plural)", options: ["players'", "player's", "players"], answer: "players'" },
+                    { text: "The ___ lounge is off-limits to students. (plural)", options: ["teachers'", "teacher's", "teachers"], answer: "teachers'" },
+                    { text: "All the ___ permission slips are due on Friday. (plural)", options: ["parents'", "parent's", "parents"], answer: "parents'" },
+                    { text: "The ___ habitat at the zoo was just renovated. (plural)", options: ["animals'", "animal's", "animals"], answer: "animals'" },
+                    { text: "The ___ roar shook the ground. (plural)", options: ["lions'", "lion's", "lions"], answer: "lions'" },
+                    { text: "The ___ experiment was a massive success. (plural)", options: ["scientists'", "scientist's", "scientists"], answer: "scientists'" },
+                    { text: "The ___ starting line is clearly marked. (plural)", options: ["runners'", "runner's", "runners"], answer: "runners'" },
+                    { text: "We watched the ___ flight pattern in the sky. (plural)", options: ["geese's", "geeses'", "geeses"], answer: "geese's" },
+                    { text: "The ___ section of the shoe store is upstairs. (plural)", options: ["women's", "womens'", "womens"], answer: "women's" },
+                    { text: "The ___ playground was built last year. (plural)", options: ["children's", "childrens'", "childrens"], answer: "children's" },
+                    { text: "The ___ yokes were incredibly heavy. (plural)", options: ["oxen's", "oxens'", "oxens"], answer: "oxen's" }
+                ]
+            },
+            {
+                ruleNumber: 5,
+                title: "Plural Names (No Apostrophe)",
+                description: "Do not use an apostrophe to simply make a name plural. Just add s or es.",
+                examples: ["The Smiths are coming over.", "We visited the Joneses."],
+                questions: [
+                    { text: "The ___ are moving to Florida next month.", options: ["Harrisons", "Harrison's", "Harrisons'"], answer: "Harrisons" },
+                    { text: "I saw the ___ shopping at the mall.", options: ["Foxes", "Fox's", "Foxes'"], answer: "Foxes" },
+                    { text: "The ___ host a big dinner every Thanksgiving.", options: ["Moores", "Moore's", "Moores'"], answer: "Moores" },
+                    { text: "Did you invite the ___ to the party?", options: ["Taylors", "Taylor's", "Taylors'"], answer: "Taylors" },
+                    { text: "The ___ have three dogs and a cat.", options: ["Andersons", "Anderson's", "Andersons'"], answer: "Andersons" },
+                    { text: "We are traveling with the ___ this summer.", options: ["Thomases", "Thomas's", "Thomas'"], answer: "Thomases" },
+                    { text: "The ___ just painted their house blue.", options: ["Jacksons", "Jackson's", "Jacksons'"], answer: "Jacksons" },
+                    { text: "I waved to the ___ across the street.", options: ["Whites", "White's", "Whites'"], answer: "Whites" },
+                    { text: "The ___ threw a surprise birthday party.", options: ["Martins", "Martin's", "Martins'"], answer: "Martins" },
+                    { text: "Are the ___ bringing dessert tonight?", options: ["Harrises", "Harris's", "Harris'"], answer: "Harrises" },
+                    { text: "The ___ always decorate heavily for winter.", options: ["Nelsons", "Nelson's", "Nelsons'"], answer: "Nelsons" },
+                    { text: "We sat behind the ___ at the baseball game.", options: ["Perez's", "Perezes", "Perezs'"], answer: "Perezes" },
+                    { text: "The ___ have lived here for ten years.", options: ["Gomezes", "Gomez's", "Gomez'"], answer: "Gomezes" },
+                    { text: "I borrowed a ladder from the ___.", options: ["Campbells", "Campbell's", "Campbells'"], answer: "Campbells" },
+                    { text: "The ___ sent us a lovely thank-you card.", options: ["Robertses", "Roberts's", "Roberts'"], answer: "Robertses" }
+                ]
+            },
+            {
+                ruleNumber: 6,
+                title: "Singular Compound Nouns",
+                description: "With a singular compound noun, show possession with 's at the end of the word.",
+                examples: ["My mother-in-law's recipe.", "The runner-up's trophy."],
+                questions: [
+                    { text: "My ___ advice was surprisingly helpful. (singular)", options: ["brother-in-law's", "brother-in-laws", "brother's-in-law"], answer: "brother-in-law's" },
+                    { text: "The ___ decision is final.", options: ["editor-in-chief's", "editors-in-chief", "editor's-in-chief"], answer: "editor-in-chief's" },
+                    { text: "We drove in my ___ truck. (singular)", options: ["father-in-law's", "fathers-in-law", "father's-in-law"], answer: "father-in-law's" },
+                    { text: "The ___ briefcase was left on the train.", options: ["attorney-at-law's", "attorneys-at-law", "attorney's-at-law"], answer: "attorney-at-law's" },
+                    { text: "The ___ score was incredibly close to first place.", options: ["runner-up's", "runners-up", "runner's-up"], answer: "runner-up's" },
+                    { text: "A brave ___ quick thinking saved the puppy.", options: ["passer-by's", "passers-by", "passer's-by"], answer: "passer-by's" },
+                    { text: "My ___ necklace is very valuable.", options: ["mother-in-law's", "mothers-in-law", "mother's-in-law"], answer: "mother-in-law's" },
+                    { text: "The ___ speech rallied the troops.", options: ["commander-in-chief's", "commanders-in-chief", "commander's-in-chief"], answer: "commander-in-chief's" },
+                    { text: "My ___ new job pays very well. (singular)", options: ["sister-in-law's", "sisters-in-law", "sister's-in-law"], answer: "sister-in-law's" },
+                    { text: "The ___ toolbox had every tool imaginable.", options: ["jack-of-all-trades's", "jacks-of-all-trades", "jack's-of-all-trades"], answer: "jack-of-all-trades's" },
+                    { text: "The ___ victory party is scheduled for tonight.", options: ["mayor-elect's", "mayors-elect", "mayor's-elect"], answer: "mayor-elect's" },
+                    { text: "My ___ promotion was well-deserved. (singular)", options: ["son-in-law's", "sons-in-law", "son's-in-law"], answer: "son-in-law's" },
+                    { text: "The ___ statement was released to the press.", options: ["secretary-general's", "secretaries-general", "secretary's-general"], answer: "secretary-general's" },
+                    { text: "My ___ cooking is the best in the world. (singular)", options: ["daughter-in-law's", "daughters-in-law", "daughter's-in-law"], answer: "daughter-in-law's" },
+                    { text: "The ___ sails were badly damaged in the storm.", options: ["man-of-war's", "men-of-war", "man's-of-war"], answer: "man-of-war's" }
+                ]
+            },
+            {
+                ruleNumber: 7,
+                title: "Plural Compound Nouns",
+                description: "If the compound noun is plural, form the plural first and then use the apostrophe.",
+                examples: ["My two brothers-in-law's businesses.", "The runners-up's medals."],
+                questions: [
+                    { text: "All three ___ flights were canceled. (plural)", options: ["brothers-in-law's", "brother-in-laws'", "brothers-in-laws"], answer: "brothers-in-law's" },
+                    { text: "The two ___ offices are located in New York. (plural)", options: ["editors-in-chief's", "editor-in-chiefs'", "editors-in-chiefs"], answer: "editors-in-chief's" },
+                    { text: "Both ___ trucks are parked out front. (plural)", options: ["fathers-in-law's", "father-in-laws'", "fathers-in-laws"], answer: "fathers-in-law's" },
+                    { text: "The three ___ firms merged into one. (plural)", options: ["attorneys-at-law's", "attorney-at-laws'", "attorneys-at-laws"], answer: "attorneys-at-law's" },
+                    { text: "The ___ medals were presented next. (plural)", options: ["runners-up's", "runner-ups'", "runners-ups"], answer: "runners-up's" },
+                    { text: "Several ___ testimonies helped the police. (plural)", options: ["passers-by's", "passer-bys'", "passers-bys"], answer: "passers-by's" },
+                    { text: "Both of my ___ recipes won awards. (plural)", options: ["mothers-in-law's", "mother-in-laws'", "mothers-in-laws"], answer: "mothers-in-law's" },
+                    { text: "The various ___ strategies were discussed. (plural)", options: ["commanders-in-chief's", "commander-in-chiefs'", "commanders-in-chiefs"], answer: "commanders-in-chief's" },
+                    { text: "All my ___ gifts were placed on the table. (plural)", options: ["sisters-in-law's", "sister-in-laws'", "sisters-in-laws"], answer: "sisters-in-law's" },
+                    { text: "The ___ skillsets are highly sought after. (plural)", options: ["jacks-of-all-trades's", "jack-of-all-tradeses'", "jacks-of-all-tradeses"], answer: "jacks-of-all-trades's" },
+                    { text: "The five ___ transition teams are working hard. (plural)", options: ["mayors-elect's", "mayor-elects'", "mayors-elects"], answer: "mayors-elect's" },
+                    { text: "Both of her ___ businesses are booming. (plural)", options: ["sons-in-law's", "son-in-laws'", "sons-in-laws"], answer: "sons-in-law's" },
+                    { text: "The ___ joint statement was historic. (plural)", options: ["secretaries-general's", "secretary-generals'", "secretaries-generals"], answer: "secretaries-general's" },
+                    { text: "All three ___ dresses were purchased locally. (plural)", options: ["daughters-in-law's", "daughter-in-laws'", "daughters-in-laws"], answer: "daughters-in-law's" },
+                    { text: "The multiple ___ cannons fired at once. (plural)", options: ["men-of-war's", "man-of-wars'", "men-of-wars"], answer: "men-of-war's" }
+                ]
+            },
+            {
+                ruleNumber: 8,
+                title: "Joint vs. Separate Possession",
+                description: "Use 's after the second name only if two people possess the SAME item. Use 's on BOTH if they own separate items.",
+                examples: ["Bob and Mary's house. (One house)", "Bob's and Mary's cars. (Separate cars)"],
+                questions: [
+                    { text: "___ science project won the fair. (They worked together)", options: ["Tim and Maya's", "Tim's and Maya's", "Tims and Mayas"], answer: "Tim and Maya's" },
+                    { text: "___ science projects were completely different. (Separate projects)", options: ["Tim's and Maya's", "Tim and Maya's", "Tims and Mayas"], answer: "Tim's and Maya's" },
+                    { text: "___ new house is located downtown. (They share it)", options: ["Greg and Lisa's", "Greg's and Lisa's", "Gregs and Lisas"], answer: "Greg and Lisa's" },
+                    { text: "___ cars are parked in different lots. (Separate cars)", options: ["Greg's and Lisa's", "Greg and Lisa's", "Gregs and Lisas"], answer: "Greg's and Lisa's" },
+                    { text: "___ podcast is the most popular in the school. (Co-hosts)", options: ["Ryan and Dave's", "Ryan's and Dave's", "Ryans and Daves"], answer: "Ryan and Dave's" },
+                    { text: "___ grades were posted on the bulletin board. (Separate students)", options: ["Ryan's and Dave's", "Ryan and Dave's", "Ryans and Daves"], answer: "Ryan's and Dave's" },
+                    { text: "___ restaurant opens next week. (Joint owners)", options: ["Chef and Baker's", "Chef's and Baker's", "Chefs and Bakers"], answer: "Chef and Baker's" },
+                    { text: "___ uniforms are totally different colors. (Separate uniforms)", options: ["Chef's and Baker's", "Chef and Baker's", "Chefs and Bakers"], answer: "Chef's and Baker's" },
+                    { text: "The ___ shared toy is covered in drool. (One toy)", options: ["puppy and kitten's", "puppy's and kitten's", "puppys and kittens"], answer: "puppy and kitten's" },
+                    { text: "The ___ bowls are kept in separate rooms. (Separate bowls)", options: ["puppy's and kitten's", "puppy and kitten's", "puppys and kittens"], answer: "puppy's and kitten's" },
+                    { text: "___ band is playing at the festival tonight. (One band)", options: ["Jake and Finn's", "Jake's and Finn's", "Jakes and Finns"], answer: "Jake and Finn's" },
+                    { text: "___ instruments got lost at the airport. (Separate instruments)", options: ["Jake's and Finn's", "Jake and Finn's", "Jakes and Finns"], answer: "Jake's and Finn's" },
+                    { text: "___ flight arrives at 6 PM. (They are traveling together)", options: ["Mom and Dad's", "Mom's and Dad's", "Moms and Dads"], answer: "Mom and Dad's" },
+                    { text: "___ jobs require them to travel often. (Separate careers)", options: ["Mom's and Dad's", "Mom and Dad's", "Moms and Dads"], answer: "Mom's and Dad's" },
+                    { text: "___ combined wealth is staggering. (Joint wealth)", options: ["King and Queen's", "King's and Queen's", "Kings and Queens"], answer: "King and Queen's" }
+                ]
+            },
+            {
+                ruleNumber: 9,
+                title: "Possessive Pronouns (No Apostrophe)",
+                description: "Never use an apostrophe with possessive pronouns: his, hers, its, theirs, ours, yours, whose.",
+                examples: ["The book is hers.", "The dog wagged its tail."],
+                questions: [
+                    { text: "The bird returned to ___ nest.", options: ["its", "it's", "its'"], answer: "its" },
+                    { text: "Is that red backpack ___?", options: ["yours", "your's", "yours'"], answer: "yours" },
+                    { text: "I can't remember ___ idea this was.", options: ["whose", "who's", "whos"], answer: "whose" },
+                    { text: "The mistake was entirely ___.", options: ["ours", "our's", "ours'"], answer: "ours" },
+                    { text: "That trophy is rightfully ___.", options: ["theirs", "their's", "theirs'"], answer: "theirs" },
+                    { text: "I left my pencil at home, can I borrow ___?", options: ["hers", "her's", "hers'"], answer: "hers" },
+                    { text: "The robot lost ___ arm in the battle.", options: ["its", "it's", "its'"], answer: "its" },
+                    { text: "___ dog is barking in the yard?", options: ["Whose", "Who's", "Whos"], answer: "Whose" },
+                    { text: "They said the corner office is ___.", options: ["theirs", "their's", "theirs'"], answer: "theirs" },
+                    { text: "This house has been ___ for twenty years.", options: ["ours", "our's", "ours'"], answer: "ours" },
+                    { text: "The snake shed ___ skin yesterday.", options: ["its", "it's", "its'"], answer: "its" },
+                    { text: "Is that skateboard ___?", options: ["his", "his'", "hi's"], answer: "his" },
+                    { text: "If that is my book, then where is ___?", options: ["yours", "your's", "yours'"], answer: "yours" },
+                    { text: "I don't know ___ keys these are.", options: ["whose", "who's", "whos"], answer: "whose" },
+                    { text: "The championship title is finally ___.", options: ["hers", "her's", "hers'"], answer: "hers" }
+                ]
+            },
+            {
+                ruleNumber: 10,
+                title: "Capital Letters & Numbers",
+                description: "Modern grammar rules state plurals for capital letters and numbers used as nouns are NOT formed with apostrophes.",
+                examples: ["She grew up in the 1990s.", "He knows his ABCs."],
+                questions: [
+                    { text: "My grandma has photo albums from the ___.", options: ["1950s", "1950's", "1950s'"], answer: "1950s" },
+                    { text: "You need to learn your ___ before you can read.", options: ["ABCs", "ABC's", "ABCs'"], answer: "ABCs" },
+                    { text: "The teacher handed out the ___ via email.", options: ["PDFs", "PDF's", "PDFs'"], answer: "PDFs" },
+                    { text: "He got all ___ on his final exams.", options: ["Bs", "B's", "Bs'"], answer: "Bs" },
+                    { text: "The roller rink plays music from the ___.", options: ["1980s", "1980's", "1980s'"], answer: "1980s" },
+                    { text: "Make sure you read the ___ before asking a question.", options: ["FAQs", "FAQ's", "FAQs'"], answer: "FAQs" },
+                    { text: "The club has a special entrance for ___.", options: ["VIPs", "VIP's", "VIPs'"], answer: "VIPs" },
+                    { text: "She prefers the fashion trends of the ___.", options: ["90s", "90's", "90s'"], answer: "90s" },
+                    { text: "There are too many ___ and not enough action.", options: ["IOUs", "IOU's", "IOUs'"], answer: "IOUs" },
+                    { text: "The bank gave me the money in ___.", options: ["20s", "20's", "20s'"], answer: "20s" },
+                    { text: "He scored three ___ on the dartboard.", options: ["100s", "100's", "100s'"], answer: "100s" },
+                    { text: "The sky was filled with lights they thought were ___.", options: ["UFOs", "UFO's", "UFOs'"], answer: "UFOs" },
+                    { text: "I need to get straight ___ to keep my scholarship.", options: ["As", "A's", "As'"], answer: "As" },
+                    { text: "The temperature dropped into the ___ overnight.", options: ["30s", "30's", "30s'"], answer: "30s" },
+                    { text: "They hired two new ___ to manage the finances.", options: ["CFOs", "CFO's", "CFOs'"], answer: "CFOs" }
+                ]
+            }
+        ];
+
+        // Add global click listener for the Multiple Choice Buttons
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.mc-btn');
+            if (!btn) return;
+            
+            const container = btn.closest('.mc-group');
+            // If section is already correctly answered and locked, don't allow changes
+            if (container.classList.contains('locked')) return;
+
+            // Deselect all others in this specific question group
+            const siblings = container.querySelectorAll('.mc-btn');
+            siblings.forEach(s => {
+                s.classList.remove('bg-sky-100', 'border-sky-400', 'text-sky-800', 'selected', 'shadow-md', 'scale-105');
+                s.classList.add('bg-white', 'border-slate-200', 'text-slate-600');
+            });
+
+            // Select the clicked one
+            btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
+            btn.classList.add('bg-sky-100', 'border-sky-400', 'text-sky-800', 'selected', 'shadow-md', 'scale-105');
+        });
+
+        // Initialize Application
+        function initApp() {
+            const container = document.getElementById('app-container');
+            
+            // 10 Unique Vibrant "Neon Box" Themes
+            const themes = [
+                { from: 'from-pink-500', to: 'to-rose-500' },
+                { from: 'from-violet-500', to: 'to-purple-600' },
+                { from: 'from-blue-500', to: 'to-cyan-500' },
+                { from: 'from-emerald-500', to: 'to-teal-500' },
+                { from: 'from-amber-500', to: 'to-orange-500' },
+                { from: 'from-red-500', to: 'to-rose-600' },
+                { from: 'from-indigo-500', to: 'to-blue-600' },
+                { from: 'from-fuchsia-500', to: 'to-pink-600' },
+                { from: 'from-cyan-500', to: 'to-teal-400' },
+                { from: 'from-purple-600', to: 'to-violet-500' }
+            ];
+            
+            rulesData.forEach((rule, ruleIdx) => {
+                const theme = themes[ruleIdx % themes.length];
+
+                const section = document.createElement('section');
+                section.className = 'bg-white rounded-2xl mb-12 border border-slate-200 relative overflow-hidden shadow-lg';
+                
+                // 1. Create the Big Colored Banner
+                const banner = document.createElement('div');
+                banner.className = `bg-gradient-to-r ${theme.from} ${theme.to} p-6 md:p-8 relative overflow-hidden shadow-md`;
+                banner.innerHTML = `
+                    <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/20 rounded-full blur-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="inline-block bg-white/20 backdrop-blur-md text-white font-black px-4 py-1.5 rounded-md text-sm mb-3 tracking-widest uppercase border border-white/40 shadow-sm">
+                            Rule ${rule.ruleNumber}
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-3 drop-shadow-lg tracking-tight" style="text-shadow: 0 0 15px rgba(255,255,255,0.5), 0 0 30px rgba(255,255,255,0.3);">${rule.title}</h2>
+                        <p class="text-white/95 text-lg font-medium drop-shadow-sm max-w-3xl">${rule.description}</p>
+                    </div>
+                `;
+                section.appendChild(banner);
+
+                // 2. Create the Body Wrapper for Content
+                const bodyDiv = document.createElement('div');
+                bodyDiv.className = 'p-6 md:p-8';
+
+                // 3. Examples Box
+                bodyDiv.innerHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 shadow-inner">
+                        <span class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3 block">Examples:</span>
+                        <ul class="list-disc list-inside text-slate-700 font-medium space-y-1.5">
+                            ${rule.examples.map(ex => `<li>${ex}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                // Questions Container
+                const questionsDiv = document.createElement('div');
+                questionsDiv.className = 'space-y-4 mb-8 relative z-10';
+
+                rule.questions.forEach((q, qIdx) => {
+                    const qId = `q_${ruleIdx}_${qIdx}`;
+                    
+                    const qRow = document.createElement('div');
+                    qRow.className = 'bg-slate-50 p-4 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm';
+                    
+                    let rowContent = `<div class="flex items-start w-full">`;
+                    rowContent += `<span class="text-slate-500 font-mono text-base w-8 pt-0.5 text-right mr-3 flex-shrink-0">${qIdx + 1}.</span>`;
+                    
+                    rowContent += `<div class="flex-grow flex flex-col gap-3">`;
+                    rowContent += `<span class="text-slate-700 text-lg font-medium leading-relaxed">${q.text}</span>`;
+                    
+                    // Render the Shuffled Options Buttons
+                    rowContent += `<div class="mc-group flex flex-wrap gap-3" id="${qId}_options">`;
+                    const shuffledOptions = shuffleArray(q.options);
+                    shuffledOptions.forEach(opt => {
+                        rowContent += `<button type="button" class="mc-btn px-4 py-2 bg-white border-2 border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-100 transition-all text-base shadow-sm focus:outline-none" data-val="${opt.replace(/"/g, '&quot;')}">${opt}</button>`;
+                    });
+                    rowContent += `</div>`;
+                    rowContent += `</div>`;
+                    
+                    // Feedback container
+                    rowContent += `<div class="flex items-center ml-4 flex-shrink-0 w-24 justify-end">`;
+                    rowContent += `<span id="feedback_${qId}" class="font-bold text-sm hidden whitespace-nowrap uppercase tracking-wider"></span>`;
+                    rowContent += `</div>`;
+                    
+                    rowContent += `</div>`;
+                    
+                    qRow.innerHTML = rowContent;
+                    questionsDiv.appendChild(qRow);
+                });
+
+                bodyDiv.appendChild(questionsDiv);
+
+                // Check Button
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'flex justify-end relative z-10';
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'btn-check text-white font-bold py-3 px-8 rounded-xl tracking-wider uppercase';
+                checkBtn.innerText = 'Check Answers';
+                checkBtn.onclick = () => checkSection(ruleIdx, checkBtn);
+                
+                btnContainer.appendChild(checkBtn);
+                bodyDiv.appendChild(btnContainer);
+                section.appendChild(bodyDiv);
+                
+                container.appendChild(section);
+            });
+        }
+
+        function checkSection(ruleIdx, btnElement) {
+            const rule = rulesData[ruleIdx];
+            
+            rule.questions.forEach((q, qIdx) => {
+                const qId = `q_${ruleIdx}_${qIdx}`;
+                const container = document.getElementById(`${qId}_options`);
+                const feedback = document.getElementById(`feedback_${qId}`);
+                const selectedBtn = container.querySelector('.selected');
+                
+                // Reset feedback visually
+                feedback.classList.remove('hidden', 'neon-green-text', 'text-red-500');
+                
+                // Reset styling of buttons ONLY IF the container isn't already locked (correct)
+                if (!container.classList.contains('locked')) {
+                    const allBtns = container.querySelectorAll('.mc-btn');
+                    allBtns.forEach(btn => {
+                        btn.classList.remove('bg-red-100', 'border-red-400', 'text-red-800', 'bg-green-100', 'border-green-500', 'text-green-800');
+                    });
+                } else {
+                    return; // Skip evaluation if this question was already answered correctly
+                }
+
+                if (!selectedBtn) {
+                    feedback.innerText = "Missed";
+                    feedback.classList.add('text-red-500');
+                    return;
+                }
+
+                const userAnswer = selectedBtn.dataset.val;
+                const correctAnswer = q.answer;
+
+                // Check answer
+                if (userAnswer === correctAnswer || (q.alternate && userAnswer === q.alternate)) {
+                    selectedBtn.classList.remove('bg-sky-100', 'border-sky-400', 'text-sky-800');
+                    selectedBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    feedback.innerText = "Correct";
+                    feedback.classList.add('neon-green-text');
+                    container.classList.add('locked'); // Lock this question
+                    
+                    // Dim the unselected, correct buttons so the right answer stands out
+                    const allBtns = container.querySelectorAll('.mc-btn');
+                    allBtns.forEach(b => {
+                        b.disabled = true;
+                        b.classList.add('cursor-not-allowed');
+                        if (!b.classList.contains('selected')) {
+                            b.classList.add('opacity-50');
+                        }
+                    });
+
+                    // Update Score
+                    if (!container.dataset.scored) {
+                        totalScore += 1;
+                        container.dataset.scored = "true";
+                    }
+                } else {
+                    // Answer is wrong
+                    selectedBtn.classList.remove('bg-sky-100', 'border-sky-400', 'text-sky-800');
+                    selectedBtn.classList.add('bg-red-100', 'border-red-400', 'text-red-800');
+                    feedback.innerText = `Try Again`;
+                    feedback.classList.add('text-red-500');
+                }
+            });
+
+            // Update Total Score Display
+            document.getElementById('total-score').innerText = totalScore;
+            
+            // Add a little pop animation to the score
+            const scoreEl = document.getElementById('total-score');
+            scoreEl.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                scoreEl.style.transform = 'scale(1)';
+            }, 200);
+
+            // Change button state if all in this section are correct
+            const allContainers = document.querySelectorAll(`[id^="q_${ruleIdx}_"]`);
+            const allCorrect = Array.from(allContainers).every(c => c.classList.contains('locked'));
+            
+            if (allCorrect) {
+                btnElement.innerText = "Section Passed!";
+                btnElement.disabled = true;
+                btnElement.classList.replace('btn-check', 'bg-green-600');
+            } else {
+                btnElement.innerText = "Try Again";
+            }
+        }
+
+        // Run setup on load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
