@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spicy Apostrophe Challenge 🌶️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800;900&display=swap');
+
+        body {
+            background-color: #fff1f2; /* rose-50 */
+            background-image: radial-gradient(#fecdd3 2px, transparent 2px); /* rose-200 */
+            background-size: 30px 30px;
+            font-family: 'Nunito', sans-serif;
+            color: #4c0519; /* rose-950 */
+        }
+
+        h1, h2, .chewy-font {
+            font-family: 'Chewy', cursive;
+            letter-spacing: 1px;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.3), 0 8px 10px -6px rgba(225, 29, 72, 0.3);
+            border: 4px solid #f43f5e; /* rose-500 */
+        }
+
+        /* Buttons */
+        .btn {
+            box-shadow: 0 6px 0 rgba(159, 18, 57, 0.5); /* rose-800 */
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 rgba(159, 18, 57, 0.5);
+        }
+
+        /* Rule Cards */
+        .rule-card {
+            border: 3px solid #fecaca; /* red-200 */
+            background: #fff5f5; /* red-50 */
+            border-radius: 16px;
+            padding: 1.5rem;
+            flex: 1;
+            min-width: 250px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .chili-icon {
+            position: absolute;
+            top: -15px;
+            right: -10px;
+            font-size: 2rem;
+            transform: rotate(15deg);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* Multiple Choice Options */
+        .mc-option {
+            background: #fff1f2;
+            border: 3px solid #fda4af; /* rose-300 */
+            color: #be123c; /* rose-700 */
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #fb7185; /* rose-400 */
+        }
+
+        .mc-option:hover:not(:disabled) {
+            background: #ffe4e6; /* rose-100 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #fb7185;
+        }
+
+        .mc-option:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #fb7185;
+        }
+
+        .mc-option.selected {
+            background: #fffbeb; /* amber-50 */
+            border-color: #f59e0b; /* amber-500 */
+            color: #b45309; /* amber-700 */
+            box-shadow: 0 4px 0 #d97706; /* amber-600 */
+        }
+        .mc-option.selected:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #d97706;
+        }
+
+        .mc-option.correct {
+            background: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #059669 !important;
+            box-shadow: 0 4px 0 #047857 !important;
+        }
+
+        .mc-option.incorrect {
+            background: #475569 !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+            box-shadow: 0 4px 0 #0f172a !important;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            25% { transform: translateX(-6px) rotate(-2deg); }
+            75% { transform: translateX(6px) rotate(2deg); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s ease-out;
+        }
+
+        @keyframes fire {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8)); }
+            50% { filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.9)); }
+        }
+        .fire-glow {
+            animation: fire 1.5s infinite;
+        }
+
+        /* Context Sentence Blank */
+        .sentence-blank {
+            display: inline-block;
+            min-width: 120px;
+            border-bottom: 4px dashed #f43f5e; /* rose-500 */
+            margin: 0 5px;
+            color: #e11d48; /* rose-600 */
+            font-weight: 900;
+            text-align: center;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-12">
+
+    <main class="game-card w-full max-w-5xl p-6 md:p-10 text-center relative overflow-hidden">
+        
+        <!-- ========================================== -->
+        <!-- INTRO SCREEN: SPICY RULES -->
+        <!-- ========================================== -->
+        <div id="intro-screen">
+            <div class="text-6xl mb-4 fire-glow">🌶️🔥🌶️</div>
+            <h1 class="text-5xl md:text-6xl text-rose-600 drop-shadow-md mb-2">
+                Spicy Apostrophe Challenge!
+            </h1>
+            <p class="text-xl text-rose-800 font-bold mb-8">Can you handle the heat? Review the 5 spicy rules before you begin!</p>
+
+            <div class="flex flex-wrap justify-center gap-6 mb-10 text-left">
+                
+                <div class="rule-card">
+                    <div class="chili-icon">🌶️</div>
+                    <div class="bg-rose-100 text-rose-800 text-sm font-bold uppercase py-1 px-3 rounded inline-block mb-2">Spice Level 1</div>
+                    <h2 class="text-2xl text-rose-900 mb-2">Tricky Contractions</h2>
+                    <p class="text-md text-slate-700 font-semibold mb-2">Apostrophes replace missing letters in mashed-up words.</p>
+                    <div class="bg-white p-2 rounded border border-rose-200 text-sm font-black text-rose-700">
+                        can not ➔ can't <br>
+                        it is ➔ it's
+                    </div>
+                </div>
+
+                <div class="rule-card">
+                    <div class="chili-icon">🌶️</div>
+                    <div class="bg-rose-100 text-rose-800 text-sm font-bold uppercase py-1 px-3 rounded inline-block mb-2">Spice Level 2</div>
+                    <h2 class="text-2xl text-rose-900 mb-2">Singular Words Ending in S</h2>
+                    <p class="text-md text-slate-700 font-semibold mb-2">Even if a single noun ends in S, usually you still add <span class="bg-rose-100 px-1 rounded">'s</span>.</p>
+                    <div class="bg-white p-2 rounded border border-rose-200 text-sm font-black text-rose-700">
+                        the boss's desk <br>
+                        Chris's shoes
+                    </div>
+                </div>
+
+                <div class="rule-card">
+                    <div class="chili-icon">🌶️🌶️</div>
+                    <div class="bg-red-100 text-red-800 text-sm font-bold uppercase py-1 px-3 rounded inline-block mb-2">Spice Level 3</div>
+                    <h2 class="text-2xl text-rose-900 mb-2">Regular Plurals</h2>
+                    <p class="text-md text-slate-700 font-semibold mb-2">If a plural word ends in S, just add the apostrophe <span class="bg-rose-100 px-1 rounded">'</span> at the end.</p>
+                    <div class="bg-white p-2 rounded border border-rose-200 text-sm font-black text-rose-700">
+                        ten dogs' bones <br>
+                        the teachers' lounge
+                    </div>
+                </div>
+
+                <div class="rule-card">
+                    <div class="chili-icon">🌶️🌶️🌶️</div>
+                    <div class="bg-orange-100 text-orange-800 text-sm font-bold uppercase py-1 px-3 rounded inline-block mb-2">Spice Level 4</div>
+                    <h2 class="text-2xl text-rose-900 mb-2">Irregular Plurals</h2>
+                    <p class="text-md text-slate-700 font-semibold mb-2">If a plural word does NOT end in S, you must add <span class="bg-rose-100 px-1 rounded">'s</span>.</p>
+                    <div class="bg-white p-2 rounded border border-rose-200 text-sm font-black text-rose-700">
+                        the children's toys <br>
+                        the mice's cheese
+                    </div>
+                </div>
+
+                <div class="rule-card bg-orange-50 border-orange-300">
+                    <div class="chili-icon">🔥</div>
+                    <div class="bg-red-500 text-white text-sm font-bold uppercase py-1 px-3 rounded inline-block mb-2 animate-pulse">Maximum Spice</div>
+                    <h2 class="text-2xl text-red-700 mb-2">The Pronoun Trap</h2>
+                    <p class="text-md text-slate-800 font-semibold mb-2">Possessive pronouns NEVER use apostrophes. They already show ownership!</p>
+                    <div class="bg-white p-2 rounded border border-orange-200 text-sm font-black text-red-600">
+                        its (belongs to it) <br>
+                        whose (belongs to who) <br>
+                        yours, ours, theirs
+                    </div>
+                </div>
+
+                <div class="rule-card bg-slate-50 border-slate-300">
+                    <div class="chili-icon">👻</div>
+                    <div class="bg-slate-700 text-white text-sm font-bold uppercase py-1 px-3 rounded inline-block mb-2 animate-pulse">Ghost Pepper</div>
+                    <h2 class="text-2xl text-slate-800 mb-2">The Imposter Plural</h2>
+                    <p class="text-md text-slate-700 font-semibold mb-2">If a word is just plural (more than one) and DOESN'T own anything, use NO apostrophe!</p>
+                    <div class="bg-white p-2 rounded border border-slate-200 text-sm font-black text-slate-600">
+                        three cats <br>
+                        many cars
+                    </div>
+                </div>
+
+            </div>
+
+            <button id="btn-start" class="btn chewy-font bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white py-5 px-12 rounded-2xl uppercase tracking-widest text-3xl">
+                Bring on the Heat! 🔥
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- GAME SCREEN -->
+        <!-- ========================================== -->
+        <div id="game-screen" class="hidden">
+            <!-- Header & Progress -->
+            <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h1 class="text-3xl md:text-4xl text-rose-600 drop-shadow-sm tracking-wide chewy-font">
+                    🌶️ Spicy Challenge 🌶️
+                </h1>
+                <div class="bg-rose-100 text-rose-800 px-4 py-2 rounded-full font-bold text-lg border-2 border-rose-200 shrink-0">
+                    Pepper <span id="current-word-num">1</span> of <span id="total-words-num">30</span>
+                </div>
+            </header>
+
+            <!-- Sentence Context -->
+            <div class="bg-orange-50 border-2 border-orange-200 rounded-3xl p-6 mb-8 shadow-inner min-h-[140px] flex flex-col items-center justify-center">
+                <p id="sentence-display" class="text-2xl md:text-3xl font-black text-rose-950 leading-relaxed">
+                    <!-- Sentence injected by JS -->
+                </p>
+            </div>
+
+            <!-- Multiple Choice Options -->
+            <div id="options-container" class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 md:gap-6 mb-8 max-w-3xl mx-auto">
+                <!-- Options injected by JS -->
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback-message" class="text-3xl chewy-font mb-6 h-10 text-transparent transition-colors">
+                Hot!
+            </div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap justify-center gap-4">
+                <button id="btn-check" class="btn chewy-font bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white py-4 px-10 rounded-2xl uppercase tracking-widest text-2xl">
+                    Check Answer
+                </button>
+                <button id="btn-next" class="hidden btn chewy-font bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white py-4 px-10 rounded-2xl uppercase tracking-widest text-2xl shadow-[0_6px_0_#047857]">
+                    Next Pepper ➔
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- GAME DATA ---
+        // 30 SPICY questions covering the 6 specific rules with fresh topics!
+        const questionsData = [
+            // Rule 1: Contractions
+            { category: "Spice Level 1: Contraction", answer: "didn't", options: ["didn't", "didnt", "did'nt"], sentence: "I [BLANK] realize the space museum was closed today." },
+            { category: "Spice Level 1: Contraction", answer: "hasn't", options: ["hasn't", "hasnt", "has'nt"], sentence: "She [BLANK] seen the new superhero movie yet." },
+            { category: "Spice Level 1: Contraction", answer: "they'll", options: ["they'll", "theyll", "their'll"], sentence: "The captain said [BLANK] discover the hidden treasure soon." },
+            { category: "Spice Level 1: Contraction", answer: "wasn't", options: ["wasn't", "wasnt", "was'nt"], sentence: "He [BLANK] planning to build a giant volcano for the science fair." },
+            { category: "Spice Level 1: Contraction", answer: "we're", options: ["we're", "were", "we'ar"], sentence: "Hurry up, [BLANK] going to be late for the rocket launch!" },
+
+            // Rule 2: Singular Ending in S
+            { category: "Spice Level 2: Singular Noun ending in S", answer: "princess's", options: ["princess's", "princesses'", "princesses"], sentence: "The [BLANK] crown was covered in shiny emeralds. (The princess)" },
+            { category: "Spice Level 2: Singular Noun ending in S", answer: "chorus's", options: ["chorus's", "choruses'", "chorus"], sentence: "The [BLANK] performance received a massive standing ovation. (The chorus)" },
+            { category: "Spice Level 2: Singular Noun ending in S", answer: "virus's", options: ["virus's", "viruses'", "virus"], sentence: "That [BLANK] cure was discovered by a brilliant scientist. (The virus)" },
+            { category: "Spice Level 2: Singular Noun ending in S", answer: "glass's", options: ["glass's", "glasses'", "glass"], sentence: "The magnifying [BLANK] handle was made of solid brass. (The glass)" },
+            { category: "Spice Level 2: Singular Noun ending in S", answer: "compass's", options: ["compass's", "compasses'", "compass"], sentence: "The giant [BLANK] needle pointed directly north. (The compass)" },
+
+            // Rule 3: Regular Plurals
+            { category: "Spice Level 3: Regular Plural ending in S", answer: "astronauts'", options: ["astronauts'", "astronaut's", "astronauts's"], sentence: "The [BLANK] spacesuits were hanging securely in the airlock. (Plural astronauts)" },
+            { category: "Spice Level 3: Regular Plural ending in S", answer: "wizards'", options: ["wizards'", "wizard's", "wizards's"], sentence: "All five [BLANK] wands started glowing at the exact same time. (Plural wizards)" },
+            { category: "Spice Level 3: Regular Plural ending in S", answer: "pirates'", options: ["pirates'", "pirate's", "pirates's"], sentence: "The three [BLANK] treasure maps led to the very same island. (Plural pirates)" },
+            { category: "Spice Level 3: Regular Plural ending in S", answer: "planets'", options: ["planets'", "planet's", "planets's"], sentence: "The nine [BLANK] orbits take them far away from the sun. (Plural planets)" },
+            { category: "Spice Level 3: Regular Plural ending in S", answer: "robots'", options: ["robots'", "robot's", "robots's"], sentence: "The factory [BLANK] metal arms assembled the jet in minutes. (Plural robots)" },
+
+            // Rule 4: Irregular Plurals
+            { category: "Spice Level 4: Irregular Plural NOT ending in S", answer: "teeth's", options: ["teeth's", "teeths'", "teeths"], sentence: "The great white shark's [BLANK] edges were incredibly sharp. (Plural teeth)" },
+            { category: "Spice Level 4: Irregular Plural NOT ending in S", answer: "feet's", options: ["feet's", "feets'", "feets"], sentence: "The giant [BLANK] footprints led directly to the hidden cave. (Plural feet)" },
+            { category: "Spice Level 4: Irregular Plural NOT ending in S", answer: "women's", options: ["women's", "womens'", "womens"], sentence: "The [BLANK] chorus sang beautifully at the grand opening. (Plural women)" },
+            { category: "Spice Level 4: Irregular Plural NOT ending in S", answer: "people's", options: ["people's", "peoples'", "peoples"], sentence: "The [BLANK] choices shape the future of the entire country. (Plural people)" },
+            { category: "Spice Level 4: Irregular Plural NOT ending in S", answer: "oxen's", options: ["oxen's", "oxens'", "oxens"], sentence: "The [BLANK] heavy harnesses were made of thick leather. (Plural oxen)" },
+
+            // Rule 5: Possessive Pronouns (The Trap!)
+            { category: "Maximum Spice: The Pronoun Trap", answer: "its", options: ["its", "it's", "its'"], sentence: "The alien spaceship fired [BLANK] thrusters and vanished." },
+            { category: "Maximum Spice: The Pronoun Trap", answer: "yours", options: ["yours", "your's", "yours'"], sentence: "I know this pizza is mine, but is that giant pasta bowl [BLANK]?" },
+            { category: "Maximum Spice: The Pronoun Trap", answer: "theirs", options: ["theirs", "their's", "theirs'"], sentence: "The gold medals belong to the red team; the victory is [BLANK]." },
+            { category: "Maximum Spice: The Pronoun Trap", answer: "ours", options: ["ours", "our's", "ours'"], sentence: "The giant sandcastle with the moat on the beach is [BLANK]." },
+            { category: "Maximum Spice: The Pronoun Trap", answer: "whose", options: ["whose", "who's", "whos"], sentence: "I wonder [BLANK] glowing secret diary this is." },
+
+            // Rule 6: Imposter Plurals (No apostrophe)
+            { category: "Ghost Pepper: Imposter Plural", answer: "stars", options: ["stars", "star's", "stars'"], sentence: "We stared up at the millions of [BLANK] in the night sky." },
+            { category: "Ghost Pepper: Imposter Plural", answer: "galaxies", options: ["galaxies", "galaxy's", "galaxies'"], sentence: "The telescope can see distant [BLANK] millions of lightyears away." },
+            { category: "Ghost Pepper: Imposter Plural", answer: "monkeys", options: ["monkeys", "monkey's", "monkeys'"], sentence: "The playful [BLANK] swung from branch to branch in the jungle." },
+            { category: "Ghost Pepper: Imposter Plural", answer: "inventors", options: ["inventors", "inventor's", "inventors'"], sentence: "Famous [BLANK] throughout history have changed the world." },
+            { category: "Ghost Pepper: Imposter Plural", answer: "computers", options: ["computers", "computer's", "computers'"], sentence: "The new [BLANK] in the science lab are incredibly fast." }
+        ];
+        
+        let questions = [];
+        let currentIndex = 0;
+
+        // --- DOM ELEMENTS ---
+        const introScreen = document.getElementById('intro-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const btnStart = document.getElementById('btn-start');
+        
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const optionsContainer = document.getElementById('options-container');
+        const btnCheck = document.getElementById('btn-check');
+        const btnNext = document.getElementById('btn-next');
+        const feedbackMsg = document.getElementById('feedback-message');
+        const currentNumEl = document.getElementById('current-word-num');
+        const totalNumEl = document.getElementById('total-words-num');
+
+        // Helper to shuffle arrays
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // --- INITIALIZATION ---
+        function startGame() {
+            introScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            // Shuffle the mixed question list
+            questions = shuffleArray(questionsData);
+            totalNumEl.innerText = questions.length;
+            currentIndex = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const currentData = questions[currentIndex];
+            currentNumEl.innerText = currentIndex + 1;
+            
+            // Reset UI
+            optionsContainer.innerHTML = '';
+            feedbackMsg.classList.remove('text-emerald-500', 'text-red-600', 'fire-glow');
+            feedbackMsg.classList.add('text-transparent');
+            feedbackMsg.innerText = "Placeholder";
+            
+            btnCheck.classList.remove('hidden');
+            btnNext.classList.add('hidden');
+
+            // Render Sentence
+            const sentenceHTML = currentData.sentence.replace("[BLANK]", `<span class="sentence-blank px-2"> ? </span>`);
+            sentenceDisplay.innerHTML = sentenceHTML;
+
+            // Render Shuffled Options
+            const shuffledOptions = shuffleArray(currentData.options);
+            shuffledOptions.forEach(optionText => {
+                const btn = document.createElement('button');
+                btn.className = 'mc-option flex-1 min-w-[140px] text-xl md:text-2xl font-black py-4 px-4 rounded-2xl cursor-pointer';
+                btn.innerText = optionText;
+                btn.dataset.val = optionText;
+                
+                btn.addEventListener('click', () => {
+                    // Deselect others
+                    document.querySelectorAll('.mc-option').forEach(b => {
+                        b.classList.remove('selected', 'incorrect', 'animate-shake');
+                    });
+                    // Select this one
+                    btn.classList.add('selected');
+                });
+                
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // --- GAME LOGIC ---
+        function checkAnswer() {
+            const currentData = questions[currentIndex];
+            const selectedBtn = document.querySelector('.mc-option.selected');
+
+            if (!selectedBtn) {
+                showFeedback("Pick a pepper first! 🌶️", "error");
+                return;
+            }
+
+            const userAnswer = selectedBtn.dataset.val;
+
+            if (userAnswer === currentData.answer) {
+                // Success!
+                if (currentData.category.includes("Maximum")) {
+                    showFeedback("Sizzling! You avoided the trap! 🔥", "success");
+                    feedbackMsg.classList.add('fire-glow');
+                } else if (currentData.category.includes("Ghost")) {
+                    showFeedback("Spooky! You spotted the imposter! 👻", "success");
+                    feedbackMsg.classList.add('fire-glow');
+                } else {
+                    showFeedback("Spicy! That's correct! 🌶️", "success");
+                }
+                
+                selectedBtn.classList.remove('selected');
+                selectedBtn.classList.add('correct', 'animate-pop');
+
+                // Fill in the blank in the sentence
+                sentenceDisplay.innerHTML = currentData.sentence.replace("[BLANK]", `<span class="text-emerald-600 border-b-4 border-emerald-500 pb-1 px-2">${currentData.answer}</span>`);
+
+                // Disable all buttons
+                document.querySelectorAll('.mc-option').forEach(b => {
+                    b.disabled = true;
+                    if (b !== selectedBtn) b.classList.add('opacity-50');
+                });
+
+                // Swap controls
+                btnCheck.classList.add('hidden');
+                btnNext.classList.remove('hidden');
+                btnNext.focus(); 
+
+            } else {
+                // Error
+                showFeedback("Too hot! Think carefully about the rules and try again! 🥵", "error");
+                selectedBtn.classList.add('incorrect', 'animate-shake');
+                selectedBtn.classList.remove('selected');
+            }
+        }
+
+        function showFeedback(text, type) {
+            feedbackMsg.innerText = text;
+            feedbackMsg.classList.remove('text-transparent', 'text-red-600', 'text-emerald-500', 'fire-glow');
+            if (type === "success") {
+                feedbackMsg.classList.add('text-emerald-500');
+            } else {
+                feedbackMsg.classList.add('text-red-600');
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                // Game Over
+                optionsContainer.innerHTML = '';
+                sentenceDisplay.innerHTML = "You survived the Spicy Apostrophe Challenge! 🔥🥵🌶️";
+                btnNext.classList.add('hidden');
+                feedbackMsg.innerText = "You are an Apostrophe Master!";
+                feedbackMsg.classList.remove('text-transparent');
+                feedbackMsg.classList.add('text-rose-600', 'fire-glow');
+                
+                const playAgainBtn = document.createElement('button');
+                playAgainBtn.className = 'btn chewy-font bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white py-4 px-10 rounded-2xl uppercase tracking-widest text-2xl mt-4';
+                playAgainBtn.innerText = 'Play Again';
+                playAgainBtn.onclick = () => {
+                    playAgainBtn.remove();
+                    gameScreen.classList.add('hidden');
+                    introScreen.classList.remove('hidden');
+                };
+                document.querySelector('.flex-col.items-center').appendChild(playAgainBtn);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        btnStart.addEventListener('click', startGame);
+        btnCheck.addEventListener('click', checkAnswer);
+        btnNext.addEventListener('click', nextQuestion);
+
+    </script>
+</body>
+</html>
