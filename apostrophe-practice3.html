@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irregular Plural Possessives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+
+        body {
+            background-color: #ecfdf5; /* emerald-50 */
+            background-image: radial-gradient(#a7f3d0 2px, transparent 2px); /* emerald-200 */
+            background-size: 30px 30px;
+            font-family: 'Quicksand', sans-serif;
+            color: #064e3b; /* emerald-900 */
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2), 0 8px 10px -6px rgba(16, 185, 129, 0.2);
+            border: 4px solid #34d399; /* emerald-400 */
+        }
+
+        /* Buttons */
+        .btn {
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.15);
+        }
+
+        /* Multiple Choice Options */
+        .mc-option {
+            background: #ecfdf5;
+            border: 3px solid #a7f3d0;
+            color: #047857; /* emerald-700 */
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #6ee7b7; /* emerald-300 */
+        }
+
+        .mc-option:hover:not(:disabled) {
+            background: #d1fae5; /* emerald-100 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #6ee7b7;
+        }
+
+        .mc-option:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #6ee7b7;
+        }
+
+        .mc-option.selected {
+            background: #ccfbf1; /* teal-100 */
+            border-color: #14b8a6; /* teal-500 */
+            color: #0f766e; /* teal-700 */
+            box-shadow: 0 4px 0 #0d9488; /* teal-600 */
+        }
+        .mc-option.selected:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #0d9488;
+        }
+
+        .mc-option.correct {
+            background: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #059669 !important;
+            box-shadow: 0 4px 0 #047857 !important;
+        }
+
+        .mc-option.incorrect {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c !important;
+            box-shadow: 0 4px 0 #b91c1c !important;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s ease-out;
+        }
+
+        /* Context Sentence Blank */
+        .sentence-blank {
+            display: inline-block;
+            min-width: 100px;
+            border-bottom: 3px solid #14b8a6; /* teal-500 */
+            margin: 0 5px;
+            color: #0d9488; /* teal-600 */
+            font-weight: 700;
+            text-align: center;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-12">
+
+    <main class="game-card w-full max-w-4xl p-6 md:p-10 text-center relative overflow-hidden">
+        
+        <!-- Header & Progress -->
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-teal-600 drop-shadow-sm tracking-wide">
+                Irregular Plural Possessives
+            </h1>
+            <div class="bg-teal-100 text-teal-800 px-4 py-2 rounded-full font-bold text-lg border-2 border-teal-200 shrink-0">
+                Question <span id="current-word-num">1</span> of <span id="total-words-num">30</span>
+            </div>
+        </header>
+
+        <!-- Rule Display Banner -->
+        <div class="bg-teal-500 text-white rounded-2xl p-5 mb-8 shadow-md border-b-4 border-teal-600 text-left">
+            <h2 class="text-xl font-bold mb-2 uppercase tracking-wider text-teal-100">Grade 5 Rule:</h2>
+            <p class="text-2xl font-semibold mb-3">To form the possessive of a plural noun that does NOT end in s, add an <span class="bg-white text-teal-600 px-2 py-0.5 rounded shadow-sm">’</span> and an <span class="bg-white text-teal-600 px-2 py-0.5 rounded shadow-sm">s</span>.</p>
+            <div class="bg-teal-700/40 rounded-lg p-3 inline-block">
+                <span class="font-bold text-teal-100 text-sm uppercase tracking-widest">Examples:</span>
+                <span class="ml-2 font-medium text-lg">mice’s cage &nbsp; | &nbsp; children’s toys</span>
+            </div>
+        </div>
+
+        <!-- Sentence Context -->
+        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 mb-8 shadow-inner min-h-[120px] flex items-center justify-center">
+            <p id="sentence-display" class="text-2xl md:text-3xl font-bold text-emerald-900 leading-relaxed">
+                <!-- Sentence injected by JS -->
+            </p>
+        </div>
+
+        <!-- Multiple Choice Options -->
+        <div id="options-container" class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 md:gap-6 mb-8 max-w-3xl mx-auto">
+            <!-- Options injected by JS -->
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="feedback-message" class="text-2xl font-bold mb-6 h-8 text-transparent transition-colors">
+            Good Job!
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <button id="btn-check" class="btn bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-wide text-xl">
+                Check Answer
+            </button>
+            <button id="btn-next" class="hidden btn bg-gradient-to-r from-teal-400 to-teal-600 hover:from-teal-500 hover:to-teal-700 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-wide text-xl shadow-[0_4px_0_#0f766e]">
+                Next Question ➔
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- GAME DATA ---
+        // Rule: Plural nouns not ending in 's' take an 's
+        const questionsData = [
+            { baseNoun: "mice", answer: "mice's", options: ["mice's", "mices'", "mices"], sentence: "The two [BLANK] cage needed to be cleaned." },
+            { baseNoun: "children", answer: "children's", options: ["children's", "childrens'", "childrens"], sentence: "We picked up the [BLANK] toys from the living room floor." },
+            { baseNoun: "men", answer: "men's", options: ["men's", "mens'", "mens"], sentence: "The [BLANK] hats were left hanging by the door." },
+            { baseNoun: "women", answer: "women's", options: ["women's", "womens'", "womens"], sentence: "The [BLANK] basketball team won the championship." },
+            { baseNoun: "geese", answer: "geese's", options: ["geese's", "geeses'", "geeses"], sentence: "We watched the [BLANK] feathers float on the pond." },
+            { baseNoun: "people", answer: "people's", options: ["people's", "peoples'", "peoples"], sentence: "A good leader always listens to the [BLANK] voices." },
+            { baseNoun: "oxen", answer: "oxen's", options: ["oxen's", "oxens'", "oxens"], sentence: "The heavy wooden wagon relied on the [BLANK] strength." },
+            { baseNoun: "sheep", answer: "sheep's", options: ["sheep's", "sheeps'", "sheeps"], sentence: "The [BLANK] wool was thick and warm for the winter." },
+            { baseNoun: "deer", answer: "deer's", options: ["deer's", "deers'", "deers"], sentence: "We spotted three [BLANK] tracks in the fresh snow." },
+            { baseNoun: "children", answer: "children's", options: ["children's", "childrens'", "childrens"], sentence: "The [BLANK] playground was closed for repairs." },
+            { baseNoun: "men", answer: "men's", options: ["men's", "mens'", "mens"], sentence: "The [BLANK] choir sang beautifully at the concert." },
+            { baseNoun: "women", answer: "women's", options: ["women's", "womens'", "womens"], sentence: "The [BLANK] shoes were arranged neatly on the shelves." },
+            { baseNoun: "mice", answer: "mice's", options: ["mice's", "mices'", "mices"], sentence: "We could hear the [BLANK] squeaks in the attic." },
+            { baseNoun: "geese", answer: "geese's", options: ["geese's", "geeses'", "geeses"], sentence: "The [BLANK] loud honks woke everyone up early." },
+            { baseNoun: "people", answer: "people's", options: ["people's", "peoples'", "peoples"], sentence: "We counted the [BLANK] votes to see who won." },
+            { baseNoun: "oxen", answer: "oxen's", options: ["oxen's", "oxens'", "oxens"], sentence: "The [BLANK] yokes were made of carved wood." },
+            { baseNoun: "sheep", answer: "sheep's", options: ["sheep's", "sheeps'", "sheeps"], sentence: "The [BLANK] pasture was covered in bright green grass." },
+            { baseNoun: "deer", answer: "deer's", options: ["deer's", "deers'", "deers"], sentence: "The [BLANK] antlers were highly visible in the forest." },
+            { baseNoun: "children", answer: "children's", options: ["children's", "childrens'", "childrens"], sentence: "The [BLANK] laughter filled the entire school." },
+            { baseNoun: "men", answer: "men's", options: ["men's", "mens'", "mens"], sentence: "The [BLANK] restroom is down the hall on the left." },
+            { baseNoun: "women", answer: "women's", options: ["women's", "womens'", "womens"], sentence: "The [BLANK] coats were hung up in the closet." },
+            { baseNoun: "mice", answer: "mice's", options: ["mice's", "mices'", "mices"], sentence: "The tiny [BLANK] tails darted under the refrigerator." },
+            { baseNoun: "geese", answer: "geese's", options: ["geese's", "geeses'", "geeses"], sentence: "The [BLANK] migration path crosses right over our city." },
+            { baseNoun: "people", answer: "people's", options: ["people's", "peoples'", "peoples"], sentence: "We must always respect other [BLANK] choices." },
+            { baseNoun: "children", answer: "children's", options: ["children's", "childrens'", "childrens"], sentence: "The library has a huge section for [BLANK] books." },
+            { baseNoun: "men", answer: "men's", options: ["men's", "mens'", "mens"], sentence: "The [BLANK] suits were tailored perfectly for the event." },
+            { baseNoun: "women", answer: "women's", options: ["women's", "womens'", "womens"], sentence: "The [BLANK] voices harmonized beautifully in the song." },
+            { baseNoun: "mice", answer: "mice's", options: ["mice's", "mices'", "mices"], sentence: "The [BLANK] cheese was snatched from the trap safely." },
+            { baseNoun: "people", answer: "people's", options: ["people's", "peoples'", "peoples"], sentence: "Protecting the [BLANK] rights is very important." },
+            { baseNoun: "geese", answer: "geese's", options: ["geese's", "geeses'", "geeses"], sentence: "The [BLANK] nesting ground is heavily protected." }
+        ];
+        
+        let questions = [];
+        let currentIndex = 0;
+
+        // --- DOM ELEMENTS ---
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const optionsContainer = document.getElementById('options-container');
+        const btnCheck = document.getElementById('btn-check');
+        const btnNext = document.getElementById('btn-next');
+        const feedbackMsg = document.getElementById('feedback-message');
+        const currentNumEl = document.getElementById('current-word-num');
+        const totalNumEl = document.getElementById('total-words-num');
+
+        // Helper to shuffle arrays
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle the question list so it's fresh every time
+            questions = shuffleArray(questionsData);
+            totalNumEl.innerText = questions.length;
+            currentIndex = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const currentData = questions[currentIndex];
+            currentNumEl.innerText = currentIndex + 1;
+            
+            // Reset UI
+            optionsContainer.innerHTML = '';
+            feedbackMsg.classList.remove('text-teal-600', 'text-red-500');
+            feedbackMsg.classList.add('text-transparent');
+            feedbackMsg.innerText = "Placeholder";
+            
+            btnCheck.classList.remove('hidden');
+            btnNext.classList.add('hidden');
+
+            // Render Sentence
+            const sentenceHTML = currentData.sentence.replace("[BLANK]", `<span class="sentence-blank px-4 text-teal-500"> ( ${currentData.baseNoun} ) </span>`);
+            sentenceDisplay.innerHTML = sentenceHTML;
+
+            // Render Shuffled Options
+            const shuffledOptions = shuffleArray(currentData.options);
+            shuffledOptions.forEach(optionText => {
+                const btn = document.createElement('button');
+                btn.className = 'mc-option flex-1 min-w-[150px] text-xl md:text-2xl font-bold py-4 px-6 rounded-2xl cursor-pointer';
+                btn.innerText = optionText;
+                btn.dataset.val = optionText;
+                
+                btn.addEventListener('click', () => {
+                    // Deselect others
+                    document.querySelectorAll('.mc-option').forEach(b => {
+                        b.classList.remove('selected', 'incorrect', 'animate-shake');
+                    });
+                    // Select this one
+                    btn.classList.add('selected');
+                });
+                
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // --- GAME LOGIC ---
+        function checkAnswer() {
+            const currentData = questions[currentIndex];
+            const selectedBtn = document.querySelector('.mc-option.selected');
+
+            if (!selectedBtn) {
+                showFeedback("Please select an answer first!", "error");
+                return;
+            }
+
+            const userAnswer = selectedBtn.dataset.val;
+
+            if (userAnswer === currentData.answer) {
+                // Success!
+                showFeedback("Correct! You added 's to the irregular plural noun.", "success");
+                
+                selectedBtn.classList.remove('selected');
+                selectedBtn.classList.add('correct', 'animate-pop');
+
+                // Fill in the blank in the sentence
+                sentenceDisplay.innerHTML = currentData.sentence.replace("[BLANK]", `<span class="text-teal-600 border-b-4 border-teal-500 pb-1">${currentData.answer}</span>`);
+
+                // Disable all buttons
+                document.querySelectorAll('.mc-option').forEach(b => {
+                    b.disabled = true;
+                    if (b !== selectedBtn) b.classList.add('opacity-50');
+                });
+
+                // Swap controls
+                btnCheck.classList.add('hidden');
+                btnNext.classList.remove('hidden');
+                btnNext.focus(); 
+
+            } else {
+                // Error
+                showFeedback("Not quite! Remember, if the plural noun doesn't end in 's', you must add 's.", "error");
+                selectedBtn.classList.add('incorrect', 'animate-shake');
+                selectedBtn.classList.remove('selected');
+            }
+        }
+
+        function showFeedback(text, type) {
+            feedbackMsg.innerText = text;
+            feedbackMsg.classList.remove('text-transparent', 'text-red-500', 'text-teal-600');
+            if (type === "success") {
+                feedbackMsg.classList.add('text-teal-600');
+            } else {
+                feedbackMsg.classList.add('text-red-500');
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                // Game Over
+                optionsContainer.innerHTML = '';
+                sentenceDisplay.innerHTML = "You are an irregular plural master!";
+                btnNext.classList.add('hidden');
+                feedbackMsg.innerText = "Amazing Job!";
+                feedbackMsg.classList.remove('text-transparent');
+                feedbackMsg.classList.add('text-teal-600', 'text-3xl');
+                
+                const playAgainBtn = document.createElement('button');
+                playAgainBtn.className = 'btn bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-wide text-xl mt-4';
+                playAgainBtn.innerText = 'Play Again';
+                playAgainBtn.onclick = () => {
+                    playAgainBtn.remove();
+                    initGame();
+                };
+                document.querySelector('.flex-wrap').appendChild(playAgainBtn);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        btnCheck.addEventListener('click', checkAnswer);
+        btnNext.addEventListener('click', nextQuestion);
+
+        // Start the game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
