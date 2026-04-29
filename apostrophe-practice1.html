@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Possessive Apostrophes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+
+        body {
+            background-color: #fffbeb; /* amber-50 */
+            background-image: radial-gradient(#fde68a 2px, transparent 2px);
+            background-size: 30px 30px;
+            font-family: 'Quicksand', sans-serif;
+            color: #451a03;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.2), 0 8px 10px -6px rgba(217, 119, 6, 0.2);
+            border: 4px solid #fbbf24;
+        }
+
+        /* Buttons */
+        .btn {
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.15);
+        }
+
+        /* Multiple Choice Options */
+        .mc-option {
+            background: #fffbeb;
+            border: 3px solid #fde68a;
+            color: #92400e;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #fcd34d;
+        }
+
+        .mc-option:hover:not(:disabled) {
+            background: #fef3c7;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #fcd34d;
+        }
+
+        .mc-option:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #fcd34d;
+        }
+
+        .mc-option.selected {
+            background: #fef08a;
+            border-color: #f59e0b;
+            color: #b45309;
+            box-shadow: 0 4px 0 #d97706;
+        }
+        .mc-option.selected:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #d97706;
+        }
+
+        .mc-option.correct {
+            background: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #059669 !important;
+            box-shadow: 0 4px 0 #047857 !important;
+        }
+
+        .mc-option.incorrect {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c !important;
+            box-shadow: 0 4px 0 #b91c1c !important;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s ease-out;
+        }
+
+        /* Context Sentence Blank */
+        .sentence-blank {
+            display: inline-block;
+            min-width: 100px;
+            border-bottom: 3px solid #f59e0b;
+            margin: 0 5px;
+            color: #d97706;
+            font-weight: 700;
+            text-align: center;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-12">
+
+    <main class="game-card w-full max-w-4xl p-6 md:p-10 text-center relative overflow-hidden">
+        
+        <!-- Header & Progress -->
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-amber-600 drop-shadow-sm tracking-wide">
+                Single Possessive Apostrophes
+            </h1>
+            <div class="bg-amber-100 text-amber-800 px-4 py-2 rounded-full font-bold text-lg border-2 border-amber-200 shrink-0">
+                Question <span id="current-word-num">1</span> of <span id="total-words-num">15</span>
+            </div>
+        </header>
+
+        <!-- Rule Display Banner -->
+        <div class="bg-amber-500 text-white rounded-2xl p-5 mb-8 shadow-md border-b-4 border-amber-600 text-left">
+            <h2 class="text-xl font-bold mb-2 uppercase tracking-wider text-amber-100">Grade 5 Rule:</h2>
+            <p class="text-2xl font-semibold mb-3">To form the possessive of a single noun, add an <span class="bg-white text-amber-600 px-2 py-0.5 rounded shadow-sm">’</span> and an <span class="bg-white text-amber-600 px-2 py-0.5 rounded shadow-sm">s</span>.</p>
+            <div class="bg-amber-600/30 rounded-lg p-3 inline-block">
+                <span class="font-bold text-amber-100 text-sm uppercase tracking-widest">Examples:</span>
+                <span class="ml-2 font-medium text-lg">Robert’s cat &nbsp; | &nbsp; the fan’s cord</span>
+            </div>
+        </div>
+
+        <!-- Sentence Context -->
+        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-6 mb-8 shadow-inner min-h-[120px] flex items-center justify-center">
+            <p id="sentence-display" class="text-2xl md:text-3xl font-bold text-orange-900 leading-relaxed">
+                <!-- Sentence injected by JS -->
+            </p>
+        </div>
+
+        <!-- Multiple Choice Options -->
+        <div id="options-container" class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 md:gap-6 mb-8 max-w-3xl mx-auto">
+            <!-- Options injected by JS -->
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="feedback-message" class="text-2xl font-bold mb-6 h-8 text-transparent transition-colors">
+            Good Job!
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <button id="btn-check" class="btn bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-wide text-xl">
+                Check Answer
+            </button>
+            <button id="btn-next" class="hidden btn bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-wide text-xl shadow-[0_4px_0_#047857]">
+                Next Question ➔
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- GAME DATA ---
+        // Every question follows the specific rule: Single Noun + 's
+        const questionsData = [
+            { baseNoun: "teacher", answer: "teacher's", options: ["teacher's", "teachers'", "teachers"], sentence: "I accidentally knocked over the [BLANK] coffee mug." },
+            { baseNoun: "Sarah", answer: "Sarah's", options: ["Sarah's", "Sarahs'", "Sarahs"], sentence: "[BLANK] jacket was left on the playground." },
+            { baseNoun: "dog", answer: "dog's", options: ["dog's", "dogs'", "dogs"], sentence: "We need to refill the [BLANK] water bowl." },
+            { baseNoun: "cat", answer: "cat's", options: ["cat's", "cats'", "cats"], sentence: "The [BLANK] favorite toy is a little stuffed mouse." },
+            { baseNoun: "bicycle", answer: "bicycle's", options: ["bicycle's", "bicycles'", "bicycles"], sentence: "The [BLANK] front tire is completely flat." },
+            { baseNoun: "Jackson", answer: "Jackson's", options: ["Jackson's", "Jacksons'", "Jacksons"], sentence: "Did you see [BLANK] amazing science project?" },
+            { baseNoun: "lion", answer: "lion's", options: ["lion's", "lions'", "lions"], sentence: "The [BLANK] loud roar echoed across the zoo." },
+            { baseNoun: "car", answer: "car's", options: ["car's", "cars'", "cars"], sentence: "My dad had to replace the [BLANK] battery." },
+            { baseNoun: "student", answer: "student's", options: ["student's", "students'", "students"], sentence: "The [BLANK] missing notebook was found in the library." },
+            { baseNoun: "computer", answer: "computer's", options: ["computer's", "computers'", "computers"], sentence: "The [BLANK] keyboard is missing a few letters." },
+            { baseNoun: "Sam", answer: "Sam's", options: ["Sam's", "Sams'", "Sams"], sentence: "We are going to ride skateboards at [BLANK] house." },
+            { baseNoun: "bird", answer: "bird's", options: ["bird's", "birds'", "birds"], sentence: "The strong wind blew the [BLANK] nest out of the tree." },
+            { baseNoun: "brother", answer: "brother's", options: ["brother's", "brothers'", "brothers"], sentence: "I accidentally broke my [BLANK] favorite video game." },
+            { baseNoun: "school", answer: "school's", options: ["school's", "schools'", "schools"], sentence: "The [BLANK] fire alarm went off right before lunch." },
+            { baseNoun: "sun", answer: "sun's", options: ["sun's", "suns'", "suns"], sentence: "The [BLANK] rays were very warm this afternoon." },
+            { baseNoun: "tree", answer: "tree's", options: ["tree's", "trees'", "trees"], sentence: "The [BLANK] leaves turn orange in the fall." },
+            { baseNoun: "ocean", answer: "ocean's", options: ["ocean's", "oceans'", "oceans"], sentence: "The [BLANK] waves crashed against the shore." },
+            { baseNoun: "chef", answer: "chef's", options: ["chef's", "chefs'", "chefs"], sentence: "The [BLANK] special recipe is a secret." },
+            { baseNoun: "sister", answer: "sister's", options: ["sister's", "sisters'", "sisters"], sentence: "I borrowed my [BLANK] favorite sweater." },
+            { baseNoun: "elephant", answer: "elephant's", options: ["elephant's", "elephants'", "elephants"], sentence: "The [BLANK] trunk is very strong." },
+            { baseNoun: "city", answer: "city's", options: ["city's", "cities'", "cities"], sentence: "The [BLANK] mayor gave a speech today." },
+            { baseNoun: "phone", answer: "phone's", options: ["phone's", "phones'", "phones"], sentence: "My [BLANK] screen needs to be cleaned." },
+            { baseNoun: "doctor", answer: "doctor's", options: ["doctor's", "doctors'", "doctors"], sentence: "The [BLANK] office is on the second floor." },
+            { baseNoun: "book", answer: "book's", options: ["book's", "books'", "books"], sentence: "The [BLANK] cover was brightly colored." },
+            { baseNoun: "hero", answer: "hero's", options: ["hero's", "heroes'", "heroes"], sentence: "The [BLANK] bravery saved the day." },
+            { baseNoun: "player", answer: "player's", options: ["player's", "players'", "players"], sentence: "The [BLANK] uniform was covered in mud." },
+            { baseNoun: "baby", answer: "baby's", options: ["baby's", "babies'", "babies"], sentence: "The [BLANK] blanket was soft and warm." },
+            { baseNoun: "moon", answer: "moon's", options: ["moon's", "moons'", "moons"], sentence: "We admired the [BLANK] bright glow in the night sky." },
+            { baseNoun: "pilot", answer: "pilot's", options: ["pilot's", "pilots'", "pilots"], sentence: "The [BLANK] announcement asked everyone to sit down." },
+            { baseNoun: "artist", answer: "artist's", options: ["artist's", "artists'", "artists"], sentence: "The [BLANK] paintbrush swept across the canvas." }
+        ];
+        
+        let questions = [];
+        let currentIndex = 0;
+
+        // --- DOM ELEMENTS ---
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const optionsContainer = document.getElementById('options-container');
+        const btnCheck = document.getElementById('btn-check');
+        const btnNext = document.getElementById('btn-next');
+        const feedbackMsg = document.getElementById('feedback-message');
+        const currentNumEl = document.getElementById('current-word-num');
+        const totalNumEl = document.getElementById('total-words-num');
+
+        // Helper to shuffle arrays
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            // Shuffle the question list so it's fresh every time
+            questions = shuffleArray(questionsData);
+            totalNumEl.innerText = questions.length;
+            currentIndex = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const currentData = questions[currentIndex];
+            currentNumEl.innerText = currentIndex + 1;
+            
+            // Reset UI
+            optionsContainer.innerHTML = '';
+            feedbackMsg.classList.remove('text-emerald-600', 'text-red-500');
+            feedbackMsg.classList.add('text-transparent');
+            feedbackMsg.innerText = "Placeholder";
+            
+            btnCheck.classList.remove('hidden');
+            btnNext.classList.add('hidden');
+
+            // Render Sentence
+            const sentenceHTML = currentData.sentence.replace("[BLANK]", `<span class="sentence-blank px-4 text-orange-400"> ( ${currentData.baseNoun} ) </span>`);
+            sentenceDisplay.innerHTML = sentenceHTML;
+
+            // Render Shuffled Options
+            const shuffledOptions = shuffleArray(currentData.options);
+            shuffledOptions.forEach(optionText => {
+                const btn = document.createElement('button');
+                btn.className = 'mc-option flex-1 min-w-[150px] text-xl md:text-2xl font-bold py-4 px-6 rounded-2xl cursor-pointer';
+                btn.innerText = optionText;
+                btn.dataset.val = optionText;
+                
+                btn.addEventListener('click', () => {
+                    // Deselect others
+                    document.querySelectorAll('.mc-option').forEach(b => {
+                        b.classList.remove('selected', 'incorrect', 'animate-shake');
+                    });
+                    // Select this one
+                    btn.classList.add('selected');
+                });
+                
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // --- GAME LOGIC ---
+        function checkAnswer() {
+            const currentData = questions[currentIndex];
+            const selectedBtn = document.querySelector('.mc-option.selected');
+
+            if (!selectedBtn) {
+                showFeedback("Please select an answer first!", "error");
+                return;
+            }
+
+            const userAnswer = selectedBtn.dataset.val;
+
+            if (userAnswer === currentData.answer) {
+                // Success!
+                showFeedback("Correct! You added 's to the noun.", "success");
+                
+                selectedBtn.classList.remove('selected');
+                selectedBtn.classList.add('correct', 'animate-pop');
+
+                // Fill in the blank in the sentence
+                sentenceDisplay.innerHTML = currentData.sentence.replace("[BLANK]", `<span class="text-emerald-600 border-b-4 border-emerald-500 pb-1">${currentData.answer}</span>`);
+
+                // Disable all buttons
+                document.querySelectorAll('.mc-option').forEach(b => {
+                    b.disabled = true;
+                    if (b !== selectedBtn) b.classList.add('opacity-50');
+                });
+
+                // Swap controls
+                btnCheck.classList.add('hidden');
+                btnNext.classList.remove('hidden');
+                btnNext.focus(); 
+
+            } else {
+                // Error
+                showFeedback("Not quite! Remember to just add 's to the single noun.", "error");
+                selectedBtn.classList.add('incorrect', 'animate-shake');
+                selectedBtn.classList.remove('selected');
+            }
+        }
+
+        function showFeedback(text, type) {
+            feedbackMsg.innerText = text;
+            feedbackMsg.classList.remove('text-transparent', 'text-red-500', 'text-emerald-600');
+            if (type === "success") {
+                feedbackMsg.classList.add('text-emerald-600');
+            } else {
+                feedbackMsg.classList.add('text-red-500');
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                // Game Over
+                optionsContainer.innerHTML = '';
+                sentenceDisplay.innerHTML = "You are a singular possessive master!";
+                btnNext.classList.add('hidden');
+                feedbackMsg.innerText = "Amazing Job!";
+                feedbackMsg.classList.remove('text-transparent');
+                feedbackMsg.classList.add('text-amber-600', 'text-3xl');
+                
+                const playAgainBtn = document.createElement('button');
+                playAgainBtn.className = 'btn bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-wide text-xl mt-4';
+                playAgainBtn.innerText = 'Play Again';
+                playAgainBtn.onclick = () => {
+                    playAgainBtn.remove();
+                    initGame();
+                };
+                document.querySelector('.flex-wrap').appendChild(playAgainBtn);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        btnCheck.addEventListener('click', checkAnswer);
+        btnNext.addEventListener('click', nextQuestion);
+
+        // Start the game
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
