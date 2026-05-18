@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adverb Adventure: Manner Quest!</title>
+  <!-- Tailwind CSS CDN for high-fidelity styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for friendly, clean typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+    }
+    h1, h2, h3, .font-fun {
+      font-family: 'Fredoka', sans-serif;
+    }
+    /* Bounce animation for correct answers */
+    @keyframes celebration {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .celebrate {
+      animation: celebration 0.5s ease infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Game Container -->
+  <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden border-4 border-indigo-200 relative">
+    
+    <!-- Top Decorative Banner -->
+    <div class="h-4 bg-gradient-to-r from-teal-400 via-indigo-50 to-purple-600"></div>
+
+    <!-- ==================== SCREEN 1: WELCOME & DIRECTIONS ==================== -->
+    <div id="screen-welcome" class="p-6 md:p-10 space-y-6">
+      <div class="text-center space-y-3">
+        <span class="text-xs font-bold uppercase tracking-widest bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full">5th Grade Grammar Quest</span>
+        <h1 class="text-4xl md:text-5xl font-bold text-indigo-900 leading-tight">Adverb Adventure!</h1>
+        <p class="text-lg text-gray-600 font-medium">Spot the Adverbs of Manner (-ly) and their Verbs</p>
+      </div>
+
+      <!-- Educational Card -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-100 space-y-4">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl">🦉</div>
+          <div>
+            <h3 class="text-xl font-bold text-indigo-900">What is an Adverb of Manner?</h3>
+            <p class="text-gray-700 mt-1 text-base leading-relaxed">
+              An <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">adverb of manner</span> describes <span class="font-bold underline">how</span> an action is done. It tells us more about the <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">verb</span>! Most of these adverbs end in <strong class="text-indigo-600">-ly</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-indigo-100 pt-4 mt-2">
+          <p class="font-bold text-indigo-900 mb-2">Example:</p>
+          <div class="bg-white p-3 rounded-xl border border-indigo-100 text-lg flex flex-wrap gap-2 justify-center">
+            <span>The dog</span>
+            <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold border border-amber-300">loudly</span>
+            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md font-bold border border-blue-300">barked</span>.
+          </div>
+          <p class="text-sm text-gray-500 mt-2 text-center">
+            "Loudly" is the adverb because it describes <em>how</em> the dog "barked" (the verb). Notice that adverbs can jump around in sentences!
+          </p>
+        </div>
+      </div>
+
+      <!-- Directions Card -->
+      <div class="bg-amber-50 rounded-2xl p-5 border-2 border-amber-200">
+        <h3 class="font-bold text-amber-900 flex items-center gap-2">
+          <span>🎮</span> How to Play:
+        </h3>
+        <ol class="list-decimal list-inside text-gray-700 mt-2 space-y-1.5 text-sm md:text-base font-medium">
+          <li>Read the sentence carefully (the adverbs of manner move to different spots!).</li>
+          <li>First, click on the <strong class="text-amber-600">ADVERB</strong> ending in -ly.</li>
+          <li>Next, click on the <strong class="text-blue-600">VERB</strong> it describes.</li>
+          <li>Click <strong class="text-indigo-600">Submit Answer</strong> to see if you got it right!</li>
+        </ol>
+      </div>
+
+      <!-- Start Button -->
+      <div class="text-center pt-2">
+        <button id="btn-start" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xl px-10 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto">
+          Start Practice! 🚀
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ==================== SCREEN 2: THE PRACTICE GAMEPLAY ==================== -->
+    <div id="screen-game" class="hidden p-6 md:p-8 space-y-6">
+      
+      <!-- HUD (Heads-Up Display) / Progress -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+        <div class="flex items-center gap-3">
+          <span id="level-badge" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-green-100 text-green-800">
+            Level 1: Simple
+          </span>
+          <span class="text-sm text-gray-500 font-bold" id="question-number">Question 1 of 30</span>
+        </div>
+        
+        <!-- Score and Streak -->
+        <div class="flex items-center gap-4 text-sm font-bold">
+          <div class="text-gray-700">
+            Score: <span id="score-val" class="text-indigo-600 text-lg">0</span>/30
+          </div>
+          <div class="text-amber-600 flex items-center gap-1">
+            🔥 Streak: <span id="streak-val">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Progress Bar -->
+      <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+        <div id="progress-bar-fill" class="bg-indigo-600 h-full transition-all duration-300" style="width: 3.3%"></div>
+      </div>
+
+      <!-- Prompt Banner / Instruction Box -->
+      <div id="instruction-banner" class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl flex items-center gap-3 transition-colors duration-200">
+        <span id="instruction-emoji" class="text-2xl">👉</span>
+        <p id="instruction-text" class="text-amber-800 font-bold text-base md:text-lg">
+          Click the <span class="underline decoration-2">ADVERB</span> ending in -ly!
+        </p>
+      </div>
+
+      <!-- Interactive Sentence Container -->
+      <div class="py-8 px-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-wrap gap-2 md:gap-3 justify-center items-center min-h-[140px]" id="sentence-container">
+        <!-- Interactive word elements generated via JS -->
+      </div>
+
+      <!-- Helper / Selection Status Info -->
+      <div class="flex justify-center gap-6 text-sm font-semibold">
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded bg-amber-500 inline-block"></span>
+          <span class="text-gray-600">Selected Adverb: <span id="status-adverb" class="font-bold text-amber-600">None</span></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded bg-blue-500 inline-block"></span>
+          <span class="text-gray-600">Selected Verb: <span id="status-verb" class="font-bold text-blue-600">None</span></span>
+        </div>
+      </div>
+
+      <!-- Control / Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button id="btn-reset-selection" class="border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-bold px-6 py-3.5 rounded-xl transition-all text-base order-2 sm:order-1">
+          Clear Selection 🧹
+        </button>
+        <button id="btn-submit" disabled class="bg-indigo-600 text-white font-bold px-8 py-3.5 rounded-xl transition-all text-base shadow hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed flex-1 order-1 sm:order-2">
+          Submit Answer
+        </button>
+        <button id="btn-next" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3.5 rounded-xl transition-all text-base shadow-lg hover:shadow-xl flex-1 order-1 sm:order-2">
+          Next Question ➡️
+        </button>
+      </div>
+
+      <!-- Interactive Feedback Panel -->
+      <div id="feedback-panel" class="hidden p-5 rounded-2xl border-2 transition-all duration-300 transform scale-95 opacity-0">
+        <div class="flex gap-4 items-start">
+          <span id="feedback-icon" class="text-4xl"></span>
+          <div class="space-y-1">
+            <h4 id="feedback-title" class="text-lg font-extrabold"></h4>
+            <p id="feedback-desc" class="text-gray-700 text-sm md:text-base"></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ==================== SCREEN 3: RESULTS & BREAKDOWN ==================== -->
+    <div id="screen-results" class="hidden p-6 md:p-10 space-y-8 text-center">
+      <div class="space-y-3">
+        <span class="text-4xl celebrate inline-block">🏆</span>
+        <h1 class="text-4xl font-bold text-indigo-900">Quest Complete!</h1>
+        <p class="text-gray-600 font-medium">You navigated the adverb wilderness successfully!</p>
+      </div>
+
+      <!-- Score Circle Display -->
+      <div class="relative w-44 h-44 mx-auto flex items-center justify-center bg-indigo-50 rounded-full border-8 border-indigo-200">
+        <div class="space-y-1">
+          <span class="text-gray-400 text-xs font-extrabold uppercase tracking-widest">Final Score</span>
+          <div class="text-5xl font-extrabold text-indigo-600" id="final-score">28/30</div>
+          <span id="final-percent" class="text-sm font-bold text-gray-500">93%</span>
+        </div>
+      </div>
+
+      <!-- Teacher Feedback Summary Card -->
+      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border-2 border-emerald-100 max-w-md mx-auto space-y-2">
+        <h3 id="result-badge" class="text-xl font-bold text-emerald-800">Super Adverb Wizard!</h3>
+        <p id="result-text" class="text-gray-700 text-sm md:text-base">
+          You have an incredible understanding of how adverbs of manner work! You effortlessly found the adverbs and connected them to the verbs.
+        </p>
+      </div>
+
+      <!-- Reset / Replay Button -->
+      <div class="pt-4">
+        <button id="btn-restart" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0">
+          Play Again 🔄
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sound/Feedback Effects (Using Web Audio API to prevent external file loads) -->
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'wrong') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } else if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+      }
+    }
+  </script>
+
+  <!-- Game Logic Javascript -->
+  <script>
+    // 30 Question dataset with highly shuffled adverb positions mapped strictly to specifications
+    const questionBank = [
+      // ================= LEVEL 1: Simple (Questions 1 - 10) =================
+      {
+        sentence: "The energetic dog loudly barked at the mailman.",
+        words: ["The", "energetic", "dog", "loudly", "barked", "at", "the", "mailman."],
+        verbIdx: 4, // "barked"
+        adverbIdx: 3, // "loudly" (Pre-verb placement)
+        explanation: "'Loudly' describes how the dog 'barked'."
+      },
+      {
+        sentence: "The sleepy baby cried softly in her soft crib.",
+        words: ["The", "sleepy", "baby", "cried", "softly", "in", "her", "soft", "crib."],
+        verbIdx: 3, // "cried"
+        adverbIdx: 4, // "softly" (Post-verb placement)
+        explanation: "'Softly' tells us how the baby 'cried'."
+      },
+      {
+        sentence: "Brightly, the warm summer sun shone over the ocean.",
+        words: ["Brightly,", "the", "warm", "sun", "shone", "over", "the", "ocean."],
+        verbIdx: 4, // "shone"
+        adverbIdx: 0, // "Brightly," (Front placement)
+        explanation: "'Brightly' describes how the sun 'shone'."
+      },
+      {
+        sentence: "Our soccer team played wonderfully during the entire match.",
+        words: ["Our", "soccer", "team", "played", "wonderfully", "during", "the", "entire", "match."],
+        verbIdx: 3, // "played"
+        adverbIdx: 4, // "wonderfully" (Post-verb placement)
+        explanation: "'Wonderfully' explains how the team 'played'."
+      },
+      {
+        sentence: "The kind teacher happily smiled at the students.",
+        words: ["The", "kind", "teacher", "happily", "smiled", "at", "the", "students."],
+        verbIdx: 4, // "smiled"
+        adverbIdx: 3, // "happily" (Pre-verb placement)
+        explanation: "'Happily' describes how the teacher 'smiled'."
+      },
+      {
+        sentence: "The wild stallion ran swiftly across the open fields.",
+        words: ["The", "wild", "stallion", "ran", "swiftly", "across", "the", "open", "fields."],
+        verbIdx: 3, // "ran"
+        adverbIdx: 4, // "swiftly" (Post-verb placement)
+        explanation: "'Swiftly' describes how the stallion 'ran'."
+      },
+      {
+        sentence: "Slowly, we walked along the sandy beach.",
+        words: ["Slowly,", "we", "walked", "along", "the", "sandy", "beach."],
+        verbIdx: 2, // "walked"
+        adverbIdx: 0, // "Slowly," (Front placement)
+        explanation: "'Slowly' explains how we 'walked'."
+      },
+      {
+        sentence: "The autumn wind blew fiercely through the tall pine trees.",
+        words: ["The", "autumn", "wind", "blew", "fiercely", "through", "the", "tall", "pine", "trees."],
+        verbIdx: 3, // "blew"
+        adverbIdx: 4, // "fiercely" (Post-verb placement)
+        explanation: "'Fiercely' describes how the wind 'blew'."
+      },
+      {
+        sentence: "The focused child wrote her homework neatly on the paper.",
+        words: ["The", "focused", "child", "wrote", "her", "homework", "neatly", "on", "the", "paper."],
+        verbIdx: 3, // "wrote"
+        adverbIdx: 6, // "neatly" (Mid-sentence / Post-object placement)
+        explanation: "'Neatly' describes how the child 'wrote'."
+      },
+      {
+        sentence: "The school choir beautifully sang a song at the festival.",
+        words: ["The", "school", "choir", "beautifully", "sang", "a", "song", "at", "the", "festival."],
+        verbIdx: 4, // "sang"
+        adverbIdx: 3, // "beautifully" (Pre-verb placement)
+        explanation: "'Beautifully' explains how the choir 'sang'."
+      },
+
+      // ================= LEVEL 2: Medium (Questions 11 - 20) =================
+      {
+        sentence: "The graceful dancer leaped beautifully across the shiny stage.",
+        words: ["The", "graceful", "dancer", "leaped", "beautifully", "across", "the", "shiny", "stage."],
+        verbIdx: 3, // "leaped"
+        adverbIdx: 4, // "beautifully" (Post-verb placement)
+        explanation: "'Beautifully' explains how the dancer 'leaped'."
+      },
+      {
+        sentence: "He quickly finished his long science homework before dinner.",
+        words: ["He", "quickly", "finished", "his", "long", "science", "homework", "before", "dinner."],
+        verbIdx: 2, // "finished"
+        adverbIdx: 1, // "quickly" (Pre-verb placement)
+        explanation: "'Quickly' tells us how he 'finished' his work."
+      },
+      {
+        sentence: "Silently, the fierce tiger stalked its prey through the grass.",
+        words: ["Silently,", "the", "fierce", "tiger", "stalked", "its", "prey", "through", "the", "grass."],
+        verbIdx: 4, // "stalked"
+        adverbIdx: 0, // "Silently," (Front placement)
+        explanation: "'Silently' describes how the tiger 'stalked' the prey."
+      },
+      {
+        sentence: "She accepted the gleaming gold medal eagerly on the podium.",
+        words: ["She", "accepted", "the", "gleaming", "gold", "medal", "eagerly", "on", "the", "podium."],
+        verbIdx: 1, // "accepted"
+        adverbIdx: 6, // "eagerly" (Post-object placement)
+        explanation: "'Eagerly' describes the way she 'accepted' the medal."
+      },
+      {
+        sentence: "Our wise teacher patiently explained the difficult math fraction rule.",
+        words: ["Our", "wise", "teacher", "patiently", "explained", "the", "difficult", "math", "fraction", "rule."],
+        verbIdx: 4, // "explained"
+        adverbIdx: 3, // "patiently" (Pre-verb placement)
+        explanation: "'Patiently' is the adverb describing how the teacher 'explained' the rule."
+      },
+      {
+        sentence: "The quiet students respectfully entered the crowded assembly hall.",
+        words: ["The", "quiet", "students", "respectfully", "entered", "the", "crowded", "assembly", "hall."],
+        verbIdx: 4, // "entered"
+        adverbIdx: 3, // "respectfully" (Pre-verb placement)
+        explanation: "'Respectfully' is the adverb describing how the students 'entered'."
+      },
+      {
+        sentence: "The heavy rain poured steadily onto the dry, cracked soil.",
+        words: ["The", "heavy", "rain", "poured", "steadily", "onto", "the", "dry,", "cracked", "soil."],
+        verbIdx: 3, // "poured"
+        adverbIdx: 4, // "steadily" (Post-verb placement)
+        explanation: "'Steadily' describes how the rain 'poured'."
+      },
+      {
+        sentence: "Carefully, we carried the fragile glass vase up the stairs.",
+        words: ["Carefully,", "we", "carried", "the", "fragile", "glass", "vase", "up", "the", "stairs."],
+        verbIdx: 2, // "carried"
+        adverbIdx: 0, // "Carefully," (Front placement)
+        explanation: "'Carefully' explains how we 'carried' the vase."
+      },
+      {
+        sentence: "The secure guard suddenly locked the heavy iron gates.",
+        words: ["The", "secure", "guard", "suddenly", "locked", "the", "heavy", "iron", "gates."],
+        verbIdx: 4, // "locked"
+        adverbIdx: 3, // "suddenly" (Pre-verb placement)
+        explanation: "'Suddenly' explains the manner in which the guard 'locked' the gates."
+      },
+      {
+        sentence: "She decorated the massive chocolate birthday cake cheerfully.",
+        words: ["She", "decorated", "the", "massive", "chocolate", "birthday", "cake", "cheerfully."],
+        verbIdx: 1, // "decorated"
+        adverbIdx: 7, // "cheerfully" (End placement)
+        explanation: "'Cheerfully' describes how she 'decorated' the cake."
+      },
+
+      // ================= LEVEL 3: Complex / Distractors / Mixed placement (Questions 21 - 30) =================
+      {
+        sentence: "Reluctantly, the nervous boy walked into the dentist's office.",
+        words: ["Reluctantly,", "the", "nervous", "boy", "walked", "into", "the", "dentist's", "office."],
+        verbIdx: 4, // "walked"
+        adverbIdx: 0, // "Reluctantly," (Front placement)
+        explanation: "Even though 'Reluctantly' is at the very beginning, it describes how the boy 'walked'!"
+      },
+      {
+        sentence: "The creative scientist examined the glowing chemical sample extremely cautiously.",
+        words: ["The", "creative", "scientist", "examined", "the", "glowing", "chemical", "sample", "extremely", "cautiously."],
+        verbIdx: 3, // "examined"
+        adverbIdx: 9, // "cautiously" (Distantly positioned adverb)
+        explanation: "'Cautiously' describes how the scientist 'examined' the sample. ('Extremely' is an adverb of degree modifying 'cautiously')."
+      },
+      {
+        sentence: "Boldly, the young explorer climbed the steep, icy mountain peak.",
+        words: ["Boldly,", "the", "young", "explorer", "climbed", "the", "steep,", "icy", "mountain", "peak."],
+        verbIdx: 4, // "climbed"
+        adverbIdx: 0, // "Boldly," (Front placement)
+        explanation: "'Boldly' is placed at the start but describes how the explorer 'climbed'."
+      },
+      {
+        sentence: "The ancient grandfather clock ticked rhythmically inside the empty, silent hallway.",
+        words: ["The", "ancient", "grandfather", "clock", "ticked", "rhythmically", "inside", "the", "empty,", "silent", "hallway."],
+        verbIdx: 4, // "ticked"
+        adverbIdx: 5, // "rhythmically" (Post-verb placement)
+        explanation: "'Rhythmically' describes how the grandfather clock 'ticked'."
+      },
+      {
+        sentence: "While listening to peaceful music, she painted the colorful canvas beautifully.",
+        words: ["While", "listening", "to", "peaceful", "music,", "she", "painted", "the", "colorful", "canvas", "beautifully."],
+        verbIdx: 6, // "painted"
+        adverbIdx: 10, // "beautifully" (End placement with distracting clause)
+        explanation: "'Beautifully' describes how she 'painted' the canvas. 'Listening' is part of a separate clause."
+      },
+      {
+        sentence: "The clever detective closely inspected the muddy footprints near the kitchen window.",
+        words: ["The", "clever", "detective", "closely", "inspected", "the", "muddy", "footprints", "near", "the", "kitchen", "window."],
+        verbIdx: 4, // "inspected"
+        adverbIdx: 3, // "closely" (Pre-verb placement)
+        explanation: "'Closely' is positioned right before the verb 'inspected' and tells us how they inspected."
+      },
+      {
+        sentence: "Anxiously, the students waited in line for their final report cards.",
+        words: ["Anxiously,", "the", "students", "waited", "in", "line", "for", "their", "final", "report", "cards."],
+        verbIdx: 3, // "waited"
+        adverbIdx: 0, // "Anxiously," (Front placement)
+        explanation: "'Anxiously' is at the front, describing the worried manner in which the students 'waited'."
+      },
+      {
+        sentence: "Without making a single sound, she cautiously opened the creaky wooden door.",
+        words: ["Without", "making", "a", "single", "sound,", "she", "cautiously", "opened", "the", "creaky", "wooden", "door."],
+        verbIdx: 7, // "opened"
+        adverbIdx: 6, // "cautiously" (Pre-verb with introductory clause)
+        explanation: "'Cautiously' describes the way she 'opened' the door."
+      },
+      {
+        sentence: "The little bluebird chirped cheerfully while building its cozy nest in the old oak tree.",
+        words: ["The", "little", "bluebird", "chirped", "cheerfully", "while", "building", "its", "cozy", "nest", "in", "the", "old", "oak", "tree."],
+        verbIdx: 3, // "chirped"
+        adverbIdx: 4, // "cheerfully" (Post-verb with nested distractor clause)
+        explanation: "'Cheerfully' is the adverb of manner describing how the bird 'chirped'. ('Building' is a distractor verb)."
+      },
+      {
+        sentence: "Slowly, the mysterious sailing ship disappeared into the thick morning fog.",
+        words: ["Slowly,", "the", "mysterious", "sailing", "ship", "disappeared", "into", "the", "thick", "morning", "fog."],
+        verbIdx: 5, // "disappeared"
+        adverbIdx: 0, // "Slowly," (Front placement)
+        explanation: "'Slowly' acts at the beginning of the sentence to describe how the ship 'disappeared'."
+      }
+    ];
+
+    // App State
+    let currentIdx = 0;
+    let score = 0;
+    let streak = 0;
+    let selectedAdverbIdx = null;
+    let selectedVerbIdx = null;
+    let hasSubmitted = false;
+
+    // DOM Elements
+    const screenWelcome = document.getElementById('screen-welcome');
+    const screenGame = document.getElementById('screen-game');
+    const screenResults = document.getElementById('screen-results');
+
+    const btnStart = document.getElementById('btn-start');
+    const btnResetSelection = document.getElementById('btn-reset-selection');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnNext = document.getElementById('btn-next');
+    const btnRestart = document.getElementById('btn-restart');
+
+    const levelBadge = document.getElementById('level-badge');
+    const qNumberText = document.getElementById('question-number');
+    const scoreVal = document.getElementById('score-val');
+    const streakVal = document.getElementById('streak-val');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+
+    const instructionBanner = document.getElementById('instruction-banner');
+    const instructionEmoji = document.getElementById('instruction-emoji');
+    const instructionText = document.getElementById('instruction-text');
+
+    const sentenceContainer = document.getElementById('sentence-container');
+    const statusVerb = document.getElementById('status-verb');
+    const statusAdverb = document.getElementById('status-adverb');
+
+    const feedbackPanel = document.getElementById('feedback-panel');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackDesc = document.getElementById('feedback-desc');
+
+    const finalScore = document.getElementById('final-score');
+    const finalPercent = document.getElementById('final-percent');
+    const resultBadge = document.getElementById('result-badge');
+    const resultText = document.getElementById('result-text');
+
+    // Event Listeners
+    btnStart.addEventListener('click', startGame);
+    btnResetSelection.addEventListener('click', clearSelections);
+    btnSubmit.addEventListener('click', evaluateAnswer);
+    btnNext.addEventListener('click', nextQuestion);
+    btnRestart.addEventListener('click', restartGame);
+
+    // Gameplay Control Functions
+    function startGame() {
+      playSound('click');
+      screenWelcome.classList.add('hidden');
+      screenGame.classList.remove('hidden');
+      currentIdx = 0;
+      score = 0;
+      streak = 0;
+      loadQuestion(currentIdx);
+    }
+
+    function restartGame() {
+      playSound('click');
+      screenResults.classList.add('hidden');
+      screenGame.classList.remove('hidden');
+      currentIdx = 0;
+      score = 0;
+      streak = 0;
+      loadQuestion(currentIdx);
+    }
+
+    function cleanPunctuation(word) {
+      return word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+    }
+
+    function loadQuestion(index) {
+      hasSubmitted = false;
+      selectedAdverbIdx = null;
+      selectedVerbIdx = null;
+
+      // Update control buttons
+      btnSubmit.classList.remove('hidden');
+      btnSubmit.disabled = true;
+      btnNext.classList.add('hidden');
+      btnResetSelection.disabled = false;
+
+      // Update Feedback Panel
+      feedbackPanel.classList.add('hidden');
+      feedbackPanel.className = "hidden p-5 rounded-2xl border-2 transition-all duration-300 transform scale-95 opacity-0";
+
+      const q = questionBank[index];
+
+      // Update UI Elements
+      scoreVal.textContent = score;
+      streakVal.textContent = streak;
+      qNumberText.textContent = `Question ${index + 1} of 30`;
+      
+      const progressPercent = ((index) / 30) * 100;
+      progressBarFill.style.width = `${progressPercent || 3.3}%`;
+
+      if (index < 10) {
+        levelBadge.textContent = "Level 1: Simple";
+        levelBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-green-100 text-green-800";
+      } else if (index < 20) {
+        levelBadge.textContent = "Level 2: Medium";
+        levelBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800";
+      } else {
+        levelBadge.textContent = "Level 3: Advanced Challenge";
+        levelBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-purple-100 text-purple-800";
+      }
+
+      setInstructionState('adverb');
+      updateStatusDisplay();
+
+      // Render Sentence Words
+      sentenceContainer.innerHTML = '';
+      q.words.forEach((wordText, wordIdx) => {
+        const wordButton = document.createElement('button');
+        wordButton.type = "button";
+        wordButton.className = "text-xl md:text-2xl font-semibold px-3 py-1.5 md:px-4 md:py-2.5 rounded-xl border-2 border-transparent transition-all hover:bg-indigo-50 focus:outline-none focus:ring-4 focus:ring-indigo-300";
+        wordButton.textContent = wordText;
+        wordButton.dataset.index = wordIdx;
+        
+        wordButton.addEventListener('click', () => handleWordClick(wordIdx));
+        sentenceContainer.appendChild(wordButton);
+      });
+    }
+
+    function handleWordClick(clickedIdx) {
+      if (hasSubmitted) return; // Freeze selection after submission
+      playSound('click');
+
+      // State 1: Awaiting Adverb Click (Adverb must be clicked first!)
+      if (selectedAdverbIdx === null) {
+        selectedAdverbIdx = clickedIdx;
+        setInstructionState('verb');
+      } 
+      // State 2: Awaiting Verb Click
+      else if (selectedVerbIdx === null) {
+        if (clickedIdx === selectedAdverbIdx) {
+          // Deselect the adverb if clicked again
+          selectedAdverbIdx = null;
+          setInstructionState('adverb');
+        } else {
+          selectedVerbIdx = clickedIdx;
+          setInstructionState('ready');
+        }
+      } 
+      // State 3: Both Selected (Allowing overrides/swaps)
+      else {
+        if (clickedIdx === selectedAdverbIdx) {
+          selectedAdverbIdx = null;
+          setInstructionState('adverb');
+        } else if (clickedIdx === selectedVerbIdx) {
+          selectedVerbIdx = null;
+          setInstructionState('verb');
+        } else {
+          // Clicking a different word now swaps the selected verb
+          selectedVerbIdx = clickedIdx;
+          setInstructionState('ready');
+        }
+      }
+
+      updateWordSelectionStyles();
+      updateStatusDisplay();
+    }
+
+    function setInstructionState(state) {
+      if (state === 'adverb') {
+        instructionBanner.className = "bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl flex items-center gap-3 transition-colors duration-200";
+        instructionEmoji.textContent = "👉";
+        instructionText.innerHTML = "First, click the <span class='underline decoration-2 font-bold'>ADVERB</span> ending in -ly!";
+        btnSubmit.disabled = true;
+      } else if (state === 'verb') {
+        instructionBanner.className = "bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl flex items-center gap-3 transition-colors duration-200";
+        instructionEmoji.textContent = "👉";
+        instructionText.innerHTML = "Perfect! Now find and click the <span class='underline decoration-2 font-bold'>VERB</span> (action word) it describes!";
+        btnSubmit.disabled = true;
+      } else if (state === 'ready') {
+        instructionBanner.className = "bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl flex items-center gap-3 transition-colors duration-200";
+        instructionEmoji.textContent = "✅";
+        instructionText.innerHTML = "Both selected! Click <span class='font-bold text-green-800'>Submit Answer</span> to test your knowledge.";
+        btnSubmit.disabled = false;
+      }
+    }
+
+    function updateWordSelectionStyles() {
+      const buttons = sentenceContainer.querySelectorAll('button');
+      buttons.forEach((btn, idx) => {
+        // Reset default styles
+        btn.className = "text-xl md:text-2xl font-semibold px-3 py-1.5 md:px-4 md:py-2.5 rounded-xl border-2 border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300";
+
+        if (idx === selectedAdverbIdx) {
+          btn.classList.add('bg-amber-500', 'text-white', 'border-amber-600', 'shadow-md');
+        } else if (idx === selectedVerbIdx) {
+          btn.classList.add('bg-blue-500', 'text-white', 'border-blue-600', 'shadow-md');
+        } else {
+          btn.classList.add('hover:bg-indigo-50', 'text-gray-800');
+        }
+      });
+    }
+
+    function updateStatusDisplay() {
+      const q = questionBank[currentIdx];
+      
+      if (selectedAdverbIdx !== null) {
+        statusAdverb.textContent = `"${cleanPunctuation(q.words[selectedAdverbIdx])}"`;
+        statusAdverb.className = "font-bold text-amber-600";
+      } else {
+        statusAdverb.textContent = "None";
+        statusAdverb.className = "font-bold text-gray-400";
+      }
+
+      if (selectedVerbIdx !== null) {
+        statusVerb.textContent = `"${cleanPunctuation(q.words[selectedVerbIdx])}"`;
+        statusVerb.className = "font-bold text-blue-600";
+      } else {
+        statusVerb.textContent = "None";
+        statusVerb.className = "font-bold text-gray-400";
+      }
+    }
+
+    function clearSelections() {
+      playSound('click');
+      selectedAdverbIdx = null;
+      selectedVerbIdx = null;
+      setInstructionState('adverb');
+      updateWordSelectionStyles();
+      updateStatusDisplay();
+    }
+
+    function evaluateAnswer() {
+      hasSubmitted = true;
+      const q = questionBank[currentIdx];
+      
+      const isAdverbCorrect = (selectedAdverbIdx === q.adverbIdx);
+      const isVerbCorrect = (selectedVerbIdx === q.verbIdx);
+      const isPerfect = isAdverbCorrect && isVerbCorrect;
+
+      btnSubmit.classList.add('hidden');
+      btnNext.classList.remove('hidden');
+      btnResetSelection.disabled = true;
+
+      // Color words on submit to show final grading
+      const buttons = sentenceContainer.querySelectorAll('button');
+      buttons.forEach((btn, idx) => {
+        btn.className = "text-xl md:text-2xl font-semibold px-3 py-1.5 md:px-4 md:py-2.5 rounded-xl border-2 focus:outline-none cursor-default";
+        
+        if (idx === q.adverbIdx) {
+          btn.classList.add('bg-emerald-100', 'text-emerald-800', 'border-emerald-500', 'font-extrabold');
+        } else if (idx === q.verbIdx) {
+          btn.classList.add('bg-green-100', 'text-green-800', 'border-green-500', 'font-extrabold');
+        } else if (idx === selectedAdverbIdx && !isAdverbCorrect) {
+          btn.classList.add('bg-red-100', 'text-red-800', 'border-red-400', 'line-through');
+        } else if (idx === selectedVerbIdx && !isVerbCorrect) {
+          btn.classList.add('bg-red-100', 'text-red-800', 'border-red-400', 'line-through');
+        } else {
+          btn.classList.add('text-gray-300', 'border-transparent');
+        }
+      });
+
+      feedbackPanel.classList.remove('hidden');
+      void feedbackPanel.offsetWidth; 
+
+      if (isPerfect) {
+        playSound('correct');
+        score++;
+        streak++;
+        
+        feedbackPanel.className = "p-5 rounded-2xl border-2 border-green-200 bg-green-50 transition-all duration-300 transform scale-100 opacity-100";
+        feedbackIcon.textContent = "🎉";
+        feedbackTitle.className = "text-lg font-extrabold text-green-800";
+        feedbackTitle.textContent = "Spectacular Job!";
+        feedbackDesc.innerHTML = `You correctly selected <strong class="text-emerald-800">${cleanPunctuation(q.words[q.adverbIdx])}</strong> (adverb) and <strong class="text-blue-800">${cleanPunctuation(q.words[q.verbIdx])}</strong> (verb). <br><span class="italic text-gray-600">${q.explanation}</span>`;
+      } else {
+        playSound('wrong');
+        streak = 0; 
+
+        feedbackPanel.className = "p-5 rounded-2xl border-2 border-red-200 bg-red-50 transition-all duration-300 transform scale-100 opacity-100";
+        feedbackIcon.textContent = "🔍";
+        feedbackTitle.className = "text-lg font-extrabold text-red-800";
+        feedbackTitle.textContent = "Not Quite!";
+        
+        let errorMsg = "";
+        if (!isAdverbCorrect && !isVerbCorrect) {
+          errorMsg = `You selected <strong class="text-red-700">${cleanPunctuation(q.words[selectedAdverbIdx])}</strong> and <strong class="text-red-700">${cleanPunctuation(q.words[selectedVerbIdx])}</strong>.`;
+        } else if (!isAdverbCorrect) {
+          errorMsg = `You got the verb right, but the adverb ending in -ly was incorrect.`;
+        } else {
+          errorMsg = `You got the adverb right, but the verb it describes was incorrect.`;
+        }
+
+        feedbackDesc.innerHTML = `${errorMsg} <br>The correct adverb of manner is <strong class="text-emerald-800">${cleanPunctuation(q.words[q.adverbIdx])}</strong> and the action verb is <strong class="text-blue-800">${cleanPunctuation(q.words[q.verbIdx])}</strong>.<br><span class="italic text-gray-600 mt-1 block">${q.explanation}</span>`;
+      }
+
+      // Update HUD stats
+      scoreVal.textContent = score;
+      streakVal.textContent = streak;
+    }
+
+    function nextQuestion() {
+      playSound('click');
+      currentIdx++;
+      if (currentIdx < questionBank.length) {
+        loadQuestion(currentIdx);
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      screenGame.classList.add('hidden');
+      screenResults.classList.remove('hidden');
+
+      finalScore.textContent = `${score}/30`;
+      const percent = Math.round((score / 30) * 100);
+      finalPercent.textContent = `${percent}%`;
+
+      if (percent === 100) {
+        resultBadge.textContent = "🏆 Legendary Adverb Overlord!";
+        resultBadge.className = "text-xl font-bold text-indigo-800";
+        resultText.textContent = "Perfect score! You are officially an expert at spotting adverbs of manner, no matter where they hide in a sentence! Your teacher is incredibly proud of you!";
+      } else if (percent >= 90) {
+        resultBadge.textContent = "🌟 Adverb Master Wizard!";
+        resultBadge.className = "text-xl font-bold text-emerald-800";
+        resultText.textContent = "Phenomenal! You handled the advanced sentence shuffles perfectly. You really know how -ly adverbs behave and describe action words.";
+      } else if (percent >= 75) {
+        resultBadge.textContent = "👍 Brilliant Word Scout!";
+        resultBadge.className = "text-xl font-bold text-amber-800";
+        resultText.textContent = "Great work! You have a solid grasp on how action verbs work alongside modifiers. A little more practice with front-facing adverbs and you'll be unstoppable!";
+      } else {
+        resultBadge.textContent = "🌱 Rising Language Apprentice!";
+        resultBadge.className = "text-xl font-bold text-rose-800";
+        resultText.textContent = "Good try! Adverbs can be tricky when they move to different parts of the sentence. Try again to boost your score and spot more of those sneaky -ly words!";
+      }
+    }
+  </script>
+</body>
+</html>
