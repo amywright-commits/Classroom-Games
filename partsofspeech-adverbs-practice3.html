@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adverb Shifter Playground!</title>
+  <!-- Tailwind CSS CDN for modern kid-friendly styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for friendly, clean typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+    }
+    h1, h2, h3, h4, .font-fun {
+      font-family: 'Fredoka', sans-serif;
+    }
+    /* Animated wave helper */
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(15deg); }
+    }
+    .wave-hand:hover {
+      animation: wave 0.3s ease infinite;
+    }
+    /* Pulse glow for active elements */
+    .active-glow {
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+    /* Celebration animation */
+    @keyframes celebration {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .celebrate {
+      animation: celebration 0.5s ease infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-amber-100 via-orange-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Container -->
+  <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden border-4 border-amber-200 relative">
+    
+    <!-- Top Rainbow Banner -->
+    <div class="h-4 bg-gradient-to-r from-amber-400 via-orange-400 to-indigo-500"></div>
+
+    <!-- Header -->
+    <div class="bg-amber-50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-b border-amber-100 gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl wave-hand inline-block cursor-default">✍️</span>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-amber-950">Adverb Shifter</h1>
+          <p class="text-xs md:text-sm text-amber-800 font-bold">Creative Sentence Builder Sandbox</p>
+        </div>
+      </div>
+      <!-- Score Indicator -->
+      <div id="progress-indicator" class="hidden bg-indigo-100 border-2 border-indigo-200 px-4 py-2 rounded-2xl flex items-center gap-2">
+        <span class="text-xl">📝</span>
+        <span id="score-badge" class="font-black text-indigo-950 text-sm">Sentence: 1 of 15</span>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN 1: WELCOME & MODELS ==================== -->
+    <div id="screen-welcome" class="p-6 md:p-10 space-y-6">
+      <div class="text-center space-y-3">
+        <span class="text-xs font-bold uppercase tracking-widest bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full">5th Grade Writing Lab</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-amber-900 leading-tight">Mastering Adverbs of Manner</h2>
+        <p class="text-gray-600 font-medium">An <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">adverb of manner</span> is a word that describes <span class="font-bold underline">how</span> an action is done. Most of them end in <strong class="text-indigo-600">-ly</strong>!</p>
+      </div>
+
+      <!-- 4 Positions Modeling Section -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-100 space-y-4">
+        <h3 class="text-xl font-bold text-indigo-950 flex items-center gap-2">
+          <span>👀</span> 4 Ways to Write the Same Sentence!
+        </h3>
+        <p class="text-sm text-indigo-800 leading-relaxed">
+          Watch how we can shift the adverb <strong>slowly</strong> around to change the rhythm of our sentence without changing its basic meaning:
+        </p>
+
+        <!-- Dynamic Visual Models Table -->
+        <div class="space-y-3">
+          <!-- Position 1 -->
+          <div class="bg-white p-3 rounded-xl border border-indigo-100 flex flex-col md:flex-row md:items-center gap-2">
+            <span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-extrabold uppercase tracking-wider w-36 text-center">🎬 1. Front</span>
+            <p class="text-base font-bold text-slate-800">
+              <span class="text-amber-600 underline">Slowly,</span> the giant turtle crawled across the hot sand.
+            </p>
+            <span class="text-xs text-slate-400 md:ml-auto">(Requires a capital letter and a comma!)</span>
+          </div>
+          <!-- Position 2 -->
+          <div class="bg-white p-3 rounded-xl border border-indigo-100 flex flex-col md:flex-row md:items-center gap-2">
+            <span class="px-2.5 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-extrabold uppercase tracking-wider w-36 text-center">👉 2. Pre-Verb</span>
+            <p class="text-base font-bold text-slate-800">
+              The giant turtle <span class="text-amber-600 underline">slowly</span> crawled across the hot sand.
+            </p>
+            <span class="text-xs text-slate-400 md:ml-auto">(Placed directly before the action word!)</span>
+          </div>
+          <!-- Position 3 -->
+          <div class="bg-white p-3 rounded-xl border border-indigo-100 flex flex-col md:flex-row md:items-center gap-2">
+            <span class="px-2.5 py-1 bg-teal-100 text-teal-800 rounded-lg text-xs font-extrabold uppercase tracking-wider w-36 text-center">👈 3. Post-Verb</span>
+            <p class="text-base font-bold text-slate-800">
+              The giant turtle crawled <span class="text-amber-600 underline">slowly</span> across the hot sand.
+            </p>
+            <span class="text-xs text-slate-400 md:ml-auto">(Placed directly after the action verb!)</span>
+          </div>
+          <!-- Position 4 -->
+          <div class="bg-white p-3 rounded-xl border border-indigo-100 flex flex-col md:flex-row md:items-center gap-2">
+            <span class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-extrabold uppercase tracking-wider w-36 text-center">🏁 4. End</span>
+            <p class="text-base font-bold text-slate-800">
+              The giant turtle crawled across the hot sand <span class="text-amber-600 underline">slowly.</span>
+            </p>
+            <span class="text-xs text-slate-400 md:ml-auto">(Placed at the very end of the sentence!)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <div class="text-center">
+        <button id="btn-start" class="bg-amber-500 hover:bg-amber-600 text-white font-black text-xl px-12 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto">
+          Start Writing Quest! 🚀
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN 2: THE WRITING WORKSPACE ==================== -->
+    <div id="screen-writing" class="hidden p-6 md:p-8 space-y-6">
+      
+      <!-- Target Word Prompt Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Target Adverb -->
+        <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+          <div class="space-y-1">
+            <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Your Adverb:</span>
+            <h3 id="target-adverb-text" class="text-2xl font-black text-amber-950">silently</h3>
+          </div>
+          <span class="text-4xl" id="adverb-emoji">🤫</span>
+        </div>
+        <!-- Target Verb -->
+        <div class="bg-blue-50 border-2 border-blue-300 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+          <div class="space-y-1">
+            <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Your Verb:</span>
+            <h3 id="target-verb-text" class="text-2xl font-black text-blue-950">pounced</h3>
+          </div>
+          <span class="text-4xl">🏃</span>
+        </div>
+      </div>
+
+      <!-- Writing Input Box -->
+      <div class="space-y-3">
+        <label for="student-input" class="block font-extrabold text-slate-700 text-base">Write your creative sentence below:</label>
+        <div class="relative rounded-2xl overflow-hidden shadow-inner border-2 border-slate-300 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all bg-white">
+          <textarea id="student-input" rows="3" placeholder="Type your sentence here... Remember capitalization, end punctuation, and spelling!" class="w-full p-4 md:p-5 text-xl font-bold text-slate-800 placeholder-slate-400 focus:outline-none resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Real-Time Error / Feedback System -->
+      <div id="validation-panel" class="hidden rounded-2xl p-5 border-2 transition-all duration-300">
+        <div class="flex gap-4 items-start">
+          <span id="validation-icon" class="text-4xl"></span>
+          <div class="space-y-1">
+            <h4 id="validation-title" class="font-extrabold text-lg"></h4>
+            <div id="validation-list" class="space-y-1 text-sm md:text-base text-gray-700">
+              <!-- Dynamically populated checklist -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        <button id="btn-submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-black text-lg py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all">
+          Check My Sentence! ✅
+        </button>
+        <button id="btn-next" class="hidden flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all">
+          Next Challenge ➡️
+        </button>
+      </div>
+
+      <!-- PERSISTENT MODELS (Static references at the bottom) -->
+      <div class="border-t border-slate-200 pt-6">
+        <h4 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <span>💡</span> Need Inspiration? Look at our Models:
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs md:text-sm font-bold text-slate-600">
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <span class="text-amber-600">🎬 Front:</span> <strong>Slowly,</strong> the giant turtle crawled across...
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <span class="text-blue-600">👉 Pre-Verb:</span> The giant turtle <strong>slowly</strong> crawled across...
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <span class="text-teal-600">👈 Post-Verb:</span> The giant turtle crawled <strong>slowly</strong> across...
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <span class="text-purple-600">🏁 End:</span> The giant turtle crawled across the hot sand <strong>slowly.</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== SCREEN 3: ADVERB AUTHOR NOTEBOOK (RESULTS) ==================== -->
+    <div id="screen-results" class="hidden p-6 md:p-10 space-y-8 text-center">
+      <div class="space-y-3">
+        <span class="text-5xl celebrate inline-block">👑</span>
+        <h1 class="text-4xl font-extrabold text-amber-950">Awesome Writing Journey!</h1>
+        <p class="text-gray-600 font-medium">You are officially an Adverb Master Author. Check out your custom story page!</p>
+      </div>
+
+      <!-- The Custom Storybook Notebook Layout -->
+      <div class="max-w-2xl mx-auto bg-amber-50 rounded-3xl p-6 border-4 border-amber-200 shadow-lg relative text-left">
+        <!-- Notebook Margins -->
+        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-red-300"></div>
+        <div class="space-y-6 pl-8 max-h-[400px] overflow-y-auto">
+          <h3 class="text-2xl font-black text-amber-950 border-b-2 border-amber-200 pb-2">My Creative Adverb Log</h3>
+          
+          <div id="notebook-sentences" class="space-y-4 font-bold text-slate-800 text-lg leading-relaxed">
+            <!-- Dynamic student entries shown here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Replay Button -->
+      <div class="pt-4">
+        <button id="btn-replay" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all">
+          Start New Story 🔄
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Audio API Context and Sound Effects -->
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+      } else if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'wrong') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      }
+    }
+  </script>
+
+  <!-- Game Logic Script -->
+  <script>
+    // 15 creative challenges for writing
+    const challenges = [
+      {
+        adverb: "silently",
+        verb: "pounced",
+        verbVariants: ["pounce", "pounced", "pounces", "pouncing"],
+        emoji: "🤫",
+        example: "The clever black cat silently pounced onto the toy mouse."
+      },
+      {
+        adverb: "cheerfully",
+        verb: "painted",
+        verbVariants: ["paint", "painted", "paints", "painting"],
+        emoji: "🎨",
+        example: "The happy children cheerfully painted a beautiful mural."
+      },
+      {
+        adverb: "brightly",
+        verb: "shone",
+        verbVariants: ["shine", "shone", "shines", "shining"],
+        emoji: "☀️",
+        example: "The glorious morning sun brightly shone through the windows."
+      },
+      {
+        adverb: "loudly",
+        verb: "shouted",
+        verbVariants: ["shout", "shouted", "shouts", "shouting"],
+        emoji: "📢",
+        example: "Boldly, the sports fans loudly shouted in the stadium."
+      },
+      {
+        adverb: "gracefully",
+        verb: "floated",
+        verbVariants: ["float", "floated", "floats", "floating"],
+        emoji: "🦢",
+        example: "A beautiful white swan gracefully floated across the lake."
+      },
+      {
+        adverb: "quickly",
+        verb: "dashed",
+        verbVariants: ["dash", "dashed", "dashes", "dashing"],
+        emoji: "⚡",
+        example: "The swift squirrel quickly dashed up the oak tree."
+      },
+      {
+        adverb: "eagerly",
+        verb: "opened",
+        verbVariants: ["open", "opened", "opens", "opening"],
+        emoji: "🎁",
+        example: "The birthday boy eagerly opened his biggest present."
+      },
+      {
+        adverb: "patiently",
+        verb: "waited",
+        verbVariants: ["wait", "waited", "waits", "waiting"],
+        emoji: "⏳",
+        example: "The friendly children patiently waited for the yellow school bus."
+      },
+      {
+        adverb: "wildly",
+        verb: "spun",
+        verbVariants: ["spin", "spun", "spins", "spinning"],
+        emoji: "🌀",
+        example: "The windy weather wildly spun the bright windmill."
+      },
+      {
+        adverb: "nervously",
+        verb: "whispered",
+        verbVariants: ["whisper", "whispered", "whispers", "whispering"],
+        emoji: "😰",
+        example: "The scared kid nervously whispered in the dark room."
+      },
+      {
+        adverb: "carefully",
+        verb: "carried",
+        verbVariants: ["carry", "carried", "carries", "carrying"],
+        emoji: "📦",
+        example: "My helpful brother carefully carried the glass bowl."
+      },
+      {
+        adverb: "suddenly",
+        verb: "stopped",
+        verbVariants: ["stop", "stopped", "stops", "stopping"],
+        emoji: "🛑",
+        example: "The zooming train suddenly stopped on the tracks."
+      },
+      {
+        adverb: "happily",
+        verb: "danced",
+        verbVariants: ["dance", "danced", "dances", "dancing"],
+        emoji: "💃",
+        example: "The golden dog happily danced around the green park."
+      },
+      {
+        adverb: "gently",
+        verb: "touched",
+        verbVariants: ["touch", "touched", "touches", "touching"],
+        emoji: "🪶",
+        example: "The curious toddler gently touched the soft feather."
+      },
+      {
+        adverb: "proudly",
+        verb: "presented",
+        verbVariants: ["present", "presented", "presents", "presenting"],
+        emoji: "🏅",
+        example: "The smart student proudly presented her science project."
+      }
+    ];
+
+    // Game state
+    let activeIndex = 0;
+    const completedSentences = [];
+
+    // DOM Elements
+    const screenWelcome = document.getElementById('screen-welcome');
+    const screenWriting = document.getElementById('screen-writing');
+    const screenResults = document.getElementById('screen-results');
+    const progressIndicator = document.getElementById('progress-indicator');
+
+    const btnStart = document.getElementById('btn-start');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnNext = document.getElementById('btn-next');
+    const btnReplay = document.getElementById('btn-replay');
+
+    const targetAdverbText = document.getElementById('target-adverb-text');
+    const targetVerbText = document.getElementById('target-verb-text');
+    const adverbEmoji = document.getElementById('adverb-emoji');
+    const studentInput = document.getElementById('student-input');
+    const scoreBadge = document.getElementById('score-badge');
+
+    const validationPanel = document.getElementById('validation-panel');
+    const validationIcon = document.getElementById('validation-icon');
+    const validationTitle = document.getElementById('validation-title');
+    const validationList = document.getElementById('validation-list');
+    const notebookSentences = document.getElementById('notebook-sentences');
+
+    // Setup Event Listeners
+    btnStart.addEventListener('click', startWritingQuest);
+    btnSubmit.addEventListener('click', checkSentenceSubmission);
+    btnNext.addEventListener('click', nextChallenge);
+    btnReplay.addEventListener('click', restartWritingQuest);
+
+    function startWritingQuest() {
+      playSound('click');
+      screenWelcome.classList.add('hidden');
+      screenWriting.classList.remove('hidden');
+      progressIndicator.classList.remove('hidden');
+      activeIndex = 0;
+      completedSentences.length = 0;
+      loadChallenge(0);
+    }
+
+    function restartWritingQuest() {
+      playSound('click');
+      screenResults.classList.add('hidden');
+      screenWriting.classList.remove('hidden');
+      progressIndicator.classList.remove('hidden');
+      activeIndex = 0;
+      completedSentences.length = 0;
+      loadChallenge(0);
+    }
+
+    function loadChallenge(index) {
+      activeIndex = index;
+      const challenge = challenges[index];
+
+      // Update HUD
+      scoreBadge.textContent = `Sentence: ${index + 1} of ${challenges.length}`;
+
+      // Load prompt cards
+      targetAdverbText.textContent = challenge.adverb;
+      targetVerbText.textContent = challenge.verb;
+      adverbEmoji.textContent = challenge.emoji;
+
+      // Reset Inputs and validation panels
+      studentInput.value = "";
+      studentInput.disabled = false;
+      validationPanel.classList.add('hidden');
+      btnSubmit.classList.remove('hidden');
+      btnNext.classList.add('hidden');
+    }
+
+    function checkSentenceSubmission() {
+      const sentence = studentInput.value.trim();
+      const challenge = challenges[activeIndex];
+
+      if (!sentence) {
+        showValidationFeedback(false, "Oops! The page is blank", ["Write down a sentence first before checking!"]);
+        playSound('wrong');
+        return;
+      }
+
+      // 1. Capitalization Validation
+      const startsWithCapital = /^[A-Z]/.test(sentence);
+
+      // 2. Ending Punctuation Validation
+      const endsWithPunctuation = /[.!?]$/.test(sentence);
+
+      // 3. Adverb comma validation (If placed first)
+      const words = sentence.split(/\s+/);
+      const cleanFirstWord = words[0].toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+      let adverbAtFrontNeedsComma = false;
+      let adverbAtFrontHasComma = true;
+
+      if (cleanFirstWord === challenge.adverb) {
+        adverbAtFrontNeedsComma = true;
+        // Verify there is a comma right after the first word
+        adverbAtFrontHasComma = words[0].includes(',');
+      }
+
+      // 4. Target adverb inclusion
+      const sentenceLower = sentence.toLowerCase();
+      const containsAdverb = sentenceLower.includes(challenge.adverb);
+
+      // 5. Target verb/variants inclusion
+      const containsVerb = challenge.verbVariants.some(variant => sentenceLower.includes(variant));
+
+      // Assemble results
+      const checklist = [];
+      let allPassed = true;
+
+      // Compile checklists for immediate learner feedback
+      if (startsWithCapital) {
+        checklist.push("🟢 Capitalized at the start!");
+      } else {
+        checklist.push("🔴 Missing capital letter at the start of your sentence.");
+        allPassed = false;
+      }
+
+      if (containsAdverb) {
+        checklist.push(`🟢 Included target adverb: <strong>${challenge.adverb}</strong>`);
+      } else {
+        checklist.push(`🔴 You must include your target adverb: <strong>${challenge.adverb}</strong>`);
+        allPassed = false;
+      }
+
+      if (containsVerb) {
+        checklist.push(`🟢 Included target verb: <strong>${challenge.verb}</strong>`);
+      } else {
+        checklist.push(`🔴 You must include your target verb: <strong>${challenge.verb}</strong> (or its variants like pounce, pounces, etc.)`);
+        allPassed = false;
+      }
+
+      if (adverbAtFrontNeedsComma) {
+        if (adverbAtFrontHasComma) {
+          checklist.push("🟢 Excellent comma after starting adverb!");
+        } else {
+          checklist.push(`🔴 Comma missing! Since <strong>"${challenge.adverb}"</strong> is at the start, you need a comma directly after it.`);
+          allPassed = false;
+        }
+      }
+
+      if (endsWithPunctuation) {
+        checklist.push("🟢 End punctuation found!");
+      } else {
+        checklist.push("🔴 Missing end punctuation! Finish with a period (.), question mark (?), or exclamation mark (!).");
+        allPassed = false;
+      }
+
+      // Display Final Evaluation Baners
+      if (allPassed) {
+        playSound('correct');
+        showValidationFeedback(true, "Fantastic Sentence!", checklist);
+        
+        // Save sentence
+        completedSentences.push(sentence);
+
+        // Lock text area
+        studentInput.disabled = true;
+        btnSubmit.classList.add('hidden');
+        btnNext.classList.remove('hidden');
+      } else {
+        playSound('wrong');
+        showValidationFeedback(false, "Almost There! Check These Edits:", checklist);
+      }
+    }
+
+    function showValidationFeedback(passed, title, listItems) {
+      validationPanel.classList.remove('hidden');
+      validationList.innerHTML = "";
+
+      if (passed) {
+        validationPanel.className = "rounded-2xl p-5 border-2 border-green-200 bg-green-50 transition-all duration-300 transform scale-100 opacity-100";
+        validationIcon.textContent = "⭐️";
+        validationTitle.className = "font-extrabold text-green-900 text-lg";
+      } else {
+        validationPanel.className = "rounded-2xl p-5 border-2 border-rose-200 bg-rose-50 transition-all duration-300 transform scale-100 opacity-100";
+        validationIcon.textContent = "✏️";
+        validationTitle.className = "font-extrabold text-rose-900 text-lg";
+      }
+
+      validationTitle.textContent = title;
+      listItems.forEach(item => {
+        const li = document.createElement('div');
+        li.className = "leading-relaxed text-slate-700";
+        li.innerHTML = item;
+        validationList.appendChild(li);
+      });
+    }
+
+    function nextChallenge() {
+      playSound('click');
+      const nextIdx = activeIndex + 1;
+      if (nextIdx < challenges.length) {
+        loadChallenge(nextIdx);
+      } else {
+        showResultsNotebook();
+      }
+    }
+
+    function showResultsNotebook() {
+      screenWriting.classList.add('hidden');
+      progressIndicator.classList.add('hidden');
+      screenResults.classList.remove('hidden');
+
+      notebookSentences.innerHTML = "";
+
+      completedSentences.forEach((sentenceStr, index) => {
+        const challenge = challenges[index];
+        const sentenceEl = document.createElement('div');
+        sentenceEl.className = "border-b border-amber-200/60 pb-3 space-y-1";
+
+        // Highlight Adverb and Verb visually inside their final sentences
+        let coloredSentence = sentenceStr
+          .replace(new RegExp(`\\b${challenge.adverb}\\b`, 'gi'), `<span class="bg-amber-200 text-amber-900 px-1 py-0.5 rounded font-black border border-amber-300">${challenge.adverb}</span>`);
+
+        challenge.verbVariants.forEach(variant => {
+          coloredSentence = coloredSentence.replace(new RegExp(`\\b${variant}\\b`, 'gi'), `<span class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-black border border-blue-200">${variant}</span>`);
+        });
+
+        sentenceEl.innerHTML = `
+          <div class="flex items-start gap-2">
+            <span class="text-sm font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded mt-1">S${index+1}</span>
+            <p class="font-bold text-slate-800 text-lg leading-relaxed flex-1">${coloredSentence}</p>
+          </div>
+        `;
+        notebookSentences.appendChild(sentenceEl);
+      });
+    }
+  </script>
+</body>
+</html>
