@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adverb Shifter Playground!</title>
+  <!-- Tailwind CSS CDN for modern kid-friendly styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for friendly, clean typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+    }
+    h1, h2, h3, h4, .font-fun {
+      font-family: 'Fredoka', sans-serif;
+    }
+    /* Animated wave helper */
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(15deg); }
+    }
+    .wave-hand:hover {
+      animation: wave 0.3s ease infinite;
+    }
+    /* Pulse glow for active position buttons */
+    .active-glow {
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+    /* Celebration animation */
+    @keyframes celebration {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .celebrate {
+      animation: celebration 0.5s ease infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-amber-100 via-orange-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Container -->
+  <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden border-4 border-amber-200 relative">
+    
+    <!-- Top Rainbow Banner -->
+    <div class="h-4 bg-gradient-to-r from-amber-400 via-orange-400 to-indigo-500"></div>
+
+    <!-- Header -->
+    <div class="bg-amber-50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-b border-amber-100 gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl wave-hand inline-block cursor-default">🔄</span>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-amber-950">Adverb Shifter</h1>
+          <p class="text-xs md:text-sm text-amber-800 font-bold">The Interactive Word Order Playground</p>
+        </div>
+      </div>
+      <!-- Progress Indicator -->
+      <div class="bg-indigo-100 border-2 border-indigo-200 px-4 py-2 rounded-2xl flex items-center gap-2">
+        <span class="text-xl">📚</span>
+        <span id="score-badge" class="font-black text-indigo-950 text-sm">Sentence: 1 of 5</span>
+      </div>
+    </div>
+
+    <!-- ==================== MAIN PLAYGROUND ==================== -->
+    <div class="p-6 md:p-8 space-y-6">
+      
+      <!-- Welcome Intro / Concept Helper -->
+      <div id="intro-card" class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl">
+        <h3 class="font-bold text-amber-950 text-base md:text-lg flex items-center gap-2">
+          <span>🧠</span> Adverbs are Sentence Gymnasts!
+        </h3>
+        <p class="text-sm text-amber-800 mt-1 leading-relaxed">
+          Unlike other words, an <strong>adverb of manner</strong> can stretch, jump, and change positions in a sentence. Try clicking the different position buttons below to shift the adverb, then click <strong>Next Sentence</strong> when you are ready!
+        </p>
+      </div>
+
+      <!-- Dynamic Sentence Display Board -->
+      <div class="p-8 bg-slate-50 rounded-3xl border-4 border-dashed border-slate-200 min-h-[160px] flex items-center justify-center relative overflow-hidden">
+        <!-- Floating active tag inside board -->
+        <span id="current-position-tag" class="absolute top-3 left-3 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-black uppercase rounded-full tracking-wider border border-amber-200">
+          Position: Front
+        </span>
+        
+        <div id="sentence-board" class="flex flex-wrap gap-x-2 gap-y-4 items-center justify-center text-2xl md:text-3xl font-extrabold text-slate-800 leading-normal max-w-2xl text-center px-4">
+          <!-- Dynamically populated pieces -->
+        </div>
+      </div>
+
+      <!-- Interactive Position Controls -->
+      <div id="position-controls-container" class="space-y-3">
+        <p class="text-center font-black text-xs text-gray-400 uppercase tracking-widest">Tap a Location to Shift the Adverb</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <!-- Position A -->
+          <button id="pos-front" onclick="shiftTo('front')" class="pos-control-btn bg-white border-2 border-slate-200 hover:bg-amber-50 p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-all">
+            <span class="text-2xl">🎬</span>
+            <span class="btn-title font-extrabold text-sm text-slate-900">1. Front Position</span>
+            <span class="btn-subtitle text-xxs text-gray-400 font-bold">At the Start</span>
+          </button>
+          <!-- Position B -->
+          <button id="pos-pre" onclick="shiftTo('pre-verb')" class="pos-control-btn bg-white border-2 border-slate-200 hover:bg-amber-50 p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-all">
+            <span class="text-2xl">👉</span>
+            <span class="btn-title font-extrabold text-sm text-slate-900">2. Pre-Verb</span>
+            <span class="btn-subtitle text-xxs text-gray-400 font-bold">Before the Action</span>
+          </button>
+          <!-- Position C -->
+          <button id="pos-post" onclick="shiftTo('post-verb')" class="pos-control-btn bg-white border-2 border-slate-200 hover:bg-amber-50 p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-all">
+            <span class="text-2xl">👈</span>
+            <span class="btn-title font-extrabold text-sm text-slate-900">3. Post-Verb</span>
+            <span class="btn-subtitle text-xxs text-gray-400 font-bold">Right After the Action</span>
+          </button>
+          <!-- Position D -->
+          <button id="pos-end" onclick="shiftTo('end')" class="pos-control-btn bg-white border-2 border-slate-200 hover:bg-amber-50 p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-all">
+            <span class="text-2xl">🏁</span>
+            <span class="btn-title font-extrabold text-sm text-slate-900">4. End Position</span>
+            <span class="btn-subtitle text-xxs text-gray-400 font-bold">At the Very End</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Footer (Progression Only) -->
+      <div id="action-footer" class="flex gap-4 items-stretch pt-2">
+        <button id="btn-next" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all">
+          Next Sentence ➡️
+        </button>
+      </div>
+
+      <!-- Grammatical Explanation Box (Full Width) -->
+      <div id="explanation-box" class="bg-indigo-50 rounded-2xl p-5 border-2 border-indigo-100 flex gap-4 items-start transition-all duration-300">
+        <span id="explanation-icon" class="text-4xl">⚡</span>
+        <div class="space-y-1">
+          <h4 id="explanation-title" class="font-extrabold text-indigo-950 text-lg">Punctuation & Flow Analysis</h4>
+          <p id="explanation-text" class="text-indigo-800 text-sm md:text-base leading-relaxed">
+            Click on one of the positions above to read the stylistic effects of that adverb position!
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Audio API Context and Sounds -->
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+      } else if (type === 'shift') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+      }
+    }
+  </script>
+
+  <!-- Main JavaScript Data and Engine -->
+  <script>
+    // Sentences with segmented blocks for positioning
+    const sentenceData = [
+      {
+        adverb: "slowly",
+        preVerb: "the giant turtle",
+        verb: "crawled",
+        postVerb: "across the hot sandy desert",
+        descriptions: {
+          front: {
+            title: "🎬 Sentence Starter (Emphasis on 'How')",
+            explain: "Starting with <strong>'Slowly,'</strong> captures attention! Notice how we must capitalize the word and add a comma right after. This delays the action and builds slow, steady suspense.",
+            icon: "🎬"
+          },
+          'pre-verb': {
+            title: "👉 Pre-Verb Placement (Traditional & Smooth)",
+            explain: "We say: <em>'The giant turtle <strong>slowly</strong> crawled...'</em> This is incredibly clean, logical, and easy to read. It tells us how the action is done immediately before the verb starts.",
+            icon: "👉"
+          },
+          'post-verb': {
+            title: "👈 Post-Verb Placement (Directly Linked)",
+            explain: "We say: <em>'The giant turtle crawled <strong>slowly</strong> across...'</em> By linking the adverb directly to the end of the action verb, we keep our main focus on the movement itself.",
+            icon: "👈"
+          },
+          end: {
+            title: "🏁 End of Sentence (Quiet & Descriptive)",
+            explain: "We say: <em>'...across the hot sandy desert <strong>slowly</strong>.'</em> This leaves a quiet, lingering picture in the reader's head at the very end of the paragraph.",
+            icon: "🏁"
+          }
+        }
+      },
+      {
+        adverb: "suddenly",
+        preVerb: "the bright purple lightning",
+        verb: "flashed",
+        postVerb: "in the dark stormy sky",
+        descriptions: {
+          front: {
+            title: "🎬 Sentence Starter (Extreme Drama!)",
+            explain: "Starting with <strong>'Suddenly,'</strong> instantly shocks the reader! Perfect for quick actions that catch characters off-guard.",
+            icon: "⚡"
+          },
+          'pre-verb': {
+            title: "👉 Pre-Verb Placement (Natural Suspense)",
+            explain: "We say: <em>'The bright purple lightning <strong>suddenly</strong> flashed...'</em> Very natural. Tells us the surprising nature of the flash just as it happens.",
+            icon: "👉"
+          },
+          'post-verb': {
+            title: "👈 Post-Verb Placement (Action Center)",
+            explain: "We say: <em>'The bright purple lightning flashed <strong>suddenly</strong> in...'</em> This places the focus on the action verb 'flashed' first, then shows its unexpected nature.",
+            icon: "👈"
+          },
+          end: {
+            title: "🏁 End of Sentence (Ending Surprise)",
+            explain: "We say: <em>'...in the dark stormy sky <strong>suddenly</strong>.'</em> Leaving the surprise word at the end works, but is less common since the flash already happened!",
+            icon: "🏁"
+          }
+        }
+      },
+      {
+        adverb: "cheerfully",
+        preVerb: "the little girl",
+        verb: "painted",
+        postVerb: "a colorful mural on her bedroom wall",
+        descriptions: {
+          front: {
+            title: "🎬 Sentence Starter (Highlighting Mood)",
+            explain: "We say: <strong>'Cheerfully,</strong> the little girl...' This immediately paints her sunny disposition before we even know what she is painting!",
+            icon: "🎨"
+          },
+          'pre-verb': {
+            title: "👉 Pre-Verb Placement (Happy Actions)",
+            explain: "We say: <em>'The little girl <strong>cheerfully</strong> painted...'</em> This is very popular and links her internal happiness directly with the act of creating art.",
+            icon: "👉"
+          },
+          'post-verb': {
+            title: "👈 Post-Verb Placement (Direct Modification)",
+            explain: "We say: <em>'The little girl painted <strong>cheerfully</strong> a colorful mural...'</em> (Often phrased as 'painted cheerfully'). It keeps the descriptive focus closely tied to her paintbrush.",
+            icon: "👈"
+          },
+          end: {
+            title: "🏁 End of Sentence (A Happy Conclusion)",
+            explain: "We say: <em>'...on her bedroom wall <strong>cheerfully</strong>.'</em> Leaves a cozy, warm feeling right at the period.",
+            icon: "🏁"
+          }
+        }
+      },
+      {
+        adverb: "boldly",
+        preVerb: "the brave astronaut",
+        verb: "stepped",
+        postVerb: "onto the unexplored surface of Mars",
+        descriptions: {
+          front: {
+            title: "🎬 Sentence Starter (Heroic and Epic)",
+            explain: "We say: <strong>'Boldly,</strong> the brave astronaut...' This makes the speaker sound like they are telling an legendary space myth. It highlights courage!",
+            icon: "🚀"
+          },
+          'pre-verb': {
+            title: "👉 Pre-Verb Placement (Clean and Strong)",
+            explain: "We say: <em>'The brave astronaut <strong>boldly</strong> stepped...'</em> A very powerful, classic way of describing the action. Simple and elegant.",
+            icon: "👉"
+          },
+          'post-verb': {
+            title: "👈 Post-Verb Placement (Action First)",
+            explain: "We say: <em>'The brave astronaut stepped <strong>boldly</strong> onto...'</em> Links the adverb directly to the physical action of putting a boot down on Martian soil.",
+            icon: "👈"
+          },
+          end: {
+            title: "🏁 End of Sentence (Courageous Finish)",
+            explain: "We say: <em>'...surface of Mars <strong>boldly</strong>.'</em> Spreads the descriptive power of the adverb across the entire journey, ending on a strong, courageous note.",
+            icon: "🏁"
+          }
+        }
+      },
+      {
+        adverb: "silently",
+        preVerb: "the clever cat",
+        verb: "pounced",
+        postVerb: "upon the little toy mouse",
+        descriptions: {
+          front: {
+            title: "🎬 Sentence Starter (Mysterious Atmosphere)",
+            explain: "We say: <strong>'Silently,</strong> the clever cat...' It creates a quiet, hush-hush atmosphere immediately. Your reader starts reading quietly!",
+            icon: "🤫"
+          },
+          'pre-verb': {
+            title: "👉 Pre-Verb Placement (Natural & Stealthy)",
+            explain: "We say: <em>'the clever cat <strong>silently</strong> pounced...'</em> Describes the stealth directly preceding the sudden leap.",
+            icon: "👉"
+          },
+          'post-verb': {
+            title: "👈 Post-Verb Placement (Focus on Silence)",
+            explain: "We say: <em>'the clever cat pounced <strong>silently</strong> upon...'</em> Focuses on the pounce itself, confirming that no sound was made during the impact.",
+            icon: "👈"
+          },
+          end: {
+            title: "🏁 End of Sentence (Quiet Wrap-up)",
+            explain: "We say: <em>'...upon the little toy mouse <strong>silently</strong>.'</em> Ends the sneaky sequence on a totally quiet note.",
+            icon: "🏁"
+          }
+        }
+      }
+    ];
+
+    // App State Management
+    let currentModeIdx = 0; // 0 to 4 (Sentences), 5 (Completion Screen)
+    let activePosition = 'pre-verb'; // 'front', 'pre-verb', 'post-verb', 'end'
+
+    // Elements
+    const sentenceBoard = document.getElementById('sentence-board');
+    const currentPositionTag = document.getElementById('current-position-tag');
+    const introCard = document.getElementById('intro-card');
+    const scoreBadge = document.getElementById('score-badge');
+
+    const btnNext = document.getElementById('btn-next');
+
+    const explanationIcon = document.getElementById('explanation-icon');
+    const explanationTitle = document.getElementById('explanation-title');
+    const explanationText = document.getElementById('explanation-text');
+    const positionControlsContainer = document.getElementById('position-controls-container');
+    const explanationBox = document.getElementById('explanation-box');
+
+    // Init App
+    window.onload = () => {
+      loadWorkspace(0);
+      registerEvents();
+    };
+
+    function registerEvents() {
+      btnNext.addEventListener('click', nextMission);
+    }
+
+    // ==================== REBUILD & POSITION ACTIONS ====================
+    function loadWorkspace(index) {
+      currentModeIdx = index;
+
+      if (index >= 5) {
+        // Complete state! Show restart button & finished design
+        scoreBadge.textContent = `Sentence: 5 of 5`;
+        introCard.classList.add('hidden');
+        
+        sentenceBoard.innerHTML = `
+          <div class="space-y-4 py-6 w-full text-center">
+            <span class="text-5xl celebrate inline-block">🏆</span>
+            <h3 class="text-3xl font-extrabold text-indigo-950">Awesome Exploration!</h3>
+            <p class="text-lg text-slate-600 font-medium">You played with all 5 sentences and mastered shifting adverbs of manner!</p>
+            <button onclick="restartAllMissions()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-8 py-3.5 rounded-2xl shadow-md transition-all mt-2">
+              Start Over 🔄
+            </button>
+          </div>
+        `;
+        currentPositionTag.textContent = "Finished!";
+        positionControlsContainer.classList.add('hidden');
+        btnNext.classList.add('hidden');
+        explanationBox.classList.add('hidden');
+        return;
+      }
+
+      // Restore elements just in case we restarted
+      introCard.classList.remove('hidden');
+      positionControlsContainer.classList.remove('hidden');
+      btnNext.classList.remove('hidden');
+      explanationBox.classList.remove('hidden');
+
+      // Update scoring HUD
+      scoreBadge.textContent = `Sentence: ${index + 1} of 5`;
+
+      // Default position load
+      shiftTo('pre-verb');
+    }
+
+    function shiftTo(position) {
+      if (currentModeIdx >= 5) return;
+      
+      playSound('shift');
+      activePosition = position;
+      currentPositionTag.textContent = `Position: ${position.replace('-', ' ')}`;
+      
+      const data = sentenceData[currentModeIdx];
+      const pieces = assembleSentencePieces(data, position);
+      
+      renderSentenceBoard(pieces);
+      updateExplanation(data, position);
+      updatePositionButtons(position);
+    }
+
+    function assembleSentencePieces(data, pos) {
+      const adverbWord = data.adverb;
+      const preVerbSegment = data.preVerb;
+      const verbSegment = data.verb;
+      const postVerbSegment = data.postVerb;
+
+      // Rule-based capitalization & grammar shuffles
+      if (pos === 'front') {
+        return [
+          { text: capitalize(adverbWord) + ",", type: "adverb", active: true },
+          { text: lowercaseFirstLetter(preVerbSegment), type: "regular" },
+          { text: verbSegment, type: "verb" },
+          { text: postVerbSegment + ".", type: "regular" }
+        ];
+      } else if (pos === 'pre-verb') {
+        return [
+          { text: capitalize(preVerbSegment), type: "regular" },
+          { text: adverbWord, type: "adverb", active: true },
+          { text: verbSegment, type: "verb" },
+          { text: postVerbSegment + ".", type: "regular" }
+        ];
+      } else if (pos === 'post-verb') {
+        return [
+          { text: capitalize(preVerbSegment), type: "regular" },
+          { text: verbSegment, type: "verb" },
+          { text: adverbWord, type: "adverb", active: true },
+          { text: postVerbSegment + ".", type: "regular" }
+        ];
+      } else { // 'end'
+        let trimmedPostVerb = postVerbSegment.replace(/\.$/, '');
+        return [
+          { text: capitalize(preVerbSegment), type: "regular" },
+          { text: verbSegment, type: "verb" },
+          { text: trimmedPostVerb, type: "regular" },
+          { text: adverbWord + ".", type: "adverb", active: true }
+        ];
+      }
+    }
+
+    function renderSentenceBoard(pieces) {
+      sentenceBoard.innerHTML = '';
+
+      pieces.forEach(p => {
+        const span = document.createElement('span');
+        span.textContent = p.text;
+
+        if (p.type === 'adverb') {
+          span.className = "bg-amber-100 text-amber-800 px-3.5 py-1.5 rounded-2xl border-2 border-amber-300 font-black shadow-sm transform hover:scale-105 transition-all inline-block";
+          if (p.active) {
+            span.classList.add('active-glow', 'animate-pulse');
+          }
+        } else if (p.type === 'verb') {
+          span.className = "bg-blue-100 text-blue-800 px-3 py-1 rounded-xl border-2 border-blue-200 font-bold inline-block";
+        } else {
+          span.className = "px-1 inline-block text-slate-800";
+        }
+
+        sentenceBoard.appendChild(span);
+      });
+    }
+
+    function updateExplanation(data, position) {
+      const explanation = data.descriptions[position];
+      explanationIcon.textContent = explanation.icon;
+      explanationTitle.textContent = explanation.title;
+      explanationText.innerHTML = explanation.explain;
+    }
+
+    function updatePositionButtons(activePos) {
+      const posIds = {
+        'front': 'pos-front',
+        'pre-verb': 'pos-pre',
+        'post-verb': 'pos-post',
+        'end': 'pos-end'
+      };
+
+      Object.entries(posIds).forEach(([posName, id]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+
+        const titleEl = btn.querySelector('.btn-title');
+        const subtitleEl = btn.querySelector('.btn-subtitle');
+
+        if (posName === activePos) {
+          btn.className = "pos-control-btn bg-amber-500 border-2 border-amber-600 p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 text-white shadow-lg scale-105 transition-all";
+          if (titleEl) titleEl.className = "btn-title font-fun font-extrabold text-sm text-white";
+          if (subtitleEl) subtitleEl.className = "btn-subtitle text-xxs text-amber-100 font-bold";
+        } else {
+          btn.className = "pos-control-btn bg-white border-2 border-slate-200 hover:bg-amber-50 hover:border-amber-300 p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-all";
+          if (titleEl) titleEl.className = "btn-title font-fun font-extrabold text-sm text-slate-900";
+          if (subtitleEl) subtitleEl.className = "btn-subtitle text-xxs text-gray-400 font-bold";
+        }
+      });
+    }
+
+    function nextMission() {
+      playSound('click');
+      let nextIdx = currentModeIdx + 1;
+      loadWorkspace(nextIdx);
+    }
+
+    function restartAllMissions() {
+      playSound('click');
+      loadWorkspace(0);
+    }
+
+    // ==================== STRING HELPERS ====================
+    function capitalize(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    function lowercaseFirstLetter(string) {
+      return string.charAt(0).toLowerCase() + string.slice(1);
+    }
+  </script>
+</body>
+</html>
