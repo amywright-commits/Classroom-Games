@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adverb Shifter: Context Clue Quest!</title>
+  <!-- Tailwind CSS CDN for modern design token defaults -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for friendly, clean typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+    }
+    h1, h2, h3, h4, .font-fun {
+      font-family: 'Fredoka', sans-serif;
+    }
+    /* Animated hover cards and buttons */
+    .bounce-hover:hover {
+      transform: translateY(-2px);
+    }
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 0 12px 6px rgba(245, 158, 11, 0.2); }
+    }
+    .clue-pulse {
+      animation: pulse-gold 2s infinite;
+    }
+    @keyframes celebration {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .celebrate {
+      animation: celebration 0.6s ease infinite;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-amber-100 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Quest Container -->
+  <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden border-4 border-indigo-200 relative">
+    
+    <!-- Top Decorative Gradient Banner -->
+    <div class="h-4 bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-600"></div>
+
+    <!-- ==================== SCREEN 1: WELCOME SCREEN ==================== -->
+    <div id="screen-welcome" class="p-6 md:p-10 space-y-6">
+      <div class="text-center space-y-3">
+        <span class="text-xs font-bold uppercase tracking-widest bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full">5th Grade Vocabulary Quest</span>
+        <h1 class="text-4xl md:text-5xl font-bold text-indigo-900 leading-tight">Context Clue Quest!</h1>
+        <p class="text-lg text-gray-600 font-medium">Use clues in sentences to select the perfect Adverb of Manner.</p>
+      </div>
+
+      <!-- Core Learning Explainer Card -->
+      <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200 space-y-4">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl">🔍</div>
+          <div>
+            <h3 class="text-xl font-bold text-amber-900">What are Context Clues?</h3>
+            <p class="text-gray-700 mt-1 text-sm md:text-base leading-relaxed">
+              <strong>Context clues</strong> are hints found within a sentence that help you figure out the meaning of missing words or choose the correct word.
+            </p>
+            <p class="text-gray-700 mt-2 text-sm md:text-base leading-relaxed">
+              In this quest, you'll look for clues like <span class="italic font-semibold">"sleeping baby"</span> or <span class="italic font-semibold">"without making a single mistake"</span> to match up the best <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">adverb ending in -ly</span>!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Highlights & Instructions -->
+      <div class="bg-indigo-50 rounded-2xl p-5 border-2 border-indigo-100 space-y-2">
+        <h3 class="font-bold text-indigo-950 flex items-center gap-2">
+          <span>🎮</span> Adventure Instructions:
+        </h3>
+        <ul class="list-disc list-inside text-gray-700 space-y-1 text-sm md:text-base font-medium">
+          <li>Read the sentence with the blank space.</li>
+          <li>The adverbs will be placed in different spots (<strong>Front</strong>, <strong>Pre-Verb</strong>, <strong>Post-Verb</strong>, or <strong>End</strong>).</li>
+          <li>Pick from 4 options. Watch out—the vocabulary gets harder as you level up!</li>
+          <li>Reach 25 correct answers to become an <strong>Adverb Grandmaster</strong>!</li>
+        </ul>
+      </div>
+
+      <!-- Welcome Action Buttons -->
+      <div class="text-center pt-2">
+        <button id="btn-start" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xl px-12 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto">
+          Begin Adventure! 🚀
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ==================== SCREEN 2: GAME INTERFACE ==================== -->
+    <div id="screen-game" class="hidden p-6 md:p-8 space-y-6">
+      
+      <!-- HUD / Progress Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <span id="level-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-green-100 text-green-800 border border-green-200 animate-pulse">
+            Level 1: Everyday
+          </span>
+          <span id="position-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
+            Position: Pre-Verb
+          </span>
+          <span class="text-sm text-gray-500 font-bold" id="question-number">Question 1 of 25</span>
+        </div>
+        
+        <!-- Interactive Scoring HUD -->
+        <div class="flex items-center gap-4 text-sm font-bold">
+          <div class="text-gray-700">
+            Score: <span id="score-val" class="text-indigo-600 text-lg font-black">0</span>/25
+          </div>
+          <div class="text-amber-600 flex items-center gap-1">
+            🔥 Streak: <span id="streak-val" class="text-lg font-black">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+        <div id="progress-bar-fill" class="bg-indigo-600 h-full transition-all duration-300" style="width: 4%"></div>
+      </div>
+
+      <!-- The Active Sentence Question Board -->
+      <div class="p-6 md:p-8 bg-slate-50 rounded-2xl border-2 border-slate-100 flex flex-col items-center justify-center min-h-[140px] text-center">
+        <p id="sentence-prompt" class="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed max-w-2xl">
+          The detective searched the dusty room <span class="bg-amber-100 border-b-2 border-amber-400 px-4 py-0.5 rounded text-amber-900 font-extrabold mx-1">________</span> so she wouldn't miss a single hidden clue.
+        </p>
+      </div>
+
+      <!-- Multiple Choice Options Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="options-container">
+        <!-- Buttons populated dynamically in JS -->
+      </div>
+
+      <!-- Interactive Detailed Feedback Banner -->
+      <div id="feedback-panel" class="hidden p-5 rounded-2xl border-2 transition-all duration-300 transform scale-95 opacity-0">
+        <div class="flex gap-4 items-start">
+          <span id="feedback-icon" class="text-4xl"></span>
+          <div class="space-y-1 flex-1">
+            <h4 id="feedback-title" class="text-lg font-black"></h4>
+            <p id="feedback-desc" class="text-gray-700 text-sm md:text-base leading-relaxed"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next Button container -->
+      <div id="action-container" class="hidden text-center pt-2">
+        <button id="btn-next" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-4 px-12 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+          Next Question ➡️
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- ==================== SCREEN 3: RESULTS/NOTEBOOK SCREEN ==================== -->
+    <div id="screen-results" class="hidden p-6 md:p-10 space-y-8 text-center">
+      <div class="space-y-3">
+        <span class="text-5xl celebrate inline-block">👑</span>
+        <h1 class="text-4xl font-extrabold text-indigo-900">Quest Finished!</h1>
+        <p class="text-gray-600 font-medium">You completed the Context Clue wilderness path.</p>
+      </div>
+
+      <!-- Circular Score Progress Graphic -->
+      <div class="relative w-44 h-44 mx-auto flex items-center justify-center bg-indigo-50 rounded-full border-8 border-indigo-200">
+        <div class="space-y-1">
+          <span class="text-gray-400 text-xs font-black uppercase tracking-widest block">Final Score</span>
+          <div class="text-5xl font-black text-indigo-600" id="final-score-text">25/25</div>
+          <span id="final-percent-text" class="text-sm font-bold text-gray-500">100%</span>
+        </div>
+      </div>
+
+      <!-- Customized Interactive Teacher Evaluation Card -->
+      <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl p-6 border-2 border-emerald-100 max-w-md mx-auto space-y-2 text-left">
+        <h3 id="result-badge" class="text-xl font-bold text-emerald-800 text-center">Grand Adverb Inquisitor!</h3>
+        <p id="result-text" class="text-gray-700 text-sm md:text-base text-center leading-relaxed">
+          Stunning results! You successfully picked up every context clue and successfully parsed intermediate and advanced -ly adverbs of manner!
+        </p>
+      </div>
+
+      <!-- Replay Button -->
+      <div class="pt-2">
+        <button id="btn-restart" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all">
+          Attempt Quest Again 🔄
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Audio Sound Synthesizer Engine (Uses HTML5 Web Audio API, no external files) -->
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'wrong') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } else if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+      }
+    }
+  </script>
+
+  <!-- Complete 25 Interactive Question dataset & logic execution -->
+  <script>
+    const quizDataset = [
+      // ==================== LEVEL 1: EVERYDAY (1-10) [Formerly Expanding] ====================
+      {
+        questionNumber: 1,
+        question: "The teacher ________ explained the difficult math concept using simple diagrams so that every student could understand it.",
+        options: ["confusingly", "clearly", "silently", "rapidly"],
+        correctIdx: 1,
+        positionType: "Pre-Verb",
+        clue: "...using simple diagrams so that every student could understand...",
+        explanations: [
+          "Not quite. If the lesson were confusing, students wouldn't understand it.",
+          "Correct! Explaining clearly means communicating ideas so they are easy to comprehend.",
+          "Not quite. Teachers cannot explain lessons without using sound.",
+          "Not quite. Explaining too fast makes hard math harder, not easier."
+        ]
+      },
+      {
+        questionNumber: 2,
+        question: "The lost hiker looked ________ at the map, trying to find the trail back before the sun set.",
+        options: ["playfully", "lazily", "anxiously", "cheerfully"],
+        correctIdx: 2,
+        positionType: "Post-Verb",
+        clue: "...lost hiker... trying to find the trail back before the sun set.",
+        explanations: [
+          "Not quite. Being lost in the wilderness is serious, not a playful game.",
+          "Not quite. The sunset threat would force the hiker to focus, not be lazy.",
+          "Correct! Anxiously describes acting with deep worry, fear, or unease.",
+          "Not quite. Being lost at night is a stressful scenario, not a cheerful one."
+        ]
+      },
+      {
+        questionNumber: 3,
+        question: "The champion racehorse galloped down the track, easily passing all the other runners to cross the finish line ________.",
+        options: ["sluggishly", "politely", "clumsily", "swiftly"],
+        correctIdx: 3,
+        positionType: "End of Sentence",
+        clue: "easily passing all the other runners to cross the finish line.",
+        explanations: [
+          "Not quite. Sluggishly means slow and tired, which would make the horse lose.",
+          "Not quite. Politeness is a social behavior; it doesn't describe the physics of speed.",
+          "Not quite. Clumsiness slows runners down and causes stumbles.",
+          "Correct! Swiftly means moving with incredible velocity or speed."
+        ]
+      },
+      {
+        questionNumber: 4,
+        question: "________, Leo swallowed and took a deep breath before stepping onto the stage for his very first school speech.",
+        options: ["Nervously", "Joyfully", "Carelessly", "Loudly"],
+        correctIdx: 0,
+        positionType: "Front",
+        clue: "...very first school speech... took a deep breath.",
+        explanations: [
+          "Correct! Swallowing and breathing deeply are physical signs of pre-performance anxiety or stage fright.",
+          "Not quite. Leo's hesitation signals fear of speaking, not joy.",
+          "Not quite. Taking a deep breath means Leo is being careful, not careless.",
+          "Not quite. A nervous swallow is quieter than a loud one; context focuses on nerves."
+        ]
+      },
+      {
+        questionNumber: 5,
+        question: "The children shared the delicious chocolate cake ________, making sure everyone got an exact, equal piece.",
+        options: ["greedily", "fairly", "secretly", "angrily"],
+        correctIdx: 1,
+        positionType: "Post-Verb",
+        clue: "...making sure everyone got an exact, equal piece.",
+        explanations: [
+          "Not quite. Greedy sharing means taking too much for yourself.",
+          "Correct! Sharing fairly means dividing resources equally and honestly with others.",
+          "Not quite. They are sharing with the group openly, not in secret.",
+          "Not quite. Equal sharing is a cooperative, helpful action, not an angry one."
+        ]
+      },
+      {
+        questionNumber: 6,
+        question: "The pilot ________ guided the damaged airplane through the thick storm clouds, keeping his eyes glued to the control panels.",
+        options: ["lazily", "cautiously", "accidentally", "foolishly"],
+        correctIdx: 1,
+        positionType: "Pre-Verb",
+        clue: "...guided the damaged airplane... keeping his eyes glued...",
+        explanations: [
+          "Not quite. Piloting a damaged plane in a storm requires deep focus, not laziness.",
+          "Correct! Cautiously means acting with high vigilance to avoid danger in risky conditions.",
+          "Not quite. Keeping eyes glued shows deliberate effort, not an accident.",
+          "Not quite. Guiding the plane to safety is smart, not foolish."
+        ]
+      },
+      {
+        questionNumber: 7,
+        question: "________, Caleb walked to the principal's office to admit his mistake, knowing he was in big trouble for breaking the window.",
+        options: ["Eagerly", "Quickly", "Reluctantly", "Cheerfully"],
+        correctIdx: 2,
+        positionType: "Front",
+        clue: "Knowing he was in big trouble... admit his mistake.",
+        explanations: [
+          "Not quite. People do not look forward to trouble with excitement or eagerness.",
+          "Not quite. People usually delay going toward trouble rather than rushing.",
+          "Correct! Reluctantly means taking action slowly because you really do not want to do it.",
+          "Not quite. Approaching trouble is an unhappy event, not a cheerful one."
+        ]
+      },
+      {
+        questionNumber: 8,
+        question: "The sneaky detective ________ dropped his pen near the suspect's desk so he would have an excuse to lean over and peek at the secret papers.",
+        options: ["accidentally", "deliberately", "clumsily", "honestly"],
+        correctIdx: 1,
+        positionType: "Pre-Verb",
+        clue: "...so he would have an excuse to lean over and peek...",
+        explanations: [
+          "Not quite. The detective dropped it on purpose for an excuse, so it wasn't an accident.",
+          "Correct! Deliberately means doing something completely on purpose or intentionally.",
+          "Not quite. Clumsiness is an accident; this action was a planned trick.",
+          "Not quite. Sneaky detective tricks are a bit dishonest, not transparently honest."
+        ]
+      },
+      {
+        questionNumber: 9,
+        question: "The audience stood up and ________ applauded the incredible theater performance with a five-minute standing ovation.",
+        options: ["halfheartedly", "quietly", "enthusiastically", "silently"],
+        correctIdx: 2,
+        positionType: "Pre-Verb",
+        clue: "...five-minute standing ovation.",
+        explanations: [
+          "Not quite. Halfhearted applause is weak and shows little interest.",
+          "Not quite. Standing ovations are loud and noisy, not quiet.",
+          "Correct! Enthusiastically means showing massive, energetic approval and excitement.",
+          "Not quite. Silent applause does not fit a loud ovation."
+        ]
+      },
+      {
+        questionNumber: 10,
+        question: "The wealthy businessman donated his money ________ to the local hospital so they could build a brand new children's wing.",
+        options: ["generously", "selfishly", "poorly", "quietly"],
+        correctIdx: 0,
+        positionType: "Post-Verb",
+        clue: "...so they could build a brand new children's wing.",
+        explanations: [
+          "Correct! Generously means giving freely and plentifully to help others.",
+          "Not quite. Selfishly means keeping things for yourself.",
+          "Not quite. Giving poorly wouldn't provide enough to build a whole new wing.",
+          "Not quite. He may have done it quietly, but 'generously' best matches the massive scale of the gift."
+        ]
+      },
+
+      // ==================== LEVEL 2: EXPANDING (11-18) [New Harder List] ====================
+      {
+        questionNumber: 11,
+        question: "________, the calm movie was interrupted when the fire alarm began to blare loudly in the theater.",
+        options: ["Abruptly", "Smoothly", "Predictably", "Calmly"],
+        correctIdx: 0,
+        positionType: "Front",
+        clue: "...interrupted when the fire alarm began to blare loudly...",
+        explanations: [
+          "Correct! Abruptly means very suddenly and unexpectedly.",
+          "Not quite. A blaring fire alarm is not a smooth transition.",
+          "Not quite. Fire alarms in theaters are unexpected, not predictable.",
+          "Not quite. Fire alarms cause panic and sudden noise, not calmness."
+        ]
+      },
+      {
+        questionNumber: 12,
+        question: "The tired runner ________ pushed through the final mile of the marathon, refusing to give up even when her legs ached.",
+        options: ["lazily", "persistently", "easily", "weakly"],
+        correctIdx: 1,
+        positionType: "Pre-Verb",
+        clue: "...refusing to give up even when her legs ached.",
+        explanations: [
+          "Not quite. Pushing through aching legs isn't lazy.",
+          "Correct! Persistently means continuing firmly in spite of difficulty or pain.",
+          "Not quite. Running with aching legs makes it hard, not easy.",
+          "Not quite. Pushing through pain requires inner strength, not weakness."
+        ]
+      },
+      {
+        questionNumber: 13,
+        question: "The wild tiger roared ________ at the approaching predators to defend its territory.",
+        options: ["gently", "calmly", "timidly", "ferociously"],
+        correctIdx: 3,
+        positionType: "Post-Verb",
+        clue: "...roar at the approaching predators to defend its territory.",
+        explanations: [
+          "Not quite. Defending territory from predators is not gentle.",
+          "Not quite. A roaring wild tiger is not calm.",
+          "Not quite. Timidly means fearfully, which doesn't match a loud, defending roar.",
+          "Correct! Ferociously means fiercely, savagely, and aggressively."
+        ]
+      },
+      {
+        questionNumber: 14,
+        question: "Because the tall teenager was still getting used to his new height, he walked ________ and kept bumping into doorways.",
+        options: ["gracefully", "awkwardly", "smoothly", "elegantly"],
+        correctIdx: 1,
+        positionType: "Post-Verb",
+        clue: "...kept bumping into doorways.",
+        explanations: [
+          "Not quite. Bumping into things is the opposite of graceful.",
+          "Correct! Awkwardly means moving in a clumsy, uncomfortable, or uncoordinated way.",
+          "Not quite. Bumping into doorways is not smooth.",
+          "Not quite. Elegant means graceful and stylish."
+        ]
+      },
+      {
+        questionNumber: 15,
+        question: "The old rusty car engine sputtered ________, working for a few seconds before dying, then randomly starting again.",
+        options: ["constantly", "smoothly", "sporadically", "reliably"],
+        correctIdx: 2,
+        positionType: "Post-Verb",
+        clue: "...working for a few seconds before dying, then randomly starting again.",
+        explanations: [
+          "Not quite. Constantly means without stopping, but this engine dies and restarts.",
+          "Not quite. A sputtering engine is rough, not smooth.",
+          "Correct! Sporadically means occurring irregularly, randomly, or in scattered instances.",
+          "Not quite. An engine that dies randomly is not reliable at all."
+        ]
+      },
+      {
+        questionNumber: 16,
+        question: "________, the security guard eyed the stranger who was wearing a heavy winter trench coat in the middle of summer.",
+        options: ["Trustingly", "Suspiciously", "Blindly", "Warmly"],
+        correctIdx: 1,
+        positionType: "Front",
+        clue: "...eyed the stranger who was wearing a heavy winter trench coat in the middle of summer.",
+        explanations: [
+          "Not quite. A trench coat in summer makes a guard cautious, not trusting.",
+          "Correct! Suspiciously means looking at someone with distrust or caution.",
+          "Not quite. Guards are paid to watch carefully, not look blindly.",
+          "Not quite. The guard would be wary of the odd clothing, not warm and welcoming."
+        ]
+      },
+      {
+        questionNumber: 17,
+        question: "The fitness instructor shook the protein bottle ________ to ensure all the powder was completely mixed into the water.",
+        options: ["weakly", "lazily", "vigorously", "gently"],
+        correctIdx: 2,
+        positionType: "Post-Verb",
+        clue: "...ensure all the powder was completely mixed...",
+        explanations: [
+          "Not quite. Weak shaking wouldn't mix the clumps of powder.",
+          "Not quite. Lazy shaking leaves the drink unmixed.",
+          "Correct! Vigorously means with great physical energy, force, and strength.",
+          "Not quite. Gentle shaking isn't enough to mix protein powder completely."
+        ]
+      },
+      {
+        questionNumber: 18,
+        question: "Since she only studied for ten minutes, Maria ________ answered the test questions, passing with just a basic C grade.",
+        options: ["perfectly", "adequately", "terribly", "flawlessly"],
+        correctIdx: 1,
+        positionType: "Pre-Verb",
+        clue: "...passing with just a basic C grade.",
+        explanations: [
+          "Not quite. She only got a basic C grade, which isn't perfect.",
+          "Correct! Adequately means just enough to meet the minimum requirement or pass.",
+          "Not quite. She passed, so she didn't do terribly.",
+          "Not quite. Flawlessly means getting an A+ with zero mistakes."
+        ]
+      },
+
+      // ==================== LEVEL 3: CHALLENGE VOCABULARY (19-25) ====================
+      {
+        questionNumber: 19,
+        question: "Because she rushed to clean her room in five minutes, books and clothes were stacked ________.",
+        options: ["neatly", "deliberately", "meticulously", "haphazardly"],
+        correctIdx: 3,
+        positionType: "End of Sentence",
+        clue: "...rushed to clean her room in five minutes... unstable piles...",
+        explanations: [
+          "Not quite. Neat stacks are stable and organized.",
+          "Not quite. The mess was caused by rushing, not on purpose.",
+          "Not quite. Meticulous cleaning takes hours and is extremely neat.",
+          "Correct! Haphazardly means done with zero planning, organization, or order."
+        ]
+      },
+      {
+        questionNumber: 20,
+        question: "Having studied the complex ancient map for hours, the archeologist ________ translated the fragile scroll line by line, making sure not to damage the delicate paper.",
+        options: ["meticulously", "carelessly", "sloppily", "rapidly"],
+        correctIdx: 0,
+        positionType: "Pre-Verb",
+        clue: "...line by line, making sure not to damage the delicate paper.",
+        explanations: [
+          "Correct! Meticulously means acting with extreme, careful attention to a very delicate task.",
+          "Not quite. Careless work would likely tear the fragile scroll paper.",
+          "Not quite. Sloppiness would ruin delicate artifacts.",
+          "Not quite. Rapid work is rushed and risky on ancient scrolls."
+        ]
+      },
+      {
+        questionNumber: 21,
+        question: "The two club members agreed so ________ about the school trip location that they did not even need to hold a formal vote.",
+        options: ["dividedly", "unanimously", "hesitantly", "argumentatively"],
+        correctIdx: 1,
+        positionType: "Post-Verb",
+        clue: "...so in agreement... did not even need to hold a formal vote.",
+        explanations: [
+          "Not quite. Being divided means disagreeing, which requires a vote.",
+          "Correct! Unanimously means with complete, absolute agreement from everyone involved.",
+          "Not quite. Hesitation means doubt, but they were in full agreement.",
+          "Not quite. Arguments happen when there is disagreement."
+        ]
+      },
+      {
+        questionNumber: 22,
+        question: "________, the two classmates whispered their plans for the surprise party during the library study session so the librarian wouldn't hear.",
+        options: ["Clandestinely", "Loudly", "Cheerfully", "Accidentally"],
+        correctIdx: 0,
+        positionType: "Front",
+        clue: "...surprise party so the librarian wouldn't hear.",
+        explanations: [
+          "Correct! Clandestinely means doing something in a secret, hidden, or sneaky way.",
+          "Not quite. Loud whispering would get them caught by the librarian immediately.",
+          "Not quite. Cheerfulness is about being happy; it does not protect secrets.",
+          "Not quite. The surprise party plans were discussed on purpose, not by accident."
+        ]
+      },
+      {
+        questionNumber: 23,
+        question: "________, James shrugged his shoulders and said, 'Sure, I guess,' when asked if he wanted to go to the movie.",
+        options: ["Excitedly", "Indifferently", "Enthusiastically", "Gratefully"],
+        correctIdx: 1,
+        positionType: "Front",
+        clue: "...did not care about the film at all... 'Sure, I guess.'",
+        explanations: [
+          "Not quite. Excitement means looking forward to the movie.",
+          "Correct! Indifferently means acting with zero interest, concern, or preference.",
+          "Not quite. Enthusiastic reactions are energetic and positive.",
+          "Not quite. Grateful reactions show thankfulness, not lack of interest."
+        ]
+      },
+      {
+        questionNumber: 24,
+        question: "The friendly, outgoing student ________ chatted with the new classmate, making them feel instantly welcome on their very first day of school.",
+        options: ["shyly", "gregariously", "silently", "angrily"],
+        correctIdx: 1,
+        positionType: "Pre-Verb",
+        clue: "friendly, outgoing student... feel instantly welcome...",
+        explanations: [
+          "Not quite. Shy students are quiet and hesitate to chat with strangers.",
+          "Correct! Gregariously means acting in a friendly, extremely social, and outgoing manner.",
+          "Not quite. Outgoing chatting is spoken and loud, not silent.",
+          "Not quite. Friendly welcomes are warm and happy, not angry."
+        ]
+      },
+      {
+        questionNumber: 25,
+        question: "The billionaire ________ parked his bright gold sports car right in front of the restaurant entrance so everyone would stare at it.",
+        options: ["modestly", "shyly", "ostentatiously", "secretly"],
+        correctIdx: 2,
+        positionType: "Pre-Verb",
+        clue: "...bright gold sports car... so everyone would stare at it.",
+        explanations: [
+          "Not quite. Modestly means avoiding attention and keeping a low profile.",
+          "Not quite. Parking a gold car in front of an entrance so people stare is the opposite of shy.",
+          "Correct! Ostentatiously means acting in a showy way designed to attract attention and show off.",
+          "Not quite. A bright gold car parked in front is not a secret."
+        ]
+      }
+    ];
+
+    // Game state
+    let activeIndex = 0; // Starts back at index 0 (Question 1)
+    let score = 0;
+    let streak = 0;
+    let choiceMade = false;
+
+    // DOM Elements
+    const screenWelcome = document.getElementById('screen-welcome');
+    const screenGame = document.getElementById('screen-game');
+    const screenResults = document.getElementById('screen-results');
+
+    const btnStart = document.getElementById('btn-start');
+    const btnNext = document.getElementById('btn-next');
+    const btnRestart = document.getElementById('btn-restart');
+
+    const levelBadge = document.getElementById('level-badge');
+    const positionBadge = document.getElementById('position-badge');
+    const qNumberText = document.getElementById('question-number');
+    const scoreVal = document.getElementById('score-val');
+    const streakVal = document.getElementById('streak-val');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+
+    const sentencePrompt = document.getElementById('sentence-prompt');
+    const optionsContainer = document.getElementById('options-container');
+
+    const feedbackPanel = document.getElementById('feedback-panel');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackDesc = document.getElementById('feedback-desc');
+    const actionContainer = document.getElementById('action-container');
+
+    const finalScoreText = document.getElementById('final-score-text');
+    const finalPercentText = document.getElementById('final-percent-text');
+    const resultBadge = document.getElementById('result-badge');
+    const resultText = document.getElementById('result-text');
+
+    // Setup Event listeners
+    btnStart.addEventListener('click', startGame);
+    btnNext.addEventListener('click', handleNextButton);
+    btnRestart.addEventListener('click', startGame);
+
+    function startGame() {
+      playSound('click');
+      screenWelcome.classList.add('hidden');
+      screenResults.classList.add('hidden');
+      screenGame.classList.remove('hidden');
+
+      activeIndex = 0; // Set to Question 1
+      score = 0;
+      streak = 0;
+      loadQuestion(0);
+    }
+
+    function loadQuestion(index) {
+      choiceMade = false;
+      activeIndex = index;
+
+      const q = quizDataset[index];
+
+      // Reset feedback and action panels
+      feedbackPanel.classList.add('hidden');
+      feedbackPanel.className = "hidden p-5 rounded-2xl border-2 transition-all duration-300 transform scale-95 opacity-0";
+      actionContainer.classList.add('hidden');
+
+      // Update HUD Labels
+      scoreVal.textContent = score;
+      streakVal.textContent = streak;
+      qNumberText.textContent = `Question ${index + 1} of 25`; // 25 questions total now
+
+      // Position Type indicators dynamically updated
+      positionBadge.textContent = `Position: ${q.positionType}`;
+
+      // Level difficulty metrics
+      if (index < 10) {
+        levelBadge.textContent = "Level 1: Everyday";
+        levelBadge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-green-100 text-green-800 border border-green-200 animate-pulse";
+      } else if (index < 18) {
+        levelBadge.textContent = "Level 2: Expanding";
+        levelBadge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 animate-pulse";
+      } else {
+        levelBadge.textContent = "Level 3: Challenge";
+        levelBadge.className = "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200 animate-pulse";
+      }
+
+      // Fill progress bar fluidly (mapped specifically to the 25-question journey)
+      const progressPercent = (index / 25) * 100;
+      progressBarFill.style.width = `${progressPercent || 4}%`;
+
+      // Setup sentence
+      sentencePrompt.innerHTML = q.question.replace("________", `<span id="word-blank" class="bg-amber-100 border-b-4 border-amber-400 px-4 py-0.5 rounded text-amber-900 font-extrabold mx-1">________</span>`);
+
+      // Populate choice buttons
+      optionsContainer.innerHTML = "";
+      q.options.forEach((optText, optIdx) => {
+        const btn = document.createElement('button');
+        btn.type = "button";
+        btn.className = "bounce-hover w-full bg-slate-50 border-2 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 text-slate-800 font-bold p-4 rounded-xl shadow-sm hover:shadow transition-all text-base md:text-lg text-left flex justify-between items-center";
+        
+        btn.innerHTML = `
+          <span>${optText}</span>
+          <span class="indicator-icon text-xl text-slate-300 opacity-20">🔘</span>
+        `;
+        
+        btn.addEventListener('click', () => handleChoice(optIdx));
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleChoice(clickedIdx) {
+      if (choiceMade) return; // Ignore multiple clicks
+      choiceMade = true;
+
+      const q = quizDataset[activeIndex];
+      const isCorrect = (clickedIdx === q.correctIdx);
+
+      const buttons = optionsContainer.querySelectorAll('button');
+
+      if (isCorrect) {
+        playSound('correct');
+        score++;
+        streak++;
+
+        // Visual check inside target sentence blank
+        const wordBlank = document.getElementById('word-blank');
+        if (wordBlank) {
+          wordBlank.textContent = q.options[q.correctIdx];
+          wordBlank.className = "bg-green-100 border-b-4 border-green-500 px-3 py-0.5 rounded text-green-950 font-extrabold mx-1 transition-all";
+        }
+
+        // Highlight chosen option green
+        const correctBtn = buttons[q.correctIdx];
+        correctBtn.className = "w-full bg-green-50 border-2 border-green-500 text-green-900 font-black p-4 rounded-xl shadow transition-all text-base md:text-lg text-left flex justify-between items-center";
+        correctBtn.querySelector('.indicator-icon').textContent = "✅";
+        correctBtn.querySelector('.indicator-icon').className = "indicator-icon text-xl text-green-600 opacity-100";
+
+        // Feedback Panel configuration
+        feedbackPanel.classList.remove('hidden');
+        void feedbackPanel.offsetWidth; // Repaint trigger
+        feedbackPanel.className = "p-5 rounded-2xl border-2 border-green-200 bg-green-50 transition-all duration-300 transform scale-100 opacity-100";
+        feedbackIcon.textContent = "🎉";
+        feedbackTitle.className = "text-lg font-black text-green-800";
+        feedbackTitle.textContent = "Excellent Connection!";
+        feedbackDesc.innerHTML = q.explanations[q.correctIdx];
+
+      } else {
+        playSound('wrong');
+        streak = 0; // Reset streak
+
+        // Highlight correct green, chosen red
+        buttons.forEach((btn, idx) => {
+          if (idx === q.correctIdx) {
+            btn.className = "w-full bg-green-50 border-2 border-green-500 text-green-900 font-black p-4 rounded-xl shadow transition-all text-base md:text-lg text-left flex justify-between items-center";
+            btn.querySelector('.indicator-icon').textContent = "✅";
+            btn.querySelector('.indicator-icon').className = "indicator-icon text-xl text-green-600 opacity-100";
+          } else if (idx === clickedIdx) {
+            btn.className = "w-full bg-rose-50 border-2 border-rose-500 text-rose-900 font-black p-4 rounded-xl shadow transition-all text-base md:text-lg text-left flex justify-between items-center";
+            btn.querySelector('.indicator-icon').textContent = "❌";
+            btn.querySelector('.indicator-icon').className = "indicator-icon text-xl text-rose-600 opacity-100";
+          } else {
+            btn.className = "w-full bg-slate-50 border-2 border-transparent text-slate-300 p-4 rounded-xl transition-all text-base md:text-lg text-left flex justify-between items-center cursor-not-allowed";
+            btn.querySelector('.indicator-icon').className = "hidden";
+          }
+        });
+
+        // Feedback Panel configuration
+        feedbackPanel.classList.remove('hidden');
+        void feedbackPanel.offsetWidth; // Repaint trigger
+        feedbackPanel.className = "p-5 rounded-2xl border-2 border-rose-200 bg-rose-50 transition-all duration-300 transform scale-100 opacity-100";
+        feedbackIcon.textContent = "🔍";
+        feedbackTitle.className = "text-lg font-black text-rose-800";
+        feedbackTitle.textContent = "Not Quite!";
+        feedbackDesc.innerHTML = `${q.explanations[clickedIdx]}<br><span class="block mt-2 text-slate-800 font-bold">The correct answer is "${q.options[q.correctIdx]}".</span>`;
+      }
+
+      // Update scoring HUD values live
+      scoreVal.textContent = score;
+      streakVal.textContent = streak;
+
+      // Reveal action slide-in
+      actionContainer.classList.remove('hidden');
+    }
+
+    function handleNextButton() {
+      playSound('click');
+      const nextIndex = activeIndex + 1;
+      
+      if (nextIndex < quizDataset.length) {
+        loadQuestion(nextIndex);
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      screenGame.classList.add('hidden');
+      screenResults.classList.remove('hidden');
+
+      finalScoreText.textContent = `${score}/25`; // Out of 25 questions total now
+      const percentage = Math.round((score / 25) * 100);
+      finalPercentText.textContent = `${percentage}%`;
+
+      // Set badge and text commentary based on performance
+      if (percentage === 100) {
+        resultBadge.textContent = "👑 Grand Adverb Inquisitor!";
+        resultBadge.className = "text-xl font-bold text-indigo-800 text-center block";
+        resultText.textContent = "Absolutely perfect! You picked up on every single context clue without error. Your mastery of Level 3 advanced vocabulary is highly impressive!";
+      } else if (percentage >= 88) {
+        resultBadge.textContent = "🏆 Elite Adverb Explorer!";
+        resultBadge.className = "text-xl font-bold text-emerald-800 text-center block";
+        resultText.textContent = "Fantastic job! You proved that you can easily analyze context clues to match adverbs of manner—even when the vocabulary gets challenging.";
+      } else if (percentage >= 70) {
+        resultBadge.textContent = "👍 Competent Detective!";
+        resultBadge.className = "text-xl font-bold text-amber-800 text-center block";
+        resultText.textContent = "Solid work! You handled Level 1 and Level 2 easily. With a bit of practice on advanced words, you will be completely unstoppable!";
+      } else {
+        resultBadge.textContent = "🌱 Rising Apprentice!";
+        resultBadge.className = "text-xl font-bold text-rose-800 text-center block";
+        resultText.textContent = "Good attempt! Some of the vocabulary choices in Level 3 are tricky. Try another run of the quest to boost your score and learn more adverbs of manner!";
+      }
+    }
+  </script>
+</body>
+</html>
