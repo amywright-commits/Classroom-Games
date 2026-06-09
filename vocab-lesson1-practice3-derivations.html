@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derivation Station!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF7F50; /* Coral */
+            --primary-dark: #FF6347; /* Tomato */
+            --primary-light: #FFE4E1;
+            --success: #2ECC71;
+            --error: #E74C3C;
+            --background: #fff8f5;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        p.instructions {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #555;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            max-width: 600px;
+        }
+
+        .game-container {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-weight: bold;
+            color: #777;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .root-word-tag {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .sentence {
+            font-size: 1.6rem;
+            line-height: 1.5;
+            margin-bottom: 40px;
+            font-weight: 700;
+        }
+
+        .blank {
+            display: inline-block;
+            min-width: 150px;
+            height: 35px;
+            border-bottom: 4px solid var(--text-dark);
+            margin: 0 10px;
+            color: var(--primary);
+            text-align: center;
+            line-height: 35px;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .option-btn {
+            background-color: white;
+            border: 3px solid #ddd;
+            padding: 12px 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Nunito', sans-serif;
+            color: var(--text-dark);
+            min-width: 140px;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--error);
+            border-color: var(--error);
+            color: white;
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .next-btn {
+            display: none;
+            background-color: var(--primary-dark);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background 0.3s;
+            font-family: 'Nunito', sans-serif;
+            box-shadow: 0 4px 10px rgba(255, 99, 71, 0.3);
+        }
+
+        .next-btn:hover {
+            background-color: #e5533d;
+            transform: translateY(-2px);
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 500px;
+        }
+
+        .modal h2 {
+            color: var(--primary-dark);
+            font-size: 2.5rem;
+            margin-top: 0;
+        }
+
+        .play-again-btn {
+            background-color: var(--primary-dark);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sentence { font-size: 1.3rem; }
+            .option-btn { font-size: 1.1rem; padding: 10px 20px;}
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Derivation Station!</h1>
+    <p class="instructions">Words can change shapes to fit into sentences! Choose the correct form of the base word to complete the sentence.</p>
+
+    <div class="game-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">Question 1 of 30</div>
+
+        <div class="root-word-tag" id="root-tag">BASE WORD: </div>
+        
+        <div class="sentence" id="sentence-display">
+            <!-- Sentence injected here -->
+        </div>
+
+        <div class="options-grid" id="options-container">
+            <!-- Buttons injected here -->
+        </div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question ➔</button>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="modal-overlay" id="win-modal">
+        <div class="modal">
+            <h2>🎉 Grammar Master! 🎉</h2>
+            <p>You successfully matched all the word forms to their sentences. You are a derivation expert!</p>
+            <button class="play-again-btn" onclick="initGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            // Original 15 Questions
+            {
+                root: "accustom",
+                sentence: "After a week at camp, the kids finally became _______ to waking up at 6 AM.",
+                options: ["accustom", "accustomed", "unaccustomed"],
+                answer: "accustomed"
+            },
+            {
+                root: "alert",
+                sentence: "The security guard watched the cameras very _______ all night.",
+                options: ["alert", "alertly", "alertness"],
+                answer: "alertly"
+            },
+            {
+                root: "assign",
+                sentence: "Did you finish your math _______ before watching television?",
+                options: ["assign", "assignment", "reassign", "unassigned"],
+                answer: "assignment"
+            },
+            {
+                root: "budge",
+                sentence: "The stubborn mule planted its feet and stood completely _______.",
+                options: ["budge", "unbudging"],
+                answer: "unbudging"
+            },
+            {
+                root: "burly",
+                sentence: "The _______ of the lumberjack made it easy for him to carry the heavy logs.",
+                options: ["burly", "burliness", "burlier", "burliest"],
+                answer: "burliness"
+            },
+            {
+                root: "companion",
+                sentence: "My dog brings me a lot of joy and _______ when I am feeling lonely.",
+                options: ["companion", "companionship", "companionable"],
+                answer: "companionship"
+            },
+            {
+                root: "compatible",
+                sentence: "I cannot use this old charger with my new phone because they are _______.",
+                options: ["compatible", "compatibility", "incompatible"],
+                answer: "incompatible"
+            },
+            {
+                root: "concept",
+                sentence: "It is hard to _______ how enormous the universe actually is.",
+                options: ["concept", "conception", "conceptual", "conceptualize"],
+                answer: "conceptualize"
+            },
+            {
+                root: "distract",
+                sentence: "The loud construction outside was a major _______ while we were taking our test.",
+                options: ["distract", "distraction", "distracting"],
+                answer: "distraction"
+            },
+            {
+                root: "jostle",
+                sentence: "There was a lot of pushing and _______ in the crowd as everyone tried to get to the stage.",
+                options: ["jostle", "jostling"],
+                answer: "jostling"
+            },
+            {
+                root: "obedient",
+                sentence: "The _______ child refused to eat his vegetables and threw his fork on the floor.",
+                options: ["obedient", "obedience", "obediently", "disobedient"],
+                answer: "disobedient"
+            },
+            {
+                root: "obstacle",
+                sentence: "The fallen tree in the middle of the road was a huge _______.",
+                options: ["obstacle", "obstacles"],
+                answer: "obstacle"
+            },
+            {
+                root: "patient",
+                sentence: "She tapped her foot and sighed, growing very _______ as she waited for the late bus.",
+                options: ["patient", "patience", "patiently", "impatient"],
+                answer: "impatient"
+            },
+            {
+                root: "pedestrian",
+                sentence: "This new bridge over the highway is only for _______ traffic, not for cars.",
+                options: ["pedestrian", "pedestrians"],
+                answer: "pedestrian"
+            },
+            {
+                root: "retire",
+                sentence: "My grandfather is really enjoying his _______ because he gets to go fishing every single day.",
+                options: ["retire", "retirement"],
+                answer: "retirement"
+            },
+            
+            // 15 New Questions
+            {
+                root: "accustom",
+                sentence: "My eyes took a few minutes to _______ to the dark movie theater.",
+                options: ["accustom", "accustomed", "unaccustomed"],
+                answer: "accustom"
+            },
+            {
+                root: "alert",
+                sentence: "During the fire drill, all students must remain _______ and listen for instructions.",
+                options: ["alert", "alertly", "alertness"],
+                answer: "alert"
+            },
+            {
+                root: "assign",
+                sentence: "The teacher decided to _______ a new science project for the weekend.",
+                options: ["assign", "assignment", "reassign", "unassigned"],
+                answer: "assign"
+            },
+            {
+                root: "budge",
+                sentence: "No matter how hard we pushed together, the heavy sofa would not _______.",
+                options: ["budge", "unbudging"],
+                answer: "budge"
+            },
+            {
+                root: "burly",
+                sentence: "Of all the players on the football team, he was by far the _______.",
+                options: ["burly", "burliness", "burlier", "burliest"],
+                answer: "burliest"
+            },
+            {
+                root: "companion",
+                sentence: "The old man and his cat were very _______ as they sat quietly on the porch.",
+                options: ["companion", "companionship", "companionable"],
+                answer: "companionable"
+            },
+            {
+                root: "compatible",
+                sentence: "The two roommates were highly _______ and never argued about who did the chores.",
+                options: ["compatible", "compatibility", "incompatible"],
+                answer: "compatible"
+            },
+            {
+                root: "concept",
+                sentence: "The architect presented a brand new _______ for the design of the modern library.",
+                options: ["concept", "conception", "conceptual", "conceptualize"],
+                answer: "concept"
+            },
+            {
+                root: "distract",
+                sentence: "Please do not _______ the driver while the school bus is moving.",
+                options: ["distract", "distraction", "distracting"],
+                answer: "distract"
+            },
+            {
+                root: "jostle",
+                sentence: "I dropped all my books when someone in the hallway accidentally decided to _______ me.",
+                options: ["jostle", "jostling"],
+                answer: "jostle"
+            },
+            {
+                root: "obedient",
+                sentence: "The well-trained dog sat _______ while waiting for its owner to hand over the treat.",
+                options: ["obedient", "obedience", "obediently", "disobedient"],
+                answer: "obediently"
+            },
+            {
+                root: "obstacle",
+                sentence: "To win the obstacle course race, you must jump over several difficult _______.",
+                options: ["obstacle", "obstacles"],
+                answer: "obstacles"
+            },
+            {
+                root: "patient",
+                sentence: "The friendly doctor spent over an hour talking calmly with her sick _______.",
+                options: ["patient", "patience", "patiently", "impatient"],
+                answer: "patient"
+            },
+            {
+                root: "pedestrian",
+                sentence: "Cars must always come to a complete stop when a _______ is waiting at the crosswalk.",
+                options: ["pedestrian", "pedestrians"],
+                answer: "pedestrian"
+            },
+            {
+                root: "retire",
+                sentence: "Because he was so tired after the long hike, he decided to _______ to bed early.",
+                options: ["retire", "retirement"],
+                answer: "retire"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let shuffledQuestions = [];
+        let isAnswered = false;
+
+        // Shuffle function
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            shuffledQuestions = shuffleArray([...quizData]);
+            currentQuestionIndex = 0;
+            document.getElementById('win-modal').style.display = 'none';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            document.getElementById('next-btn').style.display = 'none';
+            
+            const question = shuffledQuestions[currentQuestionIndex];
+            
+            // Update Progress
+            const progressPercent = ((currentQuestionIndex) / shuffledQuestions.length) * 100;
+            document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+            document.getElementById('progress-text').textContent = `Question ${currentQuestionIndex + 1} of ${shuffledQuestions.length}`;
+
+            // Update Text
+            document.getElementById('root-tag').textContent = `BASE WORD: ${question.root}`;
+            document.getElementById('sentence-display').innerHTML = question.sentence.replace('_______', '<span class="blank" id="blank-space">_______</span>');
+
+            // Render Options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            // Shuffle options so the correct answer isn't always in the same spot
+            const shuffledOptions = shuffleArray([...question.options]);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(btn, opt, question.answer);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(btnElement, selectedWord, correctWord) {
+            if (isAnswered) return; // Prevent multiple clicks
+
+            const blank = document.getElementById('blank-space');
+            
+            if (selectedWord === correctWord) {
+                // Correct
+                isAnswered = true;
+                btnElement.classList.add('correct');
+                blank.textContent = selectedWord;
+                blank.style.color = 'var(--success)';
+                blank.style.borderBottomColor = 'var(--success)';
+                
+                // Show next button
+                document.getElementById('next-btn').style.display = 'inline-block';
+            } else {
+                // Incorrect
+                btnElement.classList.add('incorrect');
+                setTimeout(() => {
+                    btnElement.classList.remove('incorrect');
+                }, 500);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                // Finish game
+                document.getElementById('progress-fill').style.width = `100%`;
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
