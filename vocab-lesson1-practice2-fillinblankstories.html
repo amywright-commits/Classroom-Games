@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Adventure Story</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8E44AD;
+            --primary-light: #F4ECF7;
+            --success: #2ECC71;
+            --success-light: #d5f5e3;
+            --error: #E74C3C;
+            --error-light: #fadbd8;
+            --background: #fdfbf7;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        p.instructions {
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #555;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            max-width: 800px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Story Tabs */
+        .story-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: -10px;
+        }
+
+        .tab-btn {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: none;
+        }
+
+        .tab-btn:hover {
+            background-color: #e8d5f0;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Word Bank Styles */
+        .word-bank-container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border-top: 5px solid var(--primary);
+        }
+
+        .word-bank-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-pill {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .word-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(142, 68, 173, 0.2);
+        }
+
+        .word-pill.selected {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(142, 68, 173, 0.4);
+        }
+
+        .word-pill.used {
+            opacity: 0.4;
+            pointer-events: none;
+            background-color: #e0e0e0;
+            border-color: #bdbdbd;
+            color: #757575;
+        }
+
+        /* Story Styles */
+        .story-container {
+            background: var(--card-bg);
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            font-size: 1.25rem;
+            line-height: 2.2;
+            background-image: repeating-linear-gradient(transparent, transparent 39px, #e0e0e0 39px, #e0e0e0 40px);
+            background-position: 0 35px;
+        }
+
+        .blank {
+            display: inline-block;
+            min-width: 120px;
+            height: 35px;
+            border-bottom: 3px dashed var(--primary);
+            margin: 0 5px;
+            vertical-align: middle;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            background-color: rgba(142, 68, 173, 0.05);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s;
+            line-height: 35px;
+        }
+
+        .blank:hover {
+            background-color: rgba(142, 68, 173, 0.15);
+        }
+
+        .blank.filled {
+            border-bottom-style: solid;
+        }
+
+        .blank.correct {
+            color: #1e8449;
+            border-bottom-color: var(--success);
+            background-color: var(--success-light);
+        }
+
+        .blank.incorrect {
+            color: #943126;
+            border-bottom-color: var(--error);
+            background-color: var(--error-light);
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Check Answers Button */
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        .btn-check {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: 'Nunito', sans-serif;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-check:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 500px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal h2 {
+            color: var(--success);
+            font-size: 2.5rem;
+            margin-top: 0;
+        }
+
+        .modal p {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+        }
+
+        .play-again-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .story-container {
+                font-size: 1.1rem;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Vocab Adventure Story</h1>
+    <p class="instructions"><strong>How to play:</strong> Click a word in the word bank to select it, then click an empty blank in the story to place the word there. If you change your mind, just click the word in the story to put it back! Click "Check Answers" when you are done.</p>
+
+    <div class="game-container">
+        
+        <!-- Story Tabs -->
+        <div class="story-tabs" id="story-tabs">
+            <button class="tab-btn active" onclick="loadStory(0)">Story 1</button>
+            <button class="tab-btn" onclick="loadStory(1)">Story 2</button>
+            <button class="tab-btn" onclick="loadStory(2)">Story 3</button>
+        </div>
+
+        <!-- Word Bank -->
+        <div class="word-bank-container">
+            <div class="word-bank-title">Word Bank</div>
+            <div class="word-bank" id="word-bank">
+                <!-- Words injected by JS -->
+            </div>
+        </div>
+
+        <!-- Story Area -->
+        <div class="story-container" id="story-content">
+            <!-- Story content injected by JS -->
+        </div>
+
+        <div class="controls">
+            <button class="btn-check" onclick="checkAnswers()">Check Answers</button>
+        </div>
+
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="modal-overlay" id="win-modal">
+        <div class="modal">
+            <h2>🎉 Fantastic Job! 🎉</h2>
+            <p id="modal-message">You used all your vocabulary words perfectly in context!</p>
+            <button class="play-again-btn" id="next-story-btn" onclick="nextStory()">Next Story</button>
+            <button class="play-again-btn" style="background-color: #7f8c8d; margin-left: 10px;" onclick="resetGame()">Read Again</button>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            "accustom", "alert", "assign", "budge", "burly", 
+            "companion", "compatible", "concept", "distract", 
+            "jostle", "obedient", "obstacle", "patient", 
+            "pedestrian", "retire"
+        ];
+
+        const storiesData = [
+            `My dog Buster and I are a great pair. We are very <span class="blank" data-answer="compatible"></span> because we both love the outdoors. Buster is a <span class="blank" data-answer="burly"></span> golden retriever, strong and full of energy. Every Saturday, my parents <span class="blank" data-answer="assign"></span> me the chore of walking him. As a responsible <span class="blank" data-answer="pedestrian"></span>, I always make sure we stay safely on the sidewalk.
+            <br><br>
+            Buster is usually very <span class="blank" data-answer="obedient"></span> and listens to my commands. He is a wonderful walking <span class="blank" data-answer="companion"></span>. However, sometimes things <span class="blank" data-answer="distract"></span> him, like a squirrel running up a tree. When he locks eyes on a squirrel, he refuses to <span class="blank" data-answer="budge"></span>. He just sits there staring! I have to be <span class="blank" data-answer="patient"></span> and wait for him to lose interest.
+            <br><br>
+            One time, a fallen branch created a huge <span class="blank" data-answer="obstacle"></span> in our path. We couldn't get around it! I had to remain <span class="blank" data-answer="alert"></span> and find a safe way to cross the street instead. The street was busy, and people began to <span class="blank" data-answer="jostle"></span> each other on the crowded corner. It took time to <span class="blank" data-answer="accustom"></span> Buster to the loud noises of the city. I tried to teach him the <span class="blank" data-answer="concept"></span> of looking both ways at a crosswalk, though I'm not sure dogs understand that! 
+            <br><br>
+            Finally, after a long walk, we head home. Buster is so tired that he is ready to <span class="blank" data-answer="retire"></span> to his dog bed for a long nap.`,
+            
+            `It took a few weeks to <span class="blank" data-answer="accustom"></span> myself to the new school schedule. My teacher, Mr. Davis, likes to <span class="blank" data-answer="assign"></span> us plenty of reading. He is a <span class="blank" data-answer="burly"></span> man who looks like a lumberjack, but he is very kind. Today, he taught us a difficult math <span class="blank" data-answer="concept"></span> about fractions. I had to be very <span class="blank" data-answer="patient"></span> to figure it out without getting frustrated.
+            <br><br>
+            Sometimes, the loud noises from the hallway would <span class="blank" data-answer="distract"></span> me. When the bell rings, kids quickly <span class="blank" data-answer="jostle"></span> each other to get to the cafeteria. The main <span class="blank" data-answer="obstacle"></span> to getting a good seat at lunch is the long line for pizza!
+            <br><br>
+            I usually eat with my best <span class="blank" data-answer="companion"></span>, Leo. We are very <span class="blank" data-answer="compatible"></span> because we both love comic books. Leo is an <span class="blank" data-answer="obedient"></span> student who always raises his hand. 
+            <br><br>
+            On the way home, I was a careful <span class="blank" data-answer="pedestrian"></span> and used the crosswalk. I had to stay <span class="blank" data-answer="alert"></span> for cars turning the corner. One time, a stubborn goose sat in the road and refused to <span class="blank" data-answer="budge"></span>! After finishing my homework, I was so tired I decided to <span class="blank" data-answer="retire"></span> to my room early.`,
+            
+            `Our family went on a camping trip to learn the <span class="blank" data-answer="concept"></span> of wilderness survival. My dad, who is quite <span class="blank" data-answer="burly"></span> and strong, carried the heaviest backpack. He would always <span class="blank" data-answer="assign"></span> me the job of gathering firewood. My trusty <span class="blank" data-answer="companion"></span> on the trail was my older sister, Mia. We were <span class="blank" data-answer="compatible"></span> hiking partners because we walked at the exact same pace.
+            <br><br>
+            We had to stay <span class="blank" data-answer="alert"></span> for bears and other wild animals in the woods. It took time to <span class="blank" data-answer="accustom"></span> our eyes to the dark when the sun finally went down. Suddenly, an unexpected <span class="blank" data-answer="obstacle"></span> blocked our path: a giant fallen boulder! We pushed with all our might, but the rock wouldn't <span class="blank" data-answer="budge"></span>. We had to be <span class="blank" data-answer="patient"></span> and carefully find a new route around it.
+            <br><br>
+            Beautiful, colorful birds in the trees constantly tried to <span class="blank" data-answer="distract"></span> us from our map. As a hiker, which is really just a wilderness <span class="blank" data-answer="pedestrian"></span>, you must always watch your step! Sometimes our bulky backpacks would <span class="blank" data-answer="jostle"></span> against the narrow trees. Through it all, our <span class="blank" data-answer="obedient"></span> dog followed right on our heels without running away. When night finally fell, we were exhausted and ready to <span class="blank" data-answer="retire"></span> to our cozy sleeping bags.`
+        ];
+
+        let selectedWordPill = null;
+        let currentStoryIndex = 0;
+
+        function initGame() {
+            loadStory(currentStoryIndex);
+        }
+
+        function loadStory(index) {
+            currentStoryIndex = index;
+            selectedWordPill = null;
+            document.getElementById('win-modal').style.display = 'none';
+
+            // Update Tabs
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach((tab, i) => {
+                if (i === index) tab.classList.add('active');
+                else tab.classList.remove('active');
+            });
+
+            // Load Story Content
+            const storyContainer = document.getElementById('story-content');
+            storyContainer.innerHTML = storiesData[index];
+
+            const wordBank = document.getElementById('word-bank');
+            wordBank.innerHTML = '';
+            
+            // Sort words alphabetically for the bank
+            const sortedWords = [...words].sort();
+
+            sortedWords.forEach(word => {
+                const pill = document.createElement('div');
+                pill.className = 'word-pill';
+                pill.textContent = word;
+                pill.dataset.word = word;
+                pill.addEventListener('click', handleWordBankClick);
+                wordBank.appendChild(pill);
+            });
+
+            // Set up blanks
+            const blanks = document.querySelectorAll('.blank');
+            blanks.forEach(blank => {
+                blank.textContent = '';
+                blank.className = 'blank'; // reset classes
+                blank.addEventListener('click', handleBlankClick);
+            });
+        }
+
+        function handleWordBankClick(e) {
+            const pill = e.currentTarget;
+            
+            // If already used, do nothing
+            if (pill.classList.contains('used')) return;
+
+            // Deselect current if any
+            if (selectedWordPill) {
+                selectedWordPill.classList.remove('selected');
+            }
+
+            // If clicking the same pill, just deselect
+            if (selectedWordPill === pill) {
+                selectedWordPill = null;
+                return;
+            }
+
+            // Select new pill
+            pill.classList.add('selected');
+            selectedWordPill = pill;
+        }
+
+        function handleBlankClick(e) {
+            const blank = e.currentTarget;
+            
+            // Remove any red/green formatting if they are changing an answer
+            blank.classList.remove('correct', 'incorrect');
+
+            // CASE 1: Blank has a word, and we want to remove it
+            if (blank.textContent !== '' && !selectedWordPill) {
+                const wordToReturn = blank.textContent;
+                // Find it in the word bank and un-use it
+                const pill = document.querySelector(`.word-pill[data-word="${wordToReturn}"]`);
+                if (pill) pill.classList.remove('used');
+                
+                blank.textContent = '';
+                blank.classList.remove('filled');
+                return;
+            }
+
+            // CASE 2: We have a word selected and want to put it in the blank
+            if (selectedWordPill) {
+                // If blank already has a word, return the old word to the bank first
+                if (blank.textContent !== '') {
+                    const oldWord = blank.textContent;
+                    const oldPill = document.querySelector(`.word-pill[data-word="${oldWord}"]`);
+                    if (oldPill) oldPill.classList.remove('used');
+                }
+
+                // Place new word
+                blank.textContent = selectedWordPill.dataset.word;
+                blank.classList.add('filled');
+                
+                // Mark pill as used and deselect
+                selectedWordPill.classList.remove('selected');
+                selectedWordPill.classList.add('used');
+                selectedWordPill = null;
+            }
+        }
+
+        function checkAnswers() {
+            const blanks = document.querySelectorAll('.blank');
+            let allCorrect = true;
+
+            blanks.forEach(blank => {
+                const answer = blank.dataset.answer;
+                const currentText = blank.textContent;
+
+                blank.classList.remove('correct', 'incorrect');
+
+                if (currentText === answer) {
+                    blank.classList.add('correct');
+                } else if (currentText !== '') {
+                    blank.classList.add('incorrect');
+                    allCorrect = false;
+                } else {
+                    // Blank is empty
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                setTimeout(() => {
+                    const modalMsg = document.getElementById('modal-message');
+                    const nextBtn = document.getElementById('next-story-btn');
+                    
+                    if (currentStoryIndex < storiesData.length - 1) {
+                        modalMsg.textContent = "You used all your vocabulary words perfectly! Ready for the next story?";
+                        nextBtn.style.display = "inline-block";
+                    } else {
+                        modalMsg.textContent = "You've mastered all 3 stories! You are a vocabulary expert!";
+                        nextBtn.style.display = "none";
+                    }
+                    
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 400);
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('win-modal').style.display = 'none';
+            selectedWordPill = null;
+            loadStory(currentStoryIndex);
+        }
+
+        function nextStory() {
+            if (currentStoryIndex < storiesData.length - 1) {
+                loadStory(currentStoryIndex + 1);
+            }
+        }
+
+        // Initialize on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
