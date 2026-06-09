@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Match-Up!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --primary-light: #e6f0fa;
+            --success: #2ECC71;
+            --success-light: #d5f5e3;
+            --error: #E74C3C;
+            --error-light: #fadbd8;
+            --background: #f9f9fb;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        p.instructions {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #555;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .game-container {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            max-width: 1000px;
+            justify-content: center;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .column-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Selection and matching states */
+        .card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            transform: scale(1.02);
+        }
+
+        .card.matched {
+            background-color: var(--success-light);
+            border-color: var(--success);
+            color: #1e8449;
+            cursor: default;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.8;
+        }
+
+        .card.error {
+            background-color: var(--error-light);
+            border-color: var(--error);
+            color: #943126;
+        }
+
+        /* Shake Animation for incorrect matches */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Modal / Pop-up styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 500px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal h2 {
+            color: var(--success);
+            font-size: 3rem;
+            margin-top: 0;
+        }
+
+        .modal p {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+        }
+
+        .play-again-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .play-again-btn:hover {
+            background-color: #357abd;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Vocabulary Match-Up!</h1>
+    <p class="instructions">Click a word, then click its definition to make a match!</p>
+
+    <div class="game-container">
+        <div class="column" id="words-column">
+            <div class="column-title">Words</div>
+            <!-- Words will be injected here by JS -->
+        </div>
+        <div class="column" id="defs-column">
+            <div class="column-title">Definitions</div>
+            <!-- Definitions will be injected here by JS -->
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="modal-overlay" id="win-modal">
+        <div class="modal">
+            <h2>🎉 Congratulations! 🎉</h2>
+            <p>You matched all 15 vocabulary words correctly! You are a vocab master!</p>
+            <button class="play-again-btn" onclick="initGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const vocabData = [
+            { id: 1, word: "accustom", def: "To make familiar." },
+            { id: 2, word: "alert", def: "Watchful; wide-awake or to warn to be ready." },
+            { id: 3, word: "assign", def: "To select for a position or to give out as work." },
+            { id: 4, word: "budge", def: "To move or shift." },
+            { id: 5, word: "burly", def: "Big and strongly built." },
+            { id: 6, word: "companion", def: "One who spends time with or does things with another." },
+            { id: 7, word: "compatible", def: "Getting along well together." },
+            { id: 8, word: "concept", def: "A general idea or thought about something." },
+            { id: 9, word: "distract", def: "To draw one's thoughts or attention away from the subject at hand." },
+            { id: 10, word: "jostle", def: "To push or shove." },
+            { id: 11, word: "obedient", def: "Doing what one is asked or told." },
+            { id: 12, word: "obstacle", def: "Something that prevents one from moving forward." },
+            { id: 13, word: "patient", def: "Willing to wait without complaining." },
+            { id: 14, word: "pedestrian", def: "A person who is walking; someone traveling on foot." },
+            { id: 15, word: "retire", def: "To stop working because one has reached a certain age or to go to bed." }
+        ];
+
+        let selectedWord = null;
+        let selectedDef = null;
+        let matchesFound = 0;
+        let isAnimating = false;
+
+        // Fisher-Yates Shuffle Algorithm
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Reset state
+            selectedWord = null;
+            selectedDef = null;
+            matchesFound = 0;
+            isAnimating = false;
+            document.getElementById('win-modal').style.display = 'none';
+
+            const wordsCol = document.getElementById('words-column');
+            const defsCol = document.getElementById('defs-column');
+
+            // Clear existing cards, keeping the titles
+            wordsCol.innerHTML = '<div class="column-title">Words</div>';
+            defsCol.innerHTML = '<div class="column-title">Definitions</div>';
+
+            // Create shuffled arrays
+            const shuffledWords = shuffleArray([...vocabData]);
+            const shuffledDefs = shuffleArray([...vocabData]);
+
+            // Render Words
+            shuffledWords.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card word-card';
+                div.textContent = item.word;
+                div.dataset.id = item.id;
+                div.dataset.type = 'word';
+                div.addEventListener('click', handleCardClick);
+                wordsCol.appendChild(div);
+            });
+
+            // Render Definitions
+            shuffledDefs.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card def-card';
+                div.textContent = item.def;
+                div.dataset.id = item.id;
+                div.dataset.type = 'def';
+                // Adjust font size slightly for longer definitions
+                if(item.def.length > 50) div.style.fontSize = '0.95rem';
+                div.addEventListener('click', handleCardClick);
+                defsCol.appendChild(div);
+            });
+        }
+
+        function handleCardClick(e) {
+            if (isAnimating) return; // Prevent clicking during animation
+            
+            const card = e.currentTarget;
+            if (card.classList.contains('matched')) return; // Ignore already matched cards
+
+            const type = card.dataset.type;
+
+            // Clicking the same card again deselects it
+            if (card === selectedWord || card === selectedDef) {
+                card.classList.remove('selected');
+                if (type === 'word') selectedWord = null;
+                else selectedDef = null;
+                return;
+            }
+
+            // Select the card
+            card.classList.add('selected');
+
+            if (type === 'word') {
+                if (selectedWord) selectedWord.classList.remove('selected');
+                selectedWord = card;
+            } else {
+                if (selectedDef) selectedDef.classList.remove('selected');
+                selectedDef = card;
+            }
+
+            // Check for match if both a word and def are selected
+            if (selectedWord && selectedDef) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            isAnimating = true; // Lock interactions
+
+            const wordId = selectedWord.dataset.id;
+            const defId = selectedDef.dataset.id;
+
+            if (wordId === defId) {
+                // Correct Match
+                selectedWord.classList.remove('selected');
+                selectedDef.classList.remove('selected');
+                
+                selectedWord.classList.add('matched');
+                selectedDef.classList.add('matched');
+
+                matchesFound++;
+                resetSelections();
+
+                if (matchesFound === vocabData.length) {
+                    setTimeout(() => {
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }, 500);
+                }
+                isAnimating = false;
+            } else {
+                // Incorrect Match
+                selectedWord.classList.remove('selected');
+                selectedDef.classList.remove('selected');
+                
+                selectedWord.classList.add('error', 'shake');
+                selectedDef.classList.add('error', 'shake');
+
+                setTimeout(() => {
+                    selectedWord.classList.remove('error', 'shake');
+                    selectedDef.classList.remove('error', 'shake');
+                    resetSelections();
+                    isAnimating = false;
+                }, 600); // Wait for shake animation to finish
+            }
+        }
+
+        function resetSelections() {
+            selectedWord = null;
+            selectedDef = null;
+        }
+
+        // Start the game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
