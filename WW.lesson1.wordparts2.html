@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Etymology: The 30-Question Mega Quiz</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a0ca3;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --correct-bg: #d4edda;
+            --correct-text: #155724;
+            --correct-border: #c3e6cb;
+            --incorrect-bg: #f8d7da;
+            --incorrect-text: #721c24;
+            --incorrect-border: #f5c6cb;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+            --text-light: #8d99ae;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .landing-screen {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .landing-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .landing-content {
+            text-align: center;
+            max-width: 700px;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
+            margin: 1rem;
+        }
+
+        .landing-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .landing-content h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--success);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .landing-content p {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            color: #e9ecef;
+        }
+
+        .quiz-container {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin: 2rem;
+        }
+
+        .quiz-container.active {
+            display: block;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quiz-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quiz-header h2 { font-size: 1.2rem; font-weight: 500; }
+        
+        .progress-container {
+            width: 100%;
+            background: #e9ecef;
+            height: 8px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-body {
+            padding: 2.5rem 2rem;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled { cursor: default; }
+
+        .option-btn.correct {
+            background: var(--correct-bg);
+            border-color: var(--correct-border);
+            color: var(--correct-text);
+        }
+
+        .option-btn.incorrect {
+            background: var(--incorrect-bg);
+            border-color: var(--incorrect-border);
+            color: var(--incorrect-text);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(247, 37, 133, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(247, 37, 133, 0.4);
+        }
+
+        .quiz-footer {
+            padding: 1.5rem 2rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        #next-btn { display: none; }
+
+        .feedback-msg {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .feedback-msg.correct-msg { background: var(--correct-bg); color: var(--correct-text); border: 1px solid var(--correct-border); display: block; }
+        .feedback-msg.incorrect-msg { background: var(--incorrect-bg); color: var(--incorrect-text); border: 1px solid var(--incorrect-border); display: block; }
+
+        .results-container {
+            display: none;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .results-container.active { display: block; animation: slideUp 0.6s ease; }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto 2rem auto;
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="landing-screen" class="landing-screen">
+        <div class="landing-content">
+            <h1>Wordly Wise Lesson 1:</h1>
+            <h2>Word Part Extension</h2>
+            <h3 style="font-size: 1.2rem; font-weight: 400; color: var(--success); margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px;">Ultimate Etymology: The 30-Question Mega Practice</h3>
+            <p>Apply the word parts from Lesson 1 to tons of new words. Are you ready?</p>
+            <button class="btn" onclick="startQuiz()">Start the Mega Practice</button>
+        </div>
+    </div>
+
+    <div id="quiz-app" class="quiz-container">
+        <div class="quiz-header">
+            <h2>Etymology Challenge</h2>
+            <h2 id="progress-text">Question 1 / 30</h2>
+        </div>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        
+        <div class="question-body">
+            <div id="question-text" class="question-text">Question goes here?</div>
+            <div id="options-grid" class="options-grid">
+                <!-- Options injected via JS -->
+            </div>
+            <div id="feedback" class="feedback-msg"></div>
+        </div>
+
+        <div class="quiz-footer">
+            <button id="next-btn" class="btn" onclick="nextQuestion()">Next Question &rarr;</button>
+        </div>
+    </div>
+
+    <div id="results-screen" class="results-container">
+        <h2>Quiz Complete!</h2>
+        <p style="margin-bottom: 2rem; color: var(--text-light); font-size: 1.1rem;">You successfully finished the Wordly Wise Lesson 1 Etymology Mega Practice.</p>
+        <div class="score-circle">
+            <span id="final-score">0/30</span>
+        </div>
+        <h3 id="result-message" style="margin-bottom: 2rem; color: var(--text-main);">Great Job!</h3>
+        <button class="btn" onclick="location.reload()">Play Again</button>
+    </div>
+
+    <script>
+        const questionsData = [
+            {
+                question: "If a loud noise 'distracts' you from studying, what is it literally doing to your attention based on the root 'tract'?",
+                correct: "Pulling it away.",
+                distractors: ["Pushing it down.", "Standing in front of it.", "Marking it out."]
+            },
+            {
+                question: "A heavy marble statue is placed on a 'pedestal'. Based on the root 'ped', what is this structure acting as for the statue?",
+                correct: "Its foot.",
+                distractors: ["Its head.", "Its crown.", "Its arms."]
+            },
+            {
+                question: "A trash can is often called a waste 'receptacle'. Based on the root 'cept', what is the primary literal function of this bin?",
+                correct: "It takes items in.",
+                distractors: ["It pushes things away.", "It burns things.", "It pulls things."]
+            },
+            {
+                question: "The two ancient castles are quite 'distant' from one another. How does the root 'sta' combined with the prefix 'dis-' (apart) describe their relationship?",
+                correct: "They stand apart.",
+                distractors: ["They mark the ground.", "They are pulled together.", "They take up space."]
+            },
+            {
+                question: "If a teacher decides to 'designate' a specific student as the class leader, what are they figuratively doing according to the root 'signum'?",
+                correct: "Marking them.",
+                distractors: ["Pulling them in.", "Standing them up.", "Giving them bread."]
+            },
+            {
+                question: "The word 'pantry' traces back to the Latin root 'panis'. Based on this root, what was a pantry originally used to store?",
+                correct: "Loaves of bread.",
+                distractors: ["Pots and pans.", "Fresh meat.", "Clean water."]
+            },
+            {
+                question: "If a meeting is 'protracted' by a long speech, what is literally happening to the time according to the roots?",
+                correct: "It is pulled forward.",
+                distractors: ["It is cut short.", "It is taken away.", "It is forced down."]
+            },
+            {
+                question: "A moral 'precept' is a rule to live by. According to its prefix and the root 'cept', what is this rule literally?",
+                correct: "Something taken beforehand.",
+                distractors: ["A mark made later.", "Standing together.", "A foot forward."]
+            },
+            {
+                question: "If you pay extra to 'expedite' a package, you are literally doing what to its progress based on the root 'ped'?",
+                correct: "Freeing its feet.",
+                distractors: ["Shackling its feet.", "Pulling it back.", "Marking it fast."]
+            },
+            {
+                question: "An individual's social 'status' refers to their position in a community. Literally, what does this word describe based on its root 'sta'?",
+                correct: "Where they stand.",
+                distractors: ["What they take.", "How they pull.", "Who they mark."]
+            },
+            {
+                question: "A guard dog shows great 'alertness'. Based on the Italian etymology 'all\\'erta', what literal physical state does this refer to?",
+                correct: "Standing on a watchtower.",
+                distractors: ["Pulling an alarm.", "Taking a prisoner.", "Marking a map."]
+            },
+            {
+                question: "To 'accustom' yourself to waking up early means you are actively doing what, based on the word's roots?",
+                correct: "Establishing a habit.",
+                distractors: ["Sharing bread.", "Standing apart.", "Pulling strings."]
+            },
+            {
+                question: "A flashing red light acts as a 'signal' to stop. Based on the root 'signum', what is this light literally doing?",
+                correct: "Making a visible mark.",
+                distractors: ["Taking a light.", "Standing tall.", "Pulling a switch."]
+            },
+            {
+                question: "A stubborn horse is described as 'intractable'. Based on the root 'tract', what can you literally not do to this animal?",
+                correct: "Pull it.",
+                distractors: ["Stand on it.", "Mark it.", "Take it."]
+            },
+            {
+                question: "Someone 'susceptible' to a cold is literally capable of being what, according to the root 'cept'?",
+                correct: "Taken up by it.",
+                distractors: ["Standing over it.", "Pulling it down.", "Marking it out."]
+            },
+            {
+                question: "A lack of funding was an 'impediment' to the project. Historically, what literal action does this word describe based on the prefix 'im-' and root 'ped'?",
+                correct: "Shackling the feet.",
+                distractors: ["Freeing the feet.", "Taking the hands.", "Standing in the way."]
+            },
+            {
+                question: "A large fallen tree blocks the road, acting as an 'obstacle'. What does this word literally translate to based on the root 'sta'?",
+                correct: "Something standing in the way.",
+                distractors: ["Something pulling you back.", "A mark on the road.", "A heavy foot."]
+            },
+            {
+                question: "When you invite friends over because you enjoy their 'company', what literal historical action are you inviting them to do based on the root 'panis'?",
+                correct: "Share bread.",
+                distractors: ["Share a standing space.", "Pull together.", "Take a gift."]
+            },
+            {
+                question: "When a car's tires lose 'traction' on an icy road, what literal action are they failing to perform?",
+                correct: "Pulling the vehicle.",
+                distractors: ["Marking the road.", "Standing still.", "Taking the ice."]
+            },
+            {
+                question: "If a magician uses a 'deceptive' trick, they are literally doing what to the audience's understanding based on the prefix 'de-' (away)?",
+                correct: "Taking it away.",
+                distractors: ["Standing it up.", "Pulling it close.", "Marking it clear."]
+            },
+            {
+                question: "In a busy city, who is most likely performing the literal action of a 'pedestrian'?",
+                correct: "Someone walking on foot.",
+                distractors: ["Someone pulling a cart.", "Someone standing guard.", "Someone baking bread."]
+            },
+            {
+                question: "A marathon runner needs incredible 'stamina'. Historically, what does this root word literally mean one can do?",
+                correct: "Stand and endure.",
+                distractors: ["Pull heavy weights.", "Take long breaths.", "Mark a fast time."]
+            },
+            {
+                question: "A military general wears an 'insignia' on their uniform. Based on the root 'signum', what is this item literally?",
+                correct: "A distinguishing mark.",
+                distractors: ["A special foot.", "A taken weapon.", "A high standing."]
+            },
+            {
+                question: "The word 'customer' comes from the root for 'habit'. Historically, what made someone a true customer of a local shop?",
+                correct: "Visiting habitually.",
+                distractors: ["Pulling a wagon.", "Standing in line.", "Taking goods."]
+            },
+            {
+                question: "A dentist must 'extract' a painful tooth. What literal action is performed based on the prefix 'ex-' and root 'tract'?",
+                correct: "Pulling it out.",
+                distractors: ["Pushing it in.", "Standing by it.", "Taking it away."]
+            },
+            {
+                question: "If a spy manages to 'intercept' a secret message before it reaches its destination, what literal action did they perform?",
+                correct: "They took it.",
+                distractors: ["They pulled it.", "They marked it.", "They stood by it."]
+            },
+            {
+                question: "You find a 'millipede' under a log. Knowing 'milli' relates to a thousand, what does the root 'ped' describe about this creature?",
+                correct: "Its thousand legs.",
+                distractors: ["Its thousand marks.", "Its thousand eyes.", "Its pulling power."]
+            },
+            {
+                question: "The 'circumstances' of the mystery were unusual. Based on the prefix 'circum-' and root 'sta', what does this word literally describe?",
+                correct: "Things standing around.",
+                distractors: ["Things pulled together.", "Things taken away.", "Things marked out."]
+            },
+            {
+                question: "When an employee decides to 'resign' from their position, the literal etymology translates to what action?",
+                correct: "Signing back.",
+                distractors: ["Pulling back.", "Standing down.", "Taking away."]
+            },
+            {
+                question: "If you 'accompany' your little sister to the park, you are acting as someone who historically does what, based on the root 'panis'?",
+                correct: "Shares bread with her.",
+                distractors: ["Stands by her.", "Pulls her along.", "Takes her hand."]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+        
+        // Shuffle the questions array so it's a true mixed challenge
+        let quizQuestions = [...questionsData].sort(() => Math.random() - 0.5);
+
+        function startQuiz() {
+            document.getElementById('landing-screen').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('landing-screen').style.display = 'none';
+                document.getElementById('quiz-app').classList.add('active');
+                loadQuestion();
+            }, 500);
+        }
+
+        function loadQuestion() {
+            hasAnswered = false;
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('feedback').className = 'feedback-msg';
+            
+            const q = quizQuestions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = q.question;
+            
+            // Update progress
+            const progressPct = ((currentQuestionIndex) / quizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = progressPct + '%';
+            document.getElementById('progress-text').innerText = `Question ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
+
+            // Setup Options
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            
+            let allOptions = [q.correct, ...q.distractors];
+            allOptions = allOptions.sort(() => Math.random() - 0.5);
+
+            allOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectAnswer(opt, q.correct, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selected, correct, btnElement) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true); // Disable all
+
+            const feedback = document.getElementById('feedback');
+            
+            if (selected === correct) {
+                btnElement.classList.add('correct');
+                feedback.innerText = "Correct! Great job analyzing the word parts.";
+                feedback.classList.add('correct-msg');
+                score++;
+            } else {
+                btnElement.classList.add('incorrect');
+                feedback.innerText = `Incorrect. The correct answer was: "${correct}"`;
+                feedback.classList.add('incorrect-msg');
+                
+                // Highlight the correct one
+                buttons.forEach(b => {
+                    if (b.innerText === correct) b.classList.add('correct');
+                });
+            }
+
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-app').classList.remove('active');
+            document.getElementById('quiz-app').style.display = 'none';
+            
+            const resultsScreen = document.getElementById('results-screen');
+            resultsScreen.classList.add('active');
+            
+            document.getElementById('final-score').innerText = `${score}/${quizQuestions.length}`;
+            
+            const msg = document.getElementById('result-message');
+            const percentage = score / quizQuestions.length;
+            
+            if (percentage >= 0.9) {
+                msg.innerText = "Outstanding! You are an Etymology Master!";
+                msg.style.color = "var(--correct-text)";
+            } else if (percentage >= 0.7) {
+                msg.innerText = "Great job! You have a solid grasp of these roots.";
+            } else {
+                msg.innerText = "Good effort! Keep practicing to master these word parts.";
+            }
+        }
+    </script>
+</body>
+</html>
