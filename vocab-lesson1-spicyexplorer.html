@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spicy Word Part Explorer</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-hover: #3a56d4;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --correct: #2ecc71;
+            --incorrect: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+            --text-light: #8d99ae;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-display {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            background: #e9ecef;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #e9ecef;
+            color: var(--text-light);
+            user-select: none;
+        }
+
+        .tab.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* */
+        .lab-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .lab-container { grid-template-columns: 1fr; }
+        }
+
+        .morpheme-col {
+            background: #f1f3f5;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border: 2px solid #e9ecef;
+        }
+
+        .morpheme-col h3 {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .morpheme-btn {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+
+        .morpheme-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .morpheme-btn.selected {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .meaning {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: normal;
+            margin-left: 0.5rem;
+        }
+
+        .lab-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .formula-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 1rem 2rem;
+            background: #eef2ff;
+            border: 2px dashed var(--primary);
+            border-radius: var(--border-radius);
+            width: 100%;
+            text-align: center;
+            min-height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.9rem 2.2rem;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        #lab-feedback {
+            margin-top: 1rem;
+            padding: 1.25rem;
+            border-radius: var(--border-radius);
+            width: 100%;
+            display: none;
+        }
+
+        #lab-feedback.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        #lab-feedback.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .word-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .word-pos {
+            font-style: italic;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .word-def, .word-ex {
+            margin-top: 0.4rem;
+        }
+
+        /* */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #f1f3f5;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            min-height: 90px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-pill {
+            background: white;
+            border: 2px solid #dee2e6;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .word-pill:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .word-pill.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .word-pill.placed {
+            background: #e9ecef;
+            color: var(--text-light);
+            border-color: #dee2e6;
+            cursor: default;
+        }
+
+        .word-pill.error-bg {
+            background: var(--incorrect);
+            color: white;
+            border-color: var(--incorrect);
+        }
+
+        .trees-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .trees-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .trees-grid { grid-template-columns: 1fr; }
+        }
+
+        .tree-box {
+            background: white;
+            border: 3px dashed #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            min-height: 150px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tree-box:hover { 
+            border-color: var(--primary); 
+            background: rgba(67, 97, 238, 0.02); 
+        }
+
+        .tree-box h3 { 
+            text-align: center; 
+            color: var(--secondary); 
+            margin-bottom: 1rem; 
+            border-bottom: 2px solid #e9ecef; 
+            padding-bottom: 0.5rem; 
+        }
+
+        .tree-words { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 0.5rem; 
+            justify-content: center; 
+        }
+
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .actions { text-align: center; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🔬 Spicy Word Part Explorer</h1>
+        <p style="font-weight: 600; font-size: 1rem; max-width: 800px; margin: 0 auto; opacity: 0.95;">
+            Combine word parts or sort root families to master vocabulary!
+        </p>
+        <div class="score-display">Score: <span id="score">0</span></div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(event, 'lab')">🧪 Word Part Lab</div>
+        <div class="tab" onclick="switchTab(event, 'families')">🌳 Word Families</div>
+    </div>
+
+    <!-- Mode 1: Lab -->
+    <div id="lab" class="tab-content active">
+        <div class="lab-container">
+            <div class="morpheme-col" id="col-prefixes">
+                <h3>Prefixes</h3>
+            </div>
+            <div class="morpheme-col" id="col-roots">
+                <h3>Roots</h3>
+            </div>
+            <div class="morpheme-col" id="col-suffixes">
+                <h3>Suffixes</h3>
+            </div>
+        </div>
+
+        <div class="lab-controls">
+            <div class="formula-display" id="formula-display">
+                <span style="color:#8d99ae">Select pieces to build a word...</span>
+            </div>
+            <button id="synthesize-btn" class="btn" onclick="checkWord()">Synthesize Word!</button>
+            <div id="lab-feedback"></div>
+        </div>
+    </div>
+
+    <!-- Mode 2: Families -->
+    <div id="families" class="tab-content">
+        <h2 style="font-size: 1.3rem; text-align: center; color: var(--secondary);">Sort words into their Root Families!</h2>
+        <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-light); font-size: 0.95rem;">
+            Click a word in the bank, then click the matching Root Tree.
+        </p>
+        
+        <div class="word-bank" id="word-bank"></div>
+
+        <div class="trees-grid">
+            <div class="tree-box" onclick="assignToTree('sta')">
+                <h3>STA (stand)</h3>
+                <div id="tree-sta" class="tree-words"></div>
+            </div>
+            <div class="tree-box" onclick="assignToTree('tract')">
+                <h3>TRACT (pull)</h3>
+                <div id="tree-tract" class="tree-words"></div>
+            </div>
+            <div class="tree-box" onclick="assignToTree('sign')">
+                <h3>SIGN (mark)</h3>
+                <div id="tree-sign" class="tree-words"></div>
+            </div>
+            <div class="tree-box" onclick="assignToTree('ped')">
+                <h3>PED (foot)</h3>
+                <div id="tree-ped" class="tree-words"></div>
+            </div>
+            <div class="tree-box" onclick="assignToTree('cept')">
+                <h3>CEPT (take)</h3>
+                <div id="tree-cept" class="tree-words"></div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn" onclick="initFamilies()">Reset Trees</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let score = 0;
+
+    // Strictly the 12 target word parts
+    const morphemes = {
+        prefixes: [
+            { id: 'p0', text: '(None)', mean: '' },
+            { id: 'p1', text: 'com- / con-', mean: '(together/with)' },
+            { id: 'p2', text: 're-', mean: '(again)' },
+            { id: 'p3', text: 'dis-', mean: '(lack of/away)' }
+        ],
+        roots: [
+            { id: 'r1', text: 'sta', mean: '(stand)' },
+            { id: 'r2', text: 'tract', mean: '(pull)' },
+            { id: 'r3', text: 'sign', mean: '(mark/place a mark)' },
+            { id: 'r4', text: 'ped', mean: '(foot)' },
+            { id: 'r5', text: 'cept', mean: '(take)' }
+        ],
+        suffixes: [
+            { id: 's0', text: '(None)', mean: '' },
+            { id: 's1', text: '-tion', mean: '(action or process)' },
+            { id: 's2', text: '-ly', mean: '(having the quality of)' },
+            { id: 's3', text: '-ment', mean: '(result of an action)' },
+            { id: 's4', text: '-ian', mean: '(one who)' }
+        ]
+    };
+
+    // Synthesize Dictionary Lookup based on IDs
+    const dictionary = {
+        // TRACT combinations
+        'p1_r2_s1': { word: 'Contraction', pos: 'noun', def: 'The act or process of pulling together.', ex: 'Muscle contraction creates movement.' },
+        'p1_r2_s0': { word: 'Contract', pos: 'verb / noun', def: 'To pull together; or a formal written agreement.', ex: 'They signed a contract to work together.' },
+        'p2_r2_s0': { word: 'Retract', pos: 'verb', def: 'To pull back or draw back in.', ex: 'The cat can retract its claws.' },
+        'p2_r2_s1': { word: 'Retraction', pos: 'noun', def: 'The action of pulling back a statement or claim.', ex: 'The newspaper printed a retraction.' },
+        'p3_r2_s0': { word: 'Distract', pos: 'verb', def: 'To pull attention away from something.', ex: 'Loud noises distract me while reading.' },
+        'p3_r2_s1': { word: 'Distraction', pos: 'noun', def: 'The state or result of having attention pulled away.', ex: 'Smartphones can be a huge distraction.' },
+        'p0_r2_s1': { word: 'Traction', pos: 'noun', def: 'The action of pulling or sticking to a surface.', ex: 'Tires need good traction on icy roads.' },
+
+        // SIGN combinations
+        'p2_r3_s0': { word: 'Resign', pos: 'verb', def: 'To step down or give up a position (sign back/away).', ex: 'She decided to resign from her position.' },
+        'p2_r3_s3': { word: 'Resignment', pos: 'noun', def: 'The act or result of resigning.', ex: 'His resignment was submitted yesterday.' },
+        'p2_r3_s1': { word: 'Resignation', pos: 'noun', def: 'The process of signing away or stepping down.', ex: 'The board accepted her resignation.' },
+        'p0_r3_s3': { word: 'Signment', pos: 'noun', def: 'An act or result of placing a mark or signature.', ex: 'The signment of the paper is complete.' },
+
+        // PED combinations
+        'p0_r4_s4': { word: 'Pedestrian', pos: 'noun', def: 'A person traveling on foot.', ex: 'Vehicles must yield to any pedestrian.' },
+
+        // CEPT combinations
+        'p1_r5_s1': { word: 'Conception', pos: 'noun', def: 'The process of taking an idea together; a concept.', ex: 'Her conception of the design was brilliant.' },
+
+        // STA combinations
+        'p3_r1_s2': { word: 'Distantly', pos: 'adverb', def: 'Standing apart with a specific quality.', ex: 'Thunder rumbled distantly in the hills.' }
+    };
+
+    // Extended Word Families pool strictly based on target roots
+    const familyWords = [
+        // TRACT (pull)
+        { text: 'distract', root: 'tract' },
+        { text: 'contract', root: 'tract' },
+        { text: 'retract', root: 'tract' },
+        { text: 'traction', root: 'tract' },
+        { text: 'attract', root: 'tract' },
+        { text: 'subtract', root: 'tract' },
+        { text: 'extract', root: 'tract' },
+        { text: 'protracted', root: 'tract' },
+        { text: 'intractable', root: 'tract' },
+
+        // SIGN (mark)
+        { text: 'assign', root: 'sign' },
+        { text: 'resign', root: 'sign' },
+        { text: 'signature', root: 'sign' },
+        { text: 'design', root: 'sign' },
+        { text: 'signal', root: 'sign' },
+        { text: 'insignia', root: 'sign' },
+        { text: 'designate', root: 'sign' },
+        { text: 'signify', root: 'sign' },
+        { text: 'resignation', root: 'sign' },
+
+        // PED (foot)
+        { text: 'pedestrian', root: 'ped' },
+        { text: 'pedal', root: 'ped' },
+        { text: 'biped', root: 'ped' },
+        { text: 'centipede', root: 'ped' },
+        { text: 'millipede', root: 'ped' },
+        { text: 'expedite', root: 'ped' },
+        { text: 'impediment', root: 'ped' },
+        { text: 'pedestal', root: 'ped' },
+        { text: 'expedition', root: 'ped' },
+
+        // CEPT (take)
+        { text: 'concept', root: 'cept' },
+        { text: 'accept', root: 'cept' },
+        { text: 'intercept', root: 'cept' },
+        { text: 'reception', root: 'cept' },
+        { text: 'deceptive', root: 'cept' },
+        { text: 'susceptible', root: 'cept' },
+        { text: 'precept', root: 'cept' },
+        { text: 'receptacle', root: 'cept' },
+        { text: 'exceptional', root: 'cept' },
+
+        // STA (stand)
+        { text: 'station', root: 'sta' },
+        { text: 'status', root: 'sta' },
+        { text: 'constant', root: 'sta' },
+        { text: 'distant', root: 'sta' },
+        { text: 'obstacle', root: 'sta' },
+        { text: 'stamina', root: 'sta' },
+        { text: 'statue', root: 'sta' },
+        { text: 'stationary', root: 'sta' },
+        { text: 'circumstance', root: 'sta' }
+    ];
+
+    let selectedPieces = { prefix: null, root: null, suffix: null };
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function updateScore(points) {
+        score += points;
+        document.getElementById('score').innerText = score;
+    }
+
+    function switchTab(evt, tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        if (evt && evt.currentTarget) {
+            evt.currentTarget.classList.add('active');
+        }
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function initLab() {
+        const renderColumn = (data, type, containerId) => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<h3>${type.charAt(0).toUpperCase() + type.slice(1)}s</h3>`;
+            data.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'morpheme-btn';
+                btn.type = 'button';
+                btn.innerHTML = `<span>${item.text}</span> <span class="meaning">${item.mean}</span>`;
+                btn.onclick = () => selectPiece(item, type, btn);
+                container.appendChild(btn);
+            });
+        };
+
+        renderColumn(morphemes.prefixes, 'prefix', 'col-prefixes');
+        renderColumn(morphemes.roots, 'root', 'col-roots');
+        renderColumn(morphemes.suffixes, 'suffix', 'col-suffixes');
+
+        // Set default selections for clear user feedback
+        const defaultPrefix = morphemes.prefixes[0];
+        const defaultSuffix = morphemes.suffixes[0];
+        selectedPieces.prefix = defaultPrefix;
+        selectedPieces.suffix = defaultSuffix;
+    }
+
+    function selectPiece(item, type, btnElement) {
+        const col = btnElement.parentElement;
+        col.querySelectorAll('.morpheme-btn').forEach(b => b.classList.remove('selected'));
+        
+        btnElement.classList.add('selected');
+        selectedPieces[type] = item;
+        
+        updateFormulaDisplay();
+        document.getElementById('lab-feedback').style.display = 'none';
+    }
+
+    function updateFormulaDisplay() {
+        const p = selectedPieces.prefix ? selectedPieces.prefix.text : '?';
+        const r = selectedPieces.root ? selectedPieces.root.text : '?';
+        const s = selectedPieces.suffix ? selectedPieces.suffix.text : '?';
+        
+        let parts = [];
+        if (p && p !== '(None)' && p !== '?') parts.push(p);
+        if (r && r !== '?') parts.push(r);
+        if (s && s !== '(None)' && s !== '?') parts.push(s);
+        
+        let text = parts.length > 0 ? parts.join(" + ") : '<span style="color:#8d99ae">Select pieces to build a word...</span>';
+        
+        document.getElementById('formula-display').innerHTML = text;
+    }
+
+    function checkWord() {
+        if (!selectedPieces.root) {
+            showLabFeedback('error', 'Hold up!', 'You must select a <strong>ROOT</strong> word (sta, tract, sign, ped, or cept) to build a word.');
+            return;
+        }
+
+        const pId = selectedPieces.prefix ? selectedPieces.prefix.id : 'p0';
+        const rId = selectedPieces.root.id;
+        const sId = selectedPieces.suffix ? selectedPieces.suffix.id : 's0';
+        
+        const key = `${pId}_${rId}_${sId}`;
+        const result = dictionary[key];
+
+        if (result) {
+            updateScore(10);
+            showLabFeedback('success', `✨ Synthesized: ${result.word}!`, `
+                <div class="word-pos">${result.pos}</div>
+                <div class="word-def"><strong>Meaning:</strong> ${result.def}</div>
+                <div class="word-ex"><strong>Example:</strong> "${result.ex}"</div>
+            `);
+        } else {
+            showLabFeedback('error', 'Not a standard word entry', 'Try combining a different prefix or suffix with this root!');
+        }
+    }
+
+    function showLabFeedback(type, title, content) {
+        const fb = document.getElementById('lab-feedback');
+        fb.className = type;
+        fb.innerHTML = `<h3 class="word-title">${title}</h3><div>${content}</div>`;
+        fb.style.display = 'block';
+    }
+
+    let selectedFamilyWord = null;
+
+    function initFamilies() {
+        const bank = document.getElementById('word-bank');
+        bank.innerHTML = '';
+        document.querySelectorAll('.tree-words').forEach(el => el.innerHTML = '');
+        selectedFamilyWord = null;
+
+        const shuffledWords = shuffleArray([...familyWords]);
+        shuffledWords.forEach(wordObj => {
+            const btn = document.createElement('button');
+            btn.className = 'word-pill';
+            btn.type = 'button';
+            btn.innerText = wordObj.text;
+            btn.onclick = () => selectFamilyWord(btn, wordObj);
+            bank.appendChild(btn);
+        });
+    }
+
+    function selectFamilyWord(btn, wordObj) {
+        if (btn.classList.contains('placed')) return;
+        
+        document.querySelectorAll('.word-pill').forEach(b => b.classList.remove('selected'));
+        
+        btn.classList.add('selected');
+        selectedFamilyWord = { btn, wordObj };
+    }
+
+    function assignToTree(rootId) {
+        if (!selectedFamilyWord) return;
+
+        if (selectedFamilyWord.wordObj.root === rootId) {
+            const treeBox = document.getElementById(`tree-${rootId}`);
+            const btn = selectedFamilyWord.btn;
+            
+            btn.classList.remove('selected');
+            btn.classList.add('placed');
+            btn.onclick = null;
+            treeBox.appendChild(btn);
+            
+            updateScore(5);
+            selectedFamilyWord = null;
+        } else {
+            const btn = selectedFamilyWord.btn;
+            btn.classList.add('shake', 'error-bg');
+            setTimeout(() => {
+                btn.classList.remove('shake', 'error-bg');
+            }, 500);
+        }
+    }
+
+    window.onload = () => {
+        initLab();
+        initFamilies();
+    };
+</script>
+</body>
+</html>
