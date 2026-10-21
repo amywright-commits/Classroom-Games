@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noun Sort: Common vs Proper</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4; /* Light green kid-friendly background */
+            background-image: radial-gradient(#bbf7d0 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        
+        .draggable-word {
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .draggable-word:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .draggable-word.selected {
+            ring: 4px solid #3b82f6;
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            z-index: 10;
+        }
+
+        .drop-zone {
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            transform: scale(1.02);
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-3deg); }
+            50% { transform: translateX(8px) rotate(3deg); }
+            75% { transform: translateX(-8px) rotate(-3deg); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Smooth accordion transitions */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        /* Hiding scrollbar for word bank but keeping functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-emerald-600 flex items-center gap-2">
+                <span>🪣</span> Noun Sort
+            </h1>
+            <div class="bg-emerald-50 px-6 py-2 rounded-full border-2 border-emerald-300 shadow-sm flex items-center gap-3">
+                <span class="text-lg font-bold text-emerald-800 hidden sm:inline">Round:</span>
+                <span id="round-display" class="text-xl sm:text-2xl font-extrabold text-emerald-600 mr-1 sm:mr-2">1 / 3</span>
+                <span class="text-lg font-bold text-emerald-800 hidden sm:inline">Sorted:</span>
+                <span id="score-display" class="text-xl sm:text-2xl font-extrabold text-emerald-600">0 / 10</span>
+                <button id="reset-btn" class="ml-2 bg-amber-400 hover:bg-amber-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-sm transition transform hover:scale-105 active:scale-95">
+                    Restart
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-8">
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <section class="lg:col-span-1 bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-xl shadow-sm h-full">
+                <h2 class="text-xl font-bold text-blue-800 mb-2 flex items-center gap-2">
+                    <span>🎮</span> How to Play:
+                </h2>
+                <p class="text-slate-700">Sort the words into the correct buckets! You can <strong>Drag & Drop</strong> the words, OR <strong>Tap a word</strong> and then <strong>Tap a bucket</strong> to place it.</p>
+            </section>
+            
+            <section class="lg:col-span-2 h-full">
+                <details class="bg-white rounded-2xl shadow-lg border-2 border-yellow-400 overflow-hidden group h-full">
+                    <summary class="bg-yellow-50 px-6 py-4 cursor-pointer flex justify-between items-center font-bold text-lg text-yellow-800 hover:bg-yellow-100 transition">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">💡</span>
+                            Capitalization Rules Review
+                        </div>
+                        <span class="text-2xl group-open:rotate-180 transition-transform duration-300">▼</span>
+                    </summary>
+                    <div class="p-6 bg-white grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <ul class="space-y-2">
+                            <li><strong class="text-sky-700">Common Nouns:</strong> General names for people, places, things, or ideas. <em>(Lower case unless starting a sentence)</em>. Ex: city, doctor, holiday.</li>
+                        </ul>
+                        <ul class="space-y-2">
+                            <li><strong class="text-rose-700">Proper Nouns:</strong> Specific names for particular people, places, things, or titles. <em>(Always Capitalized)</em>. Ex: Tokyo, Dr. Patel, Halloween.</li>
+                        </ul>
+                    </div>
+                </details>
+            </section>
+        </div>
+
+        <div id="celebration-banner" class="hidden bg-gradient-to-r from-emerald-400 to-teal-500 text-white text-center p-6 rounded-2xl shadow-xl mb-8 transform transition-all">
+            <h2 id="banner-title" class="text-3xl font-extrabold mb-2">🎉 Round Complete! 🎉</h2>
+            <p id="banner-text" class="text-lg mb-4">You sorted everything perfectly! Ready for the next set?</p>
+            <button id="next-action-btn" class="bg-white text-teal-600 font-bold py-2 px-8 rounded-full shadow-md hover:bg-teal-50 transition transform hover:scale-105">Next Round</button>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md border-2 border-slate-200 p-6 mb-8 text-center">
+            <h3 class="text-lg font-bold text-slate-500 mb-4 uppercase tracking-wider">Word Bank</h3>
+            <div id="word-bank" class="flex flex-wrap justify-center gap-3 min-h-[80px]">
+                <!-- Draggable words injected here -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <!-- Common Noun Bucket -->
+            <div id="common-bucket" class="drop-zone bg-slate-50 border-4 border-dashed border-slate-300 rounded-3xl p-6 flex flex-col cursor-pointer min-h-[300px]">
+                <div class="text-center mb-4 pointer-events-none">
+                    <span class="text-4xl block mb-2">📦</span>
+                    <h2 class="text-2xl font-extrabold text-slate-700">Common Nouns</h2>
+                    <p class="text-slate-500 text-sm">(General items, lowercase)</p>
+                </div>
+                <div id="common-content" class="flex flex-wrap content-start gap-2 flex-grow pointer-events-none">
+                    <!-- Sorted common nouns land here -->
+                </div>
+            </div>
+
+            <!-- Proper Noun Bucket -->
+            <div id="proper-bucket" class="drop-zone bg-amber-50 border-4 border-dashed border-amber-300 rounded-3xl p-6 flex flex-col cursor-pointer min-h-[300px]">
+                <div class="text-center mb-4 pointer-events-none">
+                    <span class="text-4xl block mb-2">🌟</span>
+                    <h2 class="text-2xl font-extrabold text-amber-700">Proper Nouns</h2>
+                    <p class="text-amber-600 text-sm">(Specific names, Capitalized)</p>
+                </div>
+                <div id="proper-content" class="flex flex-wrap content-start gap-2 flex-grow pointer-events-none">
+                    <!-- Sorted proper nouns land here -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Fresh, globally diverse words categorized
+        const roundsData = [
+            // Round 1
+            [
+                { word: "video game", type: "common" },
+                { word: "Minecraft", type: "proper" },
+                { word: "dog", type: "common" },
+                { word: "Golden Retriever", type: "proper" },
+                { word: "smartphone", type: "common" },
+                { word: "iPhone", type: "proper" },
+                { word: "singer", type: "common" },
+                { word: "Beyoncé", type: "proper" },
+                { word: "ocean", type: "common" },
+                { word: "Pacific Ocean", type: "proper" }
+            ],
+            // Round 2
+            [
+                { word: "country", type: "common" },
+                { word: "Nigeria", type: "proper" },
+                { word: "restaurant", type: "common" },
+                { word: "McDonald's", type: "proper" },
+                { word: "soccer player", type: "common" },
+                { word: "Lionel Messi", type: "proper" },
+                { word: "movie", type: "common" },
+                { word: "Moana", type: "proper" },
+                { word: "volcano", type: "common" },
+                { word: "Mount Vesuvius", type: "proper" }
+            ],
+            // Round 3
+            [
+                { word: "app", type: "common" },
+                { word: "TikTok", type: "proper" },
+                { word: "book", type: "common" },
+                { word: "Percy Jackson", type: "proper" },
+                { word: "desert", type: "common" },
+                { word: "Sahara Desert", type: "proper" },
+                { word: "superhero", type: "common" },
+                { word: "Spider-Man", type: "proper" },
+                { word: "car", type: "common" },
+                { word: "Tesla", type: "proper" }
+            ],
+            // Round 4
+            [
+                { word: "clothing", type: "common" },
+                { word: "Levi's", type: "proper" },
+                { word: "festival", type: "common" },
+                { word: "Oktoberfest", type: "proper" },
+                { word: "galaxy", type: "common" },
+                { word: "Milky Way", type: "proper" },
+                { word: "grocery store", type: "common" },
+                { word: "Aldi", type: "proper" },
+                { word: "island", type: "common" },
+                { word: "Jamaica", type: "proper" }
+            ],
+            // Round 5
+            [
+                { word: "sport", type: "common" },
+                { word: "Wimbledon", type: "proper" },
+                { word: "television show", type: "common" },
+                { word: "SpongeBob SquarePants", type: "proper" },
+                { word: "cat", type: "common" },
+                { word: "Garfield", type: "proper" },
+                { word: "lake", type: "common" },
+                { word: "Lake Superior", type: "proper" },
+                { word: "scientist", type: "common" },
+                { word: "Marie Curie", type: "proper" }
+            ]
+        ];
+
+        let currentRoundIndex = 0;
+        let currentScore = 0;
+        let selectedElement = null; // For click-to-sort mobile support
+
+        const wordBank = document.getElementById('word-bank');
+        const commonBucket = document.getElementById('common-bucket');
+        const properBucket = document.getElementById('proper-bucket');
+        const commonContent = document.getElementById('common-content');
+        const properContent = document.getElementById('proper-content');
+        
+        const scoreDisplay = document.getElementById('score-display');
+        const roundDisplay = document.getElementById('round-display');
+        const celebrationBanner = document.getElementById('celebration-banner');
+
+        function initGame() {
+            wordBank.innerHTML = '';
+            commonContent.innerHTML = '';
+            properContent.innerHTML = '';
+            currentScore = 0;
+            selectedElement = null;
+            
+            celebrationBanner.classList.add('hidden');
+            roundDisplay.innerText = `${currentRoundIndex + 1} / ${roundsData.length}`;
+            
+            const currentRoundWords = [...roundsData[currentRoundIndex]];
+            updateScoreDisplay(currentRoundWords.length);
+
+            // Shuffle words
+            currentRoundWords.sort(() => 0.5 - Math.random());
+
+            currentRoundWords.forEach(item => {
+                const wordEl = document.createElement('div');
+                wordEl.className = 'draggable-word bg-white border-2 border-indigo-200 text-indigo-800 font-bold px-4 py-2 rounded-xl shadow-sm hover:border-indigo-400 hover:shadow-md text-sm sm:text-base';
+                wordEl.innerText = item.word;
+                wordEl.dataset.type = item.type;
+                wordEl.draggable = true;
+                
+                // Desktop Drag Events
+                wordEl.addEventListener('dragstart', handleDragStart);
+                wordEl.addEventListener('dragend', handleDragEnd);
+                
+                // Mobile/Tap Click Events
+                wordEl.addEventListener('click', handleWordTap);
+
+                wordBank.appendChild(wordEl);
+            });
+        }
+
+        function handleDragStart(e) {
+            this.classList.add('opacity-50');
+            // We use a global variable because dataTransfer doesn't always work perfectly for DOM elements across all browsers
+            window.draggedItem = this;
+            setTimeout(() => this.classList.add('hidden'), 0);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('opacity-50', 'hidden');
+            window.draggedItem = null;
+            removeDropZoneHighlights();
+        }
+
+        [commonBucket, properBucket].forEach(bucket => {
+            bucket.addEventListener('dragover', e => {
+                e.preventDefault();
+                bucket.classList.add('drag-over');
+            });
+            bucket.addEventListener('dragleave', e => {
+                bucket.classList.remove('drag-over');
+            });
+            bucket.addEventListener('drop', handleDrop);
+            
+            // For Mobile tap-to-drop
+            bucket.addEventListener('click', () => handleBucketTap(bucket));
+        });
+
+        function removeDropZoneHighlights() {
+            commonBucket.classList.remove('drag-over');
+            properBucket.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            removeDropZoneHighlights();
+            const bucketType = this.id === 'common-bucket' ? 'common' : 'proper';
+            validatePlacement(window.draggedItem, bucketType, this);
+        }
+
+        function handleWordTap(e) {
+            e.stopPropagation(); // Prevent document click from clearing
+            
+            // If already selected, deselect
+            if (selectedElement === this) {
+                this.classList.remove('ring', 'ring-4', 'ring-indigo-400', 'scale-110');
+                selectedElement = null;
+                return;
+            }
+
+            // Deselect previous
+            if (selectedElement) {
+                selectedElement.classList.remove('ring', 'ring-4', 'ring-indigo-400', 'scale-110');
+            }
+
+            // Select new
+            selectedElement = this;
+            this.classList.add('ring', 'ring-4', 'ring-indigo-400', 'scale-110');
+        }
+
+        function handleBucketTap(bucket) {
+            if (!selectedElement) return; // Ignore if no word is selected
+            
+            const bucketType = bucket.id === 'common-bucket' ? 'common' : 'proper';
+            validatePlacement(selectedElement, bucketType, bucket);
+        }
+
+        // Click outside to deselect
+        document.addEventListener('click', (e) => {
+            if (selectedElement && !e.target.closest('.draggable-word') && !e.target.closest('.drop-zone')) {
+                selectedElement.classList.remove('ring', 'ring-4', 'ring-indigo-400', 'scale-110');
+                selectedElement = null;
+            }
+        });
+
+        function validatePlacement(itemEl, targetType, bucketContainer) {
+            if (!itemEl) return;
+            
+            const itemType = itemEl.dataset.type;
+            const contentArea = bucketContainer.querySelector('div:last-child'); // The target content div
+
+            if (itemType === targetType) {
+                // Correct Match
+                itemEl.classList.remove('ring', 'ring-4', 'ring-indigo-400', 'scale-110', 'border-indigo-200');
+                
+                // Style for success based on bucket
+                if (targetType === 'common') {
+                    itemEl.classList.add('bg-slate-200', 'border-slate-400', 'text-slate-700');
+                } else {
+                    itemEl.classList.add('bg-amber-200', 'border-amber-400', 'text-amber-800');
+                }
+                
+                // Disable further interaction
+                itemEl.draggable = false;
+                itemEl.removeEventListener('click', handleWordTap);
+                itemEl.style.cursor = 'default';
+                
+                contentArea.appendChild(itemEl);
+                selectedElement = null;
+                
+                currentScore++;
+                updateScoreDisplay(roundsData[currentRoundIndex].length);
+                checkWinCondition();
+                
+                // Tiny visual pop on bucket
+                bucketContainer.classList.add('scale-[1.02]', 'bg-green-100', 'border-green-400');
+                setTimeout(() => {
+                    bucketContainer.classList.remove('scale-[1.02]', 'bg-green-100', 'border-green-400');
+                }, 200);
+
+            } else {
+                // Incorrect Match
+                itemEl.classList.remove('ring', 'ring-4', 'ring-indigo-400', 'scale-110');
+                selectedElement = null;
+
+                itemEl.classList.add('bg-red-100', 'text-red-700', 'border-red-400', 'shake');
+                bucketContainer.classList.add('bg-red-50', 'border-red-300');
+                
+                setTimeout(() => {
+                    itemEl.classList.remove('bg-red-100', 'text-red-700', 'border-red-400', 'shake');
+                    bucketContainer.classList.remove('bg-red-50', 'border-red-300');
+                }, 500);
+            }
+        }
+
+        function updateScoreDisplay(totalWords) {
+            scoreDisplay.innerText = `${currentScore} / ${totalWords}`;
+            scoreDisplay.classList.add('scale-125', 'text-green-500');
+            setTimeout(() => {
+                scoreDisplay.classList.remove('scale-125', 'text-green-500');
+            }, 300);
+        }
+
+        function checkWinCondition() {
+            const totalWords = roundsData[currentRoundIndex].length;
+            if (currentScore === totalWords) {
+                setTimeout(() => {
+                    const bannerTitle = document.getElementById('banner-title');
+                    const bannerText = document.getElementById('banner-text');
+                    const nextBtn = document.getElementById('next-action-btn');
+
+                    if (currentRoundIndex < roundsData.length - 1) {
+                        bannerTitle.innerText = "🎉 Round Complete! 🎉";
+                        bannerText.innerText = "Great sorting! Let's move on to the next batch.";
+                        nextBtn.innerText = "Next Round";
+                        nextBtn.onclick = () => {
+                            currentRoundIndex++;
+                            initGame();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        };
+                    } else {
+                        bannerTitle.innerText = "🏆 Game Complete! 🏆";
+                        bannerText.innerText = "You are a master of Nouns! You've perfectly sorted everything.";
+                        nextBtn.innerText = "Play Again";
+                        nextBtn.onclick = () => {
+                            currentRoundIndex = 0;
+                            initGame();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        };
+                    }
+                    
+                    celebrationBanner.classList.remove('hidden');
+                    celebrationBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    triggerConfetti();
+                }, 400);
+            }
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            currentRoundIndex = 0;
+            initGame();
+        });
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
