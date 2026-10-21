@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capitalization Hunt</title>
+    <!-- Tailwind CSS for rapid, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for the reward animation -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Custom Font: Nunito for a friendly, child-appropriate look -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f9ff; /* Light blue kid-friendly background */
+            background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        
+        .clickable-word {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 8px;
+            background-color: #e0f2fe;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .clickable-word:hover {
+            background-color: #bae6fd;
+            border-color: #38bdf8;
+            transform: scale(1.05);
+        }
+
+        .clickable-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Smooth accordion transitions */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        
+        .question-card.correct {
+            border-color: #4ade80;
+            background-color: #f0fdf4;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.2);
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-sky-600 flex items-center gap-2">
+                <span>🔍</span> Capitalization Hunt
+            </h1>
+            <div class="bg-sky-100 px-6 py-2 rounded-full border-2 border-sky-300 shadow-sm flex items-center gap-3">
+                <span class="text-xl font-bold text-sky-800">Score:</span>
+                <span id="score-display" class="text-2xl font-extrabold text-sky-600">0 / 25</span>
+                <button id="reset-btn" class="ml-2 bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm transition transform hover:scale-105 active:scale-95">
+                    Restart
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 mt-8">
+        
+        <section class="mb-8">
+            <details class="bg-white rounded-2xl shadow-lg border-2 border-yellow-400 overflow-hidden group">
+                <summary class="bg-yellow-50 px-6 py-4 cursor-pointer flex justify-between items-center font-bold text-lg text-yellow-800 hover:bg-yellow-100 transition">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">💡</span>
+                        Grade 5 Capitalization Rules (Click to View)
+                    </div>
+                    <span class="text-2xl group-open:rotate-180 transition-transform duration-300">▼</span>
+                </summary>
+                <div class="p-6 bg-white grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm sm:text-base">
+                    <div>
+                        <ul class="space-y-3">
+                            <li class="flex flex-col"><strong class="text-sky-700">1. Beginning of Sentences</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ <span class="text-red-500 font-bold">U</span>nfortunately, the flower wilted.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">2. The Pronoun "I"</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ Can <span class="text-red-500 font-bold">I</span> finish this chocolate?</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">3. Proper Nouns: People</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ <span class="text-red-500 font-bold">W</span>alter and <span class="text-red-500 font-bold">W</span>esley wrestled.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">4. Proper Nouns: Places</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ I prefer the <span class="text-red-500 font-bold">S</span>tarbucks near my <span class="text-red-500 font-bold">M</span>idwest home.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">5. Proper Nouns: Things</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ The <span class="text-red-500 font-bold">D</span>etroit <span class="text-red-500 font-bold">L</span>ions wear <span class="text-red-500 font-bold">N</span>ike cleats.</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <ul class="space-y-3">
+                            <li class="flex flex-col"><strong class="text-sky-700">6. Proper Adjectives</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ ...shield us from the <span class="text-red-500 font-bold">A</span>ntarctic winds.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">7. Titles of People</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ They hired the famous <span class="text-red-500 font-bold">C</span>hef <span class="text-red-500 font-bold">W</span>ilson.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">8. Titles of Work</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ Playing "<span class="text-red-500 font-bold">C</span>ruel <span class="text-red-500 font-bold">S</span>ummer" again.</span></li>
+                            <li class="flex flex-col mt-4 p-3 bg-rose-50 border-l-4 border-rose-400 rounded">
+                                <strong class="text-rose-700">🚫 9. DO NOT capitalize common nouns!</strong> 
+                                <span class="text-gray-700 mt-1">
+                                    Common errors: "my <span class="line-through text-rose-500">G</span>randpa", "play <span class="line-through text-rose-500">S</span>occer", "Friends and <span class="line-through text-rose-500">F</span>amily".
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <div id="celebration-banner" class="hidden bg-gradient-to-r from-green-400 to-emerald-500 text-white text-center p-6 rounded-2xl shadow-xl mb-8 transform transition-all">
+            <h2 class="text-3xl font-extrabold mb-2">🎉 Fantastic Job! 🎉</h2>
+            <p class="text-lg">You've mastered all the capitalization rules! You are a capitalization superstar!</p>
+            <button onclick="resetGame()" class="mt-4 bg-white text-emerald-600 font-bold py-2 px-6 rounded-full shadow hover:bg-emerald-50 transition transform hover:scale-105">Play Again</button>
+        </div>
+
+        <div id="questions-container" class="space-y-6">
+            <!-- Questions injected via JS -->
+        </div>
+
+    </main>
+
+    <script>
+        const questionsData = [
+            {
+                id: 1,
+                options: [
+                    "My aunt traveled to Kyoto last Spring.",
+                    "My aunt traveled to Kyoto last spring.",
+                    "My Aunt traveled to Kyoto last spring."
+                ],
+                correctIndex: 1,
+                explanation: "Rule 4 & 9: Capitalize specific places ('Kyoto'), but do NOT capitalize common nouns or seasons ('aunt', 'spring').",
+                answered: false
+            },
+            {
+                id: 2,
+                options: [
+                    "When I saw Carlos at the Library, I waved hello.",
+                    "when I saw carlos at the library, I waved hello.",
+                    "When I saw Carlos at the library, I waved hello."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 1, 2, 3, & 9: Capitalize the start ('When'), 'I', and names ('Carlos'). Do NOT capitalize common places like 'library'.",
+                answered: false
+            },
+            {
+                id: 3,
+                options: [
+                    "We ate Italian food and drank Pepsi.",
+                    "We ate italian food and drank pepsi.",
+                    "We ate Italian Food and drank Pepsi."
+                ],
+                correctIndex: 0,
+                explanation: "Rules 6, 5, & 9: Capitalize proper adjectives ('Italian') and brands ('Pepsi'). Do NOT capitalize common nouns ('food').",
+                answered: false
+            },
+            {
+                id: 4,
+                options: [
+                    "Did Doctor Patel give you the Medicine?",
+                    "Did dr. patel give you the medicine?",
+                    "Did Dr. Patel give you the medicine?"
+                ],
+                correctIndex: 2,
+                explanation: "Rule 7, 3, & 9: Capitalize titles of people ('Dr.') and names ('Patel'). 'medicine' is a common noun.",
+                answered: false
+            },
+            {
+                id: 5,
+                options: [
+                    "I read \"The lion, the witch and the wardrobe\" yesterday.",
+                    "I read \"The Lion, the Witch and the Wardrobe\" yesterday.",
+                    "I read \"the Lion, The Witch And The Wardrobe\" yesterday."
+                ],
+                correctIndex: 1,
+                explanation: "Rule 8: Capitalize the first word and main words in a title. Small words like 'the' and 'and' stay lowercase in the middle of a title.",
+                answered: false
+            },
+            {
+                id: 6,
+                options: [
+                    "We hiked the Grand canyon in Arizona.",
+                    "We hiked the Grand Canyon in arizona.",
+                    "We hiked the Grand Canyon in Arizona."
+                ],
+                correctIndex: 2,
+                explanation: "Rule 4: Capitalize all parts of a specific place's name ('Grand Canyon', 'Arizona').",
+                answered: false
+            },
+            {
+                id: 7,
+                options: [
+                    "He bought a Sony television for the Living Room.",
+                    "He bought a sony television for the living room.",
+                    "He bought a Sony television for the living room."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 5 & 9: Capitalize brands ('Sony'). Do NOT capitalize common nouns ('television', 'living room').",
+                answered: false
+            },
+            {
+                id: 8,
+                options: [
+                    "Mayor Jackson spoke to the reporters.",
+                    "mayor Jackson spoke to the Reporters.",
+                    "Mayor jackson spoke to the reporters."
+                ],
+                correctIndex: 0,
+                explanation: "Rules 1, 7, 3, & 9: Capitalize titles before a name ('Mayor') and the name ('Jackson'). 'reporters' is a common noun.",
+                answered: false
+            },
+            {
+                id: 9,
+                options: [
+                    "My Brother and I went to the Beach.",
+                    "My brother and I went to the beach.",
+                    "My brother and i went to the beach."
+                ],
+                correctIndex: 1,
+                explanation: "Rule 2 & 9: Always capitalize 'I'. Do NOT capitalize common nouns ('brother', 'beach').",
+                answered: false
+            },
+            {
+                id: 10,
+                options: [
+                    "We bought a colorful liberian shirt at the market.",
+                    "We bought a colorful Liberian shirt at the Market.",
+                    "We bought a colorful Liberian shirt at the market."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 6 & 9: Capitalize proper adjectives from country names ('Liberian'). 'shirt' and 'market' are common nouns.",
+                answered: false
+            },
+            {
+                id: 11,
+                options: [
+                    "The coach gave maria a new basketball.",
+                    "The coach gave Maria a new Basketball.",
+                    "The coach gave Maria a new basketball."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 3 & 9: Capitalize names of specific people ('Maria'). 'coach' and 'basketball' are common nouns here.",
+                answered: false
+            },
+            {
+                id: 12,
+                options: [
+                    "They took a Train across europe last winter.",
+                    "They took a train across Europe last Winter.",
+                    "They took a train across Europe last winter."
+                ],
+                correctIndex: 2,
+                explanation: "Rule 4 & 9: Capitalize specific continents ('Europe'). Seasons ('winter') and common nouns ('train') are lowercase.",
+                answered: false
+            },
+            {
+                id: 13,
+                options: [
+                    "Did Maya sing \"Let It Go\" at the concert?",
+                    "Did Maya sing \"Let it go\" at the Concert?",
+                    "Did maya sing \"Let It Go\" at the concert?"
+                ],
+                correctIndex: 0,
+                explanation: "Rules 3, 8 & 9: Capitalize names ('Maya') and main words in titles ('Let It Go'). 'concert' is a common noun.",
+                answered: false
+            },
+            {
+                id: 14,
+                options: [
+                    "I prefer nike shoes over adidas.",
+                    "I prefer Nike shoes over Adidas.",
+                    "I prefer Nike Shoes over Adidas."
+                ],
+                correctIndex: 1,
+                explanation: "Rules 2, 5 & 9: Capitalize 'I' and specific brand names ('Nike', 'Adidas'). 'shoes' is a common noun.",
+                answered: false
+            },
+            {
+                id: 15,
+                options: [
+                    "Is aunt Sarah coming to the party?",
+                    "Is Aunt sarah coming to the Party?",
+                    "Is Aunt Sarah coming to the party?"
+                ],
+                correctIndex: 2,
+                explanation: "Rules 7 & 9: Capitalize titles when they are attached to a name ('Aunt Sarah'). 'party' is a common noun.",
+                answered: false
+            },
+            {
+                id: 16,
+                options: [
+                    "The longest river is the nile river.",
+                    "The longest river is the Nile River.",
+                    "The Longest River is the Nile River."
+                ],
+                correctIndex: 1,
+                explanation: "Rule 4: Capitalize all parts of a specific geographical place ('Nile River').",
+                answered: false
+            },
+            {
+                id: 17,
+                options: [
+                    "We ordered Chinese takeout on Friday.",
+                    "We ordered chinese takeout on friday.",
+                    "We ordered Chinese Takeout on Friday."
+                ],
+                correctIndex: 0,
+                explanation: "Rule 6 & 5: Capitalize proper adjectives ('Chinese') and days of the week ('Friday').",
+                answered: false
+            },
+            {
+                id: 18,
+                options: [
+                    "We watched the Movie \"Finding Nemo\" twice.",
+                    "We watched the movie \"Finding nemo\" twice.",
+                    "We watched the movie \"Finding Nemo\" twice."
+                ],
+                correctIndex: 2,
+                explanation: "Rule 8 & 9: Capitalize titles of work ('Finding Nemo'). 'movie' is a common noun.",
+                answered: false
+            },
+            {
+                id: 19,
+                options: [
+                    "lin moved from Beijing to Toronto.",
+                    "Lin moved from beijing to toronto.",
+                    "Lin moved from Beijing to Toronto."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 1, 3, & 4: Capitalize the first word, specific people ('Lin'), and specific places ('Beijing', 'Toronto').",
+                answered: false
+            },
+            {
+                id: 20,
+                options: [
+                    "She plays Minecraft on her computer.",
+                    "She plays Minecraft on her Computer.",
+                    "She plays minecraft on her computer."
+                ],
+                correctIndex: 0,
+                explanation: "Rules 5 & 9: Capitalize specific game titles/brands ('Minecraft'). 'computer' is a common noun.",
+                answered: false
+            },
+            {
+                id: 21,
+                options: [
+                    "I asked officer Smith for directions.",
+                    "I asked Officer Smith for Directions.",
+                    "I asked Officer Smith for directions."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 7, 3, & 9: Capitalize titles linked to names ('Officer Smith'). 'directions' is a common noun.",
+                answered: false
+            },
+            {
+                id: 22,
+                options: [
+                    "The Australian desert is very dry.",
+                    "The australian Desert is very dry.",
+                    "The australian desert is very dry."
+                ],
+                correctIndex: 0,
+                explanation: "Rules 6 & 9: Capitalize proper adjectives ('Australian'). 'desert' is a common noun here.",
+                answered: false
+            },
+            {
+                id: 23,
+                options: [
+                    "Should i read \"Matilda\" or watch the Movie?",
+                    "Should I read \"matilda\" or watch the movie?",
+                    "Should I read \"Matilda\" or watch the movie?"
+                ],
+                correctIndex: 2,
+                explanation: "Rules 2, 8, & 9: Capitalize 'I' and book titles ('Matilda'). 'movie' is a common noun.",
+                answered: false
+            },
+            {
+                id: 24,
+                options: [
+                    "My Niece loves to read at the Library.",
+                    "My niece loves to read at the Library.",
+                    "My niece loves to read at the library."
+                ],
+                correctIndex: 2,
+                explanation: "Rule 9: 'niece' and 'library' are common nouns here and should NOT be capitalized.",
+                answered: false
+            },
+            {
+                id: 25,
+                options: [
+                    "They flew on lufthansa airlines to Germany.",
+                    "They flew on Lufthansa Airlines to germany.",
+                    "They flew on Lufthansa Airlines to Germany."
+                ],
+                correctIndex: 2,
+                explanation: "Rules 5 & 4: Capitalize specific brands/companies ('Lufthansa Airlines') and specific places ('Germany').",
+                answered: false
+            }
+        ];
+
+        let currentScore = 0;
+        let gameState = JSON.parse(JSON.stringify(questionsData)); // Deep copy for reset functionality
+
+        const container = document.getElementById('questions-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const celebrationBanner = document.getElementById('celebration-banner');
+
+        function initGame() {
+            container.innerHTML = '';
+            currentScore = 0;
+            updateScoreDisplay();
+            celebrationBanner.classList.add('hidden');
+            
+            gameState.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = `question-card bg-white rounded-2xl shadow-md border-2 border-slate-100 p-6 relative`;
+                card.id = `q-card-${index}`;
+                
+                let contentHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-sky-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow">${index + 1}</div>
+                        <h3 class="text-lg font-bold text-slate-700">Which sentence is capitalized correctly?</h3>
+                    </div>
+                    <div class="space-y-3 mt-4" id="options-${index}">
+                `;
+
+                q.options.forEach((opt, optIndex) => {
+                    contentHTML += `
+                        <label class="flex items-center p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition option-label" id="label-${index}-${optIndex}">
+                            <input type="radio" name="q-${index}" value="${optIndex}" class="w-5 h-5 text-sky-500 focus:ring-sky-400 mr-3" onchange="checkAnswer(${index}, ${optIndex})">
+                            <span class="text-lg text-slate-700">${opt}</span>
+                        </label>
+                    `;
+                });
+
+                contentHTML += `</div>
+                    <div id="feedback-${index}" class="hidden mt-4 p-4 rounded-xl text-lg font-bold flex items-start gap-3">
+                        <span id="feedback-icon-${index}" class="text-2xl"></span>
+                        <div id="feedback-text-${index}"></div>
+                    </div>
+                `;
+
+                card.innerHTML = contentHTML;
+                container.appendChild(card);
+            });
+        }
+
+        function checkAnswer(qIndex, selectedIndex) {
+            if (gameState[qIndex].answered) return;
+
+            const qData = gameState[qIndex];
+            const isCorrect = (selectedIndex === qData.correctIndex);
+            
+            // Disable all radio buttons for this question
+            const radios = document.querySelectorAll(`input[name="q-${qIndex}"]`);
+            radios.forEach(radio => radio.disabled = true);
+
+            // Highlight selected option
+            const selectedLabel = document.getElementById(`label-${qIndex}-${selectedIndex}`);
+            const correctLabel = document.getElementById(`label-${qIndex}-${qData.correctIndex}`);
+
+            if (isCorrect) {
+                selectedLabel.classList.remove('border-slate-200', 'hover:bg-slate-50');
+                selectedLabel.classList.add('border-green-500', 'bg-green-50');
+                showFeedback(qIndex, true, qData.explanation);
+            } else {
+                selectedLabel.classList.remove('border-slate-200', 'hover:bg-slate-50');
+                selectedLabel.classList.add('border-red-400', 'bg-red-50');
+                correctLabel.classList.remove('border-slate-200');
+                correctLabel.classList.add('border-green-500', 'bg-green-50');
+                showFeedback(qIndex, false, qData.explanation);
+            }
+        }
+
+        function showFeedback(qIndex, isCorrect, explanation) {
+            const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+            const feedbackIcon = document.getElementById(`feedback-icon-${qIndex}`);
+            const feedbackText = document.getElementById(`feedback-text-${qIndex}`);
+            const card = document.getElementById(`q-card-${qIndex}`);
+            
+            feedbackDiv.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-800');
+            
+            if (isCorrect) {
+                feedbackDiv.classList.add('bg-green-50', 'text-green-800');
+                feedbackIcon.innerText = "⭐";
+                feedbackText.innerHTML = `<strong>Correct!</strong> ${explanation}`;
+                card.classList.add('correct');
+                
+                // Only award points once
+                if (!gameState[qIndex].answered) {
+                    currentScore++;
+                    updateScoreDisplay();
+                    checkWinCondition();
+                }
+            } else {
+                feedbackDiv.classList.add('bg-red-50', 'text-red-700');
+                feedbackIcon.innerText = "Oops!";
+                feedbackText.innerHTML = `<strong>Not quite right.</strong> Let's review: ${explanation}`;
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 500);
+            }
+            
+            gameState[qIndex].answered = true; // Lock after any answer
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.innerText = `${currentScore} / ${gameState.length}`;
+            
+            // Little bounce animation on score change
+            scoreDisplay.classList.add('scale-125', 'text-green-500');
+            setTimeout(() => {
+                scoreDisplay.classList.remove('scale-125', 'text-green-500');
+            }, 300);
+        }
+
+        function checkWinCondition() {
+            if (currentScore === gameState.length) {
+                setTimeout(() => {
+                    celebrationBanner.classList.remove('hidden');
+                    celebrationBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    triggerConfetti();
+                }, 500);
+            }
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function resetGame() {
+            gameState = JSON.parse(JSON.stringify(questionsData));
+            initGame();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Event listener for restart button in header
+        document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
