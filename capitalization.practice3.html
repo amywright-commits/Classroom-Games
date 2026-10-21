@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capitalization Hunt</title>
+    <!-- Tailwind CSS for rapid, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for the reward animation -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Custom Font: Nunito for a friendly, child-appropriate look -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f9ff; /* Light blue kid-friendly background */
+            background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        
+        .clickable-word {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 8px;
+            background-color: #e0f2fe;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .clickable-word:hover {
+            background-color: #bae6fd;
+            border-color: #38bdf8;
+            transform: scale(1.05);
+        }
+
+        .clickable-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Smooth accordion transitions */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        
+        .question-card.correct {
+            border-color: #4ade80;
+            background-color: #f0fdf4;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.2);
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .match-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .match-card.selected {
+            border-color: #38bdf8;
+            background-color: #e0f2fe;
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3);
+        }
+
+        .match-card.matched {
+            border-color: #4ade80;
+            background-color: #f0fdf4;
+            color: #166534;
+            transform: scale(0.95);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-sky-600 flex items-center gap-2">
+                <span>🔍</span> Capitalization Hunt
+            </h1>
+            <div class="bg-sky-100 px-6 py-2 rounded-full border-2 border-sky-300 shadow-sm flex items-center gap-3">
+                <span class="text-lg font-bold text-sky-800 hidden sm:inline">Round:</span>
+                <span id="round-display" class="text-xl sm:text-2xl font-extrabold text-sky-600 mr-1 sm:mr-2">1 / 3</span>
+                <span class="text-lg font-bold text-sky-800 hidden sm:inline">Pairs:</span>
+                <span id="score-display" class="text-xl sm:text-2xl font-extrabold text-sky-600">0 / 10</span>
+                <button id="reset-btn" class="ml-2 bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm transition transform hover:scale-105 active:scale-95">
+                    Restart
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 mt-8">
+
+        <section class="bg-blue-50 border-l-4 border-blue-500 p-5 mb-8 rounded-r-xl shadow-sm">
+            <h2 class="text-xl font-bold text-blue-800 mb-2 flex items-center gap-2">
+                <span>🎮</span> How to Play:
+            </h2>
+            <p class="text-slate-700 text-lg">Click to flip the cards. Your goal is to match the <strong>Common Noun</strong> (like "sneaker brand") with its specific <strong>Proper Noun</strong> partner (like "Adidas"). Clear the board to advance through all 3 rounds!</p>
+        </section>
+        
+        <section class="mb-8">
+            <details class="bg-white rounded-2xl shadow-lg border-2 border-yellow-400 overflow-hidden group">
+                <summary class="bg-yellow-50 px-6 py-4 cursor-pointer flex justify-between items-center font-bold text-lg text-yellow-800 hover:bg-yellow-100 transition">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">💡</span>
+                        Grade 5 Capitalization Rules (Click to View)
+                    </div>
+                    <span class="text-2xl group-open:rotate-180 transition-transform duration-300">▼</span>
+                </summary>
+                <div class="p-6 bg-white grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm sm:text-base">
+                    <div>
+                        <ul class="space-y-3">
+                            <li class="flex flex-col"><strong class="text-sky-700">1. Beginning of Sentences</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ <span class="text-red-500 font-bold">U</span>nfortunately, the flower wilted.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">2. The Pronoun "I"</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ Can <span class="text-red-500 font-bold">I</span> finish this chocolate?</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">3. Proper Nouns: People</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ <span class="text-red-500 font-bold">W</span>alter and <span class="text-red-500 font-bold">W</span>esley wrestled.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">4. Proper Nouns: Places</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ I prefer the <span class="text-red-500 font-bold">S</span>tarbucks near my <span class="text-red-500 font-bold">M</span>idwest home.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">5. Proper Nouns: Things</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ The <span class="text-red-500 font-bold">D</span>etroit <span class="text-red-500 font-bold">L</span>ions wear <span class="text-red-500 font-bold">N</span>ike cleats.</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <ul class="space-y-3">
+                            <li class="flex flex-col"><strong class="text-sky-700">6. Proper Adjectives</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ ...shield us from the <span class="text-red-500 font-bold">A</span>ntarctic winds.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">7. Titles of People</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ They hired the famous <span class="text-red-500 font-bold">C</span>hef <span class="text-red-500 font-bold">W</span>ilson.</span></li>
+                            <li class="flex flex-col"><strong class="text-sky-700">8. Titles of Work</strong> <span class="italic text-gray-600 bg-gray-50 p-1 rounded">✅ Playing "<span class="text-red-500 font-bold">C</span>ruel <span class="text-red-500 font-bold">S</span>ummer" again.</span></li>
+                            <li class="flex flex-col mt-4 p-3 bg-rose-50 border-l-4 border-rose-400 rounded">
+                                <strong class="text-rose-700">🚫 9. DO NOT capitalize common nouns!</strong> 
+                                <span class="text-gray-700 mt-1">
+                                    Common errors: "my <span class="line-through text-rose-500">G</span>randpa", "play <span class="line-through text-rose-500">S</span>occer", "Friends and <span class="line-through text-rose-500">F</span>amily".
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <div id="celebration-banner" class="hidden bg-gradient-to-r from-green-400 to-emerald-500 text-white text-center p-6 rounded-2xl shadow-xl mb-8 transform transition-all">
+            <h2 id="banner-title" class="text-3xl font-extrabold mb-2">🎉 Round Complete! 🎉</h2>
+            <p id="banner-text" class="text-lg">Fantastic matching! Ready for the next challenge?</p>
+            <button id="next-action-btn" class="mt-4 bg-white text-emerald-600 font-bold py-2 px-6 rounded-full shadow hover:bg-emerald-50 transition transform hover:scale-105">Next Round</button>
+        </div>
+
+        <div id="game-board" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-12">
+            <!-- Cards injected via JS -->
+        </div>
+
+    </main>
+
+    <script>
+        const roundsData = [
+            // Round 1
+            [
+                { id: 1, common: "sneaker brand", proper: "Adidas" },
+                { id: 2, common: "superhero", proper: "Black Panther" },
+                { id: 3, common: "cereal", proper: "Cheerios" },
+                { id: 4, common: "month", proper: "October" },
+                { id: 5, common: "automobile", proper: "Toyota" },
+                { id: 6, common: "ocean", proper: "Indian Ocean" },
+                { id: 7, common: "mountain", proper: "Mount Fuji" },
+                { id: 8, common: "planet", proper: "Saturn" },
+                { id: 9, common: "fast food restaurant", proper: "Wendy's" },
+                { id: 10, common: "historical monument", proper: "Eiffel Tower" }
+            ],
+            // Round 2
+            [
+                { id: 11, common: "movie", proper: "Toy Story" },
+                { id: 12, common: "author", proper: "Roald Dahl" },
+                { id: 13, common: "desert", proper: "Sahara Desert" },
+                { id: 14, common: "language", proper: "Arabic" },
+                { id: 15, common: "continent", proper: "Asia" },
+                { id: 16, common: "shoe", proper: "Crocs" },
+                { id: 17, common: "theme park", proper: "Disneyland" },
+                { id: 18, common: "river", proper: "Ganges" },
+                { id: 19, common: "board game", proper: "Monopoly" },
+                { id: 20, common: "scientist", proper: "Albert Einstein" }
+            ],
+            // Round 3
+            [
+                { id: 21, common: "astronaut", proper: "Mae Jemison" },
+                { id: 22, common: "festival", proper: "Lunar New Year" },
+                { id: 23, common: "island", proper: "Madagascar" },
+                { id: 24, common: "computer brand", proper: "Apple" },
+                { id: 25, common: "candy", proper: "Skittles" },
+                { id: 26, common: "state", proper: "California" },
+                { id: 27, common: "tourist attraction", proper: "Great Wall of China" },
+                { id: 28, common: "clothing brand", proper: "Gucci" },
+                { id: 29, common: "airline", proper: "Emirates" },
+                { id: 30, common: "stadium", proper: "Wembley Stadium" }
+            ]
+        ];
+
+        let currentRoundIndex = 0;
+        let currentScore = 0;
+        let cardsArray = [];
+        let firstSelectedCard = null;
+        let lockBoard = false;
+
+        const board = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score-display');
+        const roundDisplay = document.getElementById('round-display');
+        const celebrationBanner = document.getElementById('celebration-banner');
+        const bannerTitle = document.getElementById('banner-title');
+        const bannerText = document.getElementById('banner-text');
+        const nextActionBtn = document.getElementById('next-action-btn');
+
+        function initGame() {
+            board.innerHTML = '';
+            currentScore = 0;
+            firstSelectedCard = null;
+            lockBoard = false;
+            celebrationBanner.classList.add('hidden');
+            
+            roundDisplay.innerText = `${currentRoundIndex + 1} / ${roundsData.length}`;
+            
+            const currentRoundPairs = roundsData[currentRoundIndex];
+            updateScoreDisplay(currentRoundPairs.length);
+
+            // Flatten pairs into individual cards
+            cardsArray = [];
+            currentRoundPairs.forEach(pair => {
+                cardsArray.push({ text: pair.common, pairId: pair.id });
+                cardsArray.push({ text: pair.proper, pairId: pair.id });
+            });
+
+            // Shuffle the cards
+            cardsArray.sort(() => 0.5 - Math.random());
+
+            // Render cards
+            cardsArray.forEach((card) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'match-card bg-white rounded-xl shadow border-2 border-slate-200 p-3 sm:p-4 flex items-center justify-center text-center font-bold text-sm sm:text-base lg:text-lg min-h-[90px] sm:min-h-[100px] hover:shadow-md hover:border-sky-300';
+                cardEl.dataset.pairId = card.pairId;
+                cardEl.innerText = card.text;
+                
+                cardEl.addEventListener('click', () => handleCardClick(cardEl));
+                board.appendChild(cardEl);
+            });
+        }
+
+        function handleCardClick(cardEl) {
+            if (lockBoard) return;
+            // Prevent clicking the same card twice to deselect
+            if (cardEl === firstSelectedCard) {
+                cardEl.classList.remove('selected');
+                firstSelectedCard = null;
+                return;
+            }
+            if (cardEl.classList.contains('matched')) return;
+
+            cardEl.classList.add('selected');
+
+            if (!firstSelectedCard) {
+                firstSelectedCard = cardEl;
+                return;
+            }
+
+            // Check for match
+            lockBoard = true;
+            const secondSelectedCard = cardEl;
+            const isMatch = firstSelectedCard.dataset.pairId === secondSelectedCard.dataset.pairId;
+
+            if (isMatch) {
+                setTimeout(() => {
+                    firstSelectedCard.classList.remove('selected');
+                    secondSelectedCard.classList.remove('selected');
+                    firstSelectedCard.classList.add('matched');
+                    secondSelectedCard.classList.add('matched');
+                    
+                    currentScore++;
+                    updateScoreDisplay(roundsData[currentRoundIndex].length);
+                    checkWinCondition();
+                    
+                    resetSelection();
+                }, 400);
+            } else {
+                // No Match - show error feedback
+                setTimeout(() => {
+                    firstSelectedCard.classList.add('shake', 'border-red-400', 'bg-red-50', 'text-red-700');
+                    secondSelectedCard.classList.add('shake', 'border-red-400', 'bg-red-50', 'text-red-700');
+                    
+                    setTimeout(() => {
+                        firstSelectedCard.classList.remove('selected', 'shake', 'border-red-400', 'bg-red-50', 'text-red-700');
+                        secondSelectedCard.classList.remove('selected', 'shake', 'border-red-400', 'bg-red-50', 'text-red-700');
+                        resetSelection();
+                    }, 600);
+                }, 300);
+            }
+        }
+
+        function resetSelection() {
+            firstSelectedCard = null;
+            lockBoard = false;
+        }
+
+        function updateScoreDisplay(totalPairs) {
+            scoreDisplay.innerText = `${currentScore} / ${totalPairs}`;
+            
+            // Little bounce animation on score change
+            scoreDisplay.classList.add('scale-125', 'text-green-500');
+            setTimeout(() => {
+                scoreDisplay.classList.remove('scale-125', 'text-green-500');
+            }, 300);
+        }
+
+        function checkWinCondition() {
+            const currentRoundPairs = roundsData[currentRoundIndex];
+            if (currentScore === currentRoundPairs.length) {
+                setTimeout(() => {
+                    if (currentRoundIndex < roundsData.length - 1) {
+                        // Round completed, more to go
+                        bannerTitle.innerText = "🎉 Round Complete! 🎉";
+                        bannerText.innerText = `Awesome job! You've matched all the nouns for Round ${currentRoundIndex + 1}.`;
+                        nextActionBtn.innerText = "Next Round";
+                        nextActionBtn.onclick = advanceToNextRound;
+                    } else {
+                        // All rounds finished
+                        bannerTitle.innerText = "🏆 Game Complete! 🏆";
+                        bannerText.innerText = "You've mastered all 3 rounds! You are a capitalization superstar!";
+                        nextActionBtn.innerText = "Play Again";
+                        nextActionBtn.onclick = resetGame;
+                    }
+                    
+                    celebrationBanner.classList.remove('hidden');
+                    celebrationBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    triggerConfetti();
+                }, 500);
+            }
+        }
+
+        function advanceToNextRound() {
+            currentRoundIndex++;
+            initGame();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function resetGame() {
+            currentRoundIndex = 0;
+            initGame();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Event listener for restart button in header
+        document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
