@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derivation Station - Lesson 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s ease-in-out;
+        }
+
+        .option-btn {
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .correct-answer {
+            background-color: #22c55e !important; /* text-green-500 */
+            color: white !important;
+            border-color: #16a34a !important;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
+        }
+        
+        .wrong-answer {
+            background-color: #ef4444 !important; /* text-red-500 */
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+
+        .blank-space {
+            display: inline-block;
+            min-width: 140px;
+            border-bottom: 3px solid #6366f1; /* indigo-500 */
+            text-align: center;
+            font-weight: 800;
+            color: #4f46e5; /* indigo-600 */
+            padding: 0 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .blank-filled-correct {
+            border-bottom-color: #22c55e; /* green-500 */
+            color: #16a34a;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 font-sans text-slate-800 min-h-screen flex flex-col items-center py-8">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-4xl px-4 flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div class="text-center md:text-left flex items-center gap-3">
+            <div class="bg-amber-500 text-white p-3 rounded-xl shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-amber-600 mb-1 tracking-tight">Derivation Station</h1>
+                <p class="text-md text-amber-700/80 font-bold uppercase tracking-wider">Lesson 2</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="bg-white px-5 py-2 rounded-xl shadow-sm border border-amber-200 text-center">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Score</span>
+                <div class="text-2xl font-black text-amber-500 leading-none"><span id="score">0</span></div>
+            </div>
+            <button onclick="initGame()" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-4 py-3 rounded-xl font-bold transition-colors shadow-sm active:scale-95 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="w-full max-w-4xl px-4 mb-6">
+        <div class="flex justify-between text-sm font-bold text-amber-500 mb-2">
+            <span>Progress</span>
+            <span id="progress-text">Question 1 of 15</span>
+        </div>
+        <div class="w-full bg-amber-200 rounded-full h-3 shadow-inner">
+            <div id="progress-bar" class="bg-amber-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Game Area -->
+    <main class="w-full max-w-4xl px-4 flex-1 flex flex-col">
+        <!-- Question Card -->
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-6 flex flex-col md:flex-row">
+            
+            <!-- Base Word Badge (Left side on desktop, top on mobile) -->
+            <div class="bg-indigo-600 text-white p-6 md:p-8 flex flex-col justify-center items-center md:w-1/3 shadow-inner">
+                <span class="text-indigo-200 font-bold uppercase tracking-widest text-xs mb-2">Base Word</span>
+                <span id="base-word" class="text-3xl md:text-4xl font-black tracking-wide text-center">distract</span>
+            </div>
+
+            <!-- Sentence Area -->
+            <div class="p-8 md:p-10 flex-1 flex flex-col justify-center">
+                <p class="text-slate-500 font-bold text-sm uppercase tracking-wider mb-4">Complete the sentence:</p>
+                <p id="sentence-text" class="text-2xl md:text-3xl font-medium text-slate-700 leading-relaxed">
+                    <!-- Sentence injected here -->
+                </p>
+            </div>
+        </div>
+
+        <!-- Options Grid -->
+        <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
+            <!-- Buttons injected here -->
+        </div>
+    </main>
+
+    <!-- End Game Modal -->
+    <div id="end-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center transform scale-95 transition-transform duration-300" id="modal-content">
+            <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 bg-amber-100 text-amber-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 id="end-title" class="text-3xl font-extrabold text-slate-800 mb-2">Station Complete!</h2>
+            <p class="text-lg text-slate-600 mb-6">You successfully built <span id="final-score" class="font-bold text-amber-600"></span> out of <span id="total-score-display">30</span> words.</p>
+            <button onclick="initGame()" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xl font-bold py-4 px-8 rounded-xl shadow-lg transition-colors active:scale-95">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Derivation Data for Lesson 2
+        const derivationData = [
+            {
+                base: "aroma",
+                sentence: "The freshly baked bread was incredibly [blank], filling the whole house with a wonderful smell.",
+                options: ["aroma", "aromatic", "aromatically", "aromas"],
+                answer: "aromatic"
+            },
+            {
+                base: "beverage",
+                sentence: "During the hot summer picnic, we brought a cooler filled with several cold [blank].",
+                options: ["beverage", "beverages", "beveraging", "beveraged"],
+                answer: "beverages"
+            },
+            {
+                base: "bland",
+                sentence: "Because he forgot to add salt and spices, the chef's soup suffered from extreme [blank].",
+                options: ["bland", "blandly", "blandness", "blandest"],
+                answer: "blandness"
+            },
+            {
+                base: "brittle",
+                sentence: "The old, dried leaves had so much [blank] that they crumbled into dust when I touched them.",
+                options: ["brittle", "brittleness", "brittles", "brittler"],
+                answer: "brittleness"
+            },
+            {
+                base: "cluster",
+                sentence: "During the unexpected fire drill, the frightened students [blank] together on the soccer field.",
+                options: ["cluster", "clustered", "clustering", "clusters"],
+                answer: "clustered"
+            },
+            {
+                base: "combine",
+                sentence: "The winning recipe was a strange but delicious [blank] of chocolate, marshmallows, and peanut butter.",
+                options: ["combine", "combined", "combination", "combining"],
+                answer: "combination"
+            },
+            {
+                base: "consume",
+                sentence: "Doctors recommend reducing our daily [blank] of sugary drinks to stay healthy.",
+                options: ["consume", "consumed", "consumer", "consumption"],
+                answer: "consumption"
+            },
+            {
+                base: "crave",
+                sentence: "After hiking all day in the sun, I had a huge [blank] for a tall glass of ice water.",
+                options: ["crave", "craved", "craving", "craves"],
+                answer: "craving"
+            },
+            {
+                base: "cultivate",
+                sentence: "The successful [blank] of tomatoes requires plenty of sunlight, good soil, and daily watering.",
+                options: ["cultivate", "cultivated", "cultivation", "cultivator"],
+                answer: "cultivation"
+            },
+            {
+                base: "equivalent",
+                sentence: "The math teacher explained the exact [blank] between the fraction 1/2 and the decimal 0.5.",
+                options: ["equivalent", "equivalence", "equivalently", "equivalents"],
+                answer: "equivalence"
+            },
+            {
+                base: "export",
+                sentence: "Colombia is a major [blank] of coffee beans, sending them to countries all over the world.",
+                options: ["export", "exported", "exporter", "exportation"],
+                answer: "exporter"
+            },
+            {
+                base: "extract",
+                sentence: "The dentist scheduled the [blank] of my wisdom teeth for next Thursday.",
+                options: ["extract", "extracted", "extraction", "extracts"],
+                answer: "extraction"
+            },
+            {
+                base: "introduce",
+                sentence: "Before starting chapter one, the author wrote a brief [blank] to explain why she wrote the book.",
+                options: ["introduce", "introduced", "introduction", "introductory"],
+                answer: "introduction"
+            },
+            {
+                base: "purchase",
+                sentence: "My parents [blank] a brand new car last weekend after saving up for three years.",
+                options: ["purchase", "purchased", "purchaser", "purchasing"],
+                answer: "purchased"
+            },
+            {
+                base: "tropical",
+                sentence: "Many beautiful, colorful birds, like macaws and toucans, live in the humid [blank] near the equator.",
+                options: ["tropical", "tropics", "tropically", "tropic"],
+                answer: "tropics"
+            },
+            {
+                base: "aroma",
+                sentence: "Walking through the international spice market, we could smell dozens of different [blank] blending together.",
+                options: ["aroma", "aromas", "aromatic", "aromatherapy"],
+                answer: "aromas"
+            },
+            {
+                base: "beverage",
+                sentence: "After the long marathon, volunteers handed out sports [blank] to the exhausted runners.",
+                options: ["beverage", "beverages", "beveraging", "beveraged"],
+                answer: "beverages"
+            },
+            {
+                base: "bland",
+                sentence: "He smiled [blank] and nodded, showing no real emotion or excitement about the news.",
+                options: ["bland", "blandly", "blandness", "blandest"],
+                answer: "blandly"
+            },
+            {
+                base: "brittle",
+                sentence: "The ancient Egyptian papyrus was so [blank] that the scientist had to use special tweezers to turn the page.",
+                options: ["brittle", "brittleness", "brittles", "brittler"],
+                answer: "brittle"
+            },
+            {
+                base: "cluster",
+                sentence: "We looked up at the clear night sky and admired the bright [blank] of distant stars.",
+                options: ["cluster", "clustered", "clustering", "clusters"],
+                answer: "clusters"
+            },
+            {
+                base: "combine",
+                sentence: "[blank] blue and yellow paint on an art palette will always give you a green color.",
+                options: ["combine", "combined", "combination", "combining"],
+                answer: "combining"
+            },
+            {
+                base: "consume",
+                sentence: "As a smart [blank], you should always read product reviews before spending your money online.",
+                options: ["consume", "consumed", "consumer", "consumption"],
+                answer: "consumer"
+            },
+            {
+                base: "crave",
+                sentence: "While trapped in the freezing snowstorm, the explorers [blank] a hot bowl of soup.",
+                options: ["crave", "craved", "craving", "craves"],
+                answer: "craved"
+            },
+            {
+                base: "cultivate",
+                sentence: "The farmer attached a heavy mechanical [blank] to his tractor to break up the hard, rocky soil.",
+                options: ["cultivate", "cultivated", "cultivation", "cultivator"],
+                answer: "cultivator"
+            },
+            {
+                base: "equivalent",
+                sentence: "The recipe called for vegetable oil, but I decided to use one of its healthier [blank], like applesauce.",
+                options: ["equivalent", "equivalence", "equivalently", "equivalents"],
+                answer: "equivalents"
+            },
+            {
+                base: "export",
+                sentence: "Cars, electronics, and heavy machinery are some of Japan's most valuable [blank].",
+                options: ["export", "exports", "exporter", "exportation"],
+                answer: "exports"
+            },
+            {
+                base: "extract",
+                sentence: "The baker mixed a few drops of almond and lemon [blank] into the cookie dough for extra flavor.",
+                options: ["extract", "extracted", "extraction", "extracts"],
+                answer: "extracts"
+            },
+            {
+                base: "introduce",
+                sentence: "On the first day of guitar class, the teacher gave an [blank] lesson on how to properly hold the instrument.",
+                options: ["introduce", "introduced", "introduction", "introductory"],
+                answer: "introductory"
+            },
+            {
+                base: "purchase",
+                sentence: "She carried her heavy shopping bags out of the mall, very happy with all of her new [blank].",
+                options: ["purchase", "purchases", "purchaser", "purchasing"],
+                answer: "purchases"
+            },
+            {
+                base: "tropical",
+                sentence: "The indoor botanical garden was kept [blank] warm and humid so the rare orchids could thrive.",
+                options: ["tropical", "tropics", "tropically", "tropic"],
+                answer: "tropically"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let gameQuestions = [];
+        let isAnswering = false;
+
+        const baseWordElement = document.getElementById('base-word');
+        const sentenceElement = document.getElementById('sentence-text');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreElement = document.getElementById('score');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const endModal = document.getElementById('end-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        // Utility: Shuffle Array
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            scoreElement.textContent = score;
+            isAnswering = false;
+
+            endModal.classList.add('hidden');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+
+            // Shuffle questions for varied replayability
+            gameQuestions = shuffleArray([...derivationData]);
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswering = false;
+            const currentQ = gameQuestions[currentQuestionIndex];
+
+            // Update Header / Progress
+            baseWordElement.textContent = currentQ.base;
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${gameQuestions.length}`;
+            progressBar.style.width = `${(currentQuestionIndex / gameQuestions.length) * 100}%`;
+
+            // Prepare sentence with blank
+            const parts = currentQ.sentence.split('[blank]');
+            sentenceElement.innerHTML = `${parts[0]} <span id="blank-space" class="blank-space">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> ${parts[1]}`;
+
+            // Render Options
+            optionsContainer.innerHTML = '';
+            const shuffledOptions = shuffleArray([...currentQ.options]);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn bg-white border-2 border-slate-200 text-slate-700 font-bold text-xl py-5 px-4 rounded-2xl shadow-sm hover:border-indigo-400 hover:bg-indigo-50 w-full flex items-center justify-center';
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(opt === currentQ.answer, btn, opt, currentQ.answer);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(isCorrect, clickedBtn, selectedWord, correctWord) {
+            if (isAnswering) return;
+            isAnswering = true;
+
+            const blankSpace = document.getElementById('blank-space');
+            const allButtons = optionsContainer.querySelectorAll('button');
+            
+            // Disable buttons
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (isCorrect) {
+                clickedBtn.classList.add('correct-answer', 'animate-pop');
+                blankSpace.textContent = selectedWord;
+                blankSpace.classList.add('blank-filled-correct', 'animate-pop');
+                score++;
+                scoreElement.textContent = score;
+
+                // Move to next question automatically if correct
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1800);
+            } else {
+                clickedBtn.classList.add('wrong-answer', 'animate-shake');
+                
+                // Show the wrong word in the blank temporarily, in red
+                blankSpace.textContent = selectedWord;
+                blankSpace.style.color = '#ef4444'; // red-500
+                blankSpace.style.borderColor = '#ef4444';
+                blankSpace.classList.add('animate-shake');
+
+                // Let them try again after a brief pause
+                setTimeout(() => {
+                    clickedBtn.classList.remove('wrong-answer', 'animate-shake');
+                    clickedBtn.disabled = false; // re-enable this button
+                    
+                    // Reset blank
+                    blankSpace.textContent = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0";
+                    blankSpace.style.color = '';
+                    blankSpace.style.borderColor = '';
+                    blankSpace.classList.remove('animate-shake');
+                    
+                    // Re-enable other buttons
+                    allButtons.forEach(btn => {
+                        if(!btn.classList.contains('wrong-answer')) {
+                            btn.disabled = false;
+                        }
+                    });
+                    
+                    isAnswering = false;
+                }, 1200);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < gameQuestions.length) {
+                loadQuestion();
+            } else {
+                showEndGame();
+            }
+        }
+
+        function showEndGame() {
+            progressBar.style.width = '100%';
+            
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('total-score-display').textContent = gameQuestions.length;
+            const title = document.getElementById('end-title');
+
+            if (score === gameQuestions.length) {
+                title.textContent = "Perfect Score!";
+            } else if (score >= gameQuestions.length * 0.7) {
+                title.textContent = "Great Job!";
+            } else {
+                title.textContent = "Good Practice!";
+            }
+
+            endModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        // Initialize on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
