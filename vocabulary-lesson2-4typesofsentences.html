@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary & 4 Types of Sentences</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #faf5ff; /* fuchsia-50 */
+            background-image: 
+                radial-gradient(circle at 20% 40%, rgba(192, 132, 252, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(74, 222, 128, 0.1) 0%, transparent 40%);
+            color: #1e293b;
+        }
+
+        h1, h2, .sentence-text {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Option Buttons */
+        .option-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0px 0px rgba(0,0,0,0.1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0px 0px rgba(0,0,0,0.1);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px 0px transparent;
+        }
+        
+        .correct-btn {
+            background-color: #10b981 !important; /* emerald */
+            border-color: #059669 !important;
+            color: white !important;
+            box-shadow: 0 4px 0px 0px #047857 !important;
+        }
+        .wrong-btn {
+            background-color: #f43f5e !important; /* rose */
+            border-color: #e11d48 !important;
+            color: white !important;
+            box-shadow: 0 4px 0px 0px #be123c !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- Intro Landing Page (with the Chart from the screenshot) -->
+    <div id="intro-screen" class="w-full max-w-5xl flex flex-col gap-6 animate-slide-up">
+        <div class="bg-white rounded-[2rem] shadow-xl p-8 md:p-10 border-t-8 border-purple-500 relative overflow-hidden">
+            
+            <h1 class="text-3xl md:text-5xl font-black text-purple-700 mb-2 tracking-tight text-center">End Punctuation / 4 Types of Sentences</h1>
+            <p class="text-lg text-slate-600 mb-8 text-center max-w-3xl mx-auto">
+                Before we practice our Lesson 2 vocabulary, review the chart below to remember how words change based on their sentence's purpose!
+            </p>
+            
+            <!-- Recreated Chart from Screenshot -->
+            <div class="w-full overflow-x-auto mb-8 shadow-sm rounded-xl border-2 border-slate-300">
+                <table class="w-full text-left min-w-[700px] border-collapse bg-white">
+                    <thead>
+                        <tr class="bg-purple-200 border-b-2 border-slate-300">
+                            <th class="p-4 font-black text-slate-800 text-lg text-center border-r border-slate-300 w-1/4">Purpose</th>
+                            <th class="p-4 font-black text-slate-800 text-lg text-center border-r border-slate-300 w-1/4">Type</th>
+                            <th class="p-4 font-black text-slate-800 text-lg text-center border-r border-slate-300 w-1/6">End Punctuation</th>
+                            <th class="p-4 font-black text-slate-800 text-lg text-center w-1/3">Example</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base md:text-lg text-slate-700 font-medium">
+                        <!-- Declarative -->
+                        <tr class="border-b border-slate-300">
+                            <td class="p-4 border-r border-slate-300">Statement: You are stating or declaring something.</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 font-black text-center text-green-900">declarative</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 text-center font-black text-2xl">.</td>
+                            <td class="p-4">The heart of a shrimp is located in its head.</td>
+                        </tr>
+                        <!-- Exclamatory -->
+                        <tr class="border-b border-slate-300">
+                            <td class="p-4 border-r border-slate-300">Exclamation: You are stating or exclaiming with emotion.</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 font-black text-center text-green-900">exclamatory</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 text-center font-black text-2xl">!</td>
+                            <td class="p-4">That birthday party was so much fun!</td>
+                        </tr>
+                        <!-- Interrogative -->
+                        <tr class="border-b border-slate-300">
+                            <td class="p-4 border-r border-slate-300">Question: You are wondering or interrogating.</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 font-black text-center text-green-900">interrogative</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 text-center font-black text-2xl">?</td>
+                            <td class="p-4">Why do I always forget where I put my car?</td>
+                        </tr>
+                        <!-- Imperative -->
+                        <tr>
+                            <td class="p-4 border-r border-slate-300">Demand: You are demanding something, and it's imperative it be done! It starts with a verb.</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 font-black text-center text-green-900">imperative</td>
+                            <td class="p-4 border-r border-slate-300 bg-green-100 text-center font-black text-2xl">! or .</td>
+                            <td class="p-4">Come fold your laundry.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center">
+                <button onclick="startGame()" class="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white text-2xl font-black py-4 px-12 rounded-2xl shadow-[0_6px_0_rgba(147,51,234,0.4)] transition-all active:scale-95 active:shadow-none hover:-translate-y-1 inline-flex items-center justify-center gap-3">
+                    Start Dual-Practice! 
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wrapper for Game UI (Hidden initially) -->
+    <div id="game-screen" class="hidden w-full flex-col items-center">
+        
+        <!-- Header -->
+        <header class="w-full max-w-4xl flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-5 rounded-3xl shadow-sm border border-purple-100">
+            <div class="flex items-center gap-4 text-center md:text-left">
+                <div class="bg-purple-100 text-purple-500 p-3 rounded-xl shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black text-purple-800 tracking-tight">Vocab & Sentences</h1>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Dual Skill Challenge</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-purple-50 px-5 py-2 rounded-xl border border-purple-100 text-center">
+                    <span class="text-[10px] font-black text-purple-400 uppercase tracking-widest block mb-1">Score</span>
+                    <div class="text-2xl font-black text-purple-600 leading-none">
+                        <span id="score-count">0</span><span class="text-lg text-purple-400">/30</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="w-full max-w-4xl flex-1 flex flex-col gap-6">
+            
+            <!-- Progress Bar -->
+            <div class="w-full mb-2">
+                <div class="flex justify-between text-xs font-bold text-purple-500 mb-2 uppercase tracking-widest">
+                    <span>Progress</span>
+                    <span id="progress-text">Question 1 of 15</span>
+                </div>
+                <div class="w-full bg-purple-200 rounded-full h-3 border border-purple-300">
+                    <div id="progress-bar" class="bg-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Sentence Display Card -->
+            <div id="question-card" class="bg-white rounded-3xl p-8 md:p-12 text-center relative overflow-hidden shadow-lg border-2 border-purple-100">
+                <div class="flex flex-wrap justify-center items-end gap-x-2 gap-y-4 text-2xl md:text-4xl font-semibold tracking-wide sentence-text text-slate-700 leading-relaxed" id="sentence-container">
+                    <!-- Sentence parts injected here -->
+                </div>
+            </div>
+
+            <!-- Task Prompts & Multiple Choice Options -->
+            <div class="w-full bg-slate-50 p-6 rounded-3xl border-2 border-slate-200">
+                
+                <!-- Step 1: Vocab Selection -->
+                <div id="step-1-container" class="w-full">
+                    <h2 class="text-lg font-black text-purple-600 uppercase tracking-widest mb-4 text-center">Step 1: Choose the missing word</h2>
+                    <div id="word-options" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <!-- Word buttons injected here -->
+                    </div>
+                </div>
+
+                <!-- Step 2: Sentence Type Selection (Hidden initially) -->
+                <div id="step-2-container" class="w-full hidden">
+                    <h2 class="text-lg font-black text-green-600 uppercase tracking-widest mb-4 text-center animate-fade-in">Step 2: What type of sentence is this?</h2>
+                    <div id="type-options" class="grid grid-cols-2 gap-4 animate-fade-in">
+                        <button class="type-btn option-btn bg-white border-2 border-green-300 text-green-800 hover:bg-green-50 font-bold text-xl py-4 rounded-xl" data-type="declarative">Declarative</button>
+                        <button class="type-btn option-btn bg-white border-2 border-green-300 text-green-800 hover:bg-green-50 font-bold text-xl py-4 rounded-xl" data-type="exclamatory">Exclamatory</button>
+                        <button class="type-btn option-btn bg-white border-2 border-green-300 text-green-800 hover:bg-green-50 font-bold text-xl py-4 rounded-xl" data-type="interrogative">Interrogative</button>
+                        <button class="type-btn option-btn bg-white border-2 border-green-300 text-green-800 hover:bg-green-50 font-bold text-xl py-4 rounded-xl" data-type="imperative">Imperative</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- End Game Modal -->
+    <div id="end-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl p-10 max-w-lg w-full text-center transform scale-95 transition-transform duration-300 border-4 border-purple-200" id="modal-content">
+            <div class="w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-6 bg-purple-100 text-5xl border-4 border-white shadow-[0_0_20px_rgba(168,85,247,0.4)] animate-pop">
+                🎉
+            </div>
+            <h2 class="text-4xl font-black text-purple-800 mb-2 font-['Fredoka']">Dual Master!</h2>
+            <p class="text-xl text-slate-600 mb-8 font-bold">You mastered <span id="final-score" class="text-purple-600 text-2xl">0</span> vocabulary and sentence pairs!</p>
+            
+            <button onclick="initGame()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-2xl font-black py-4 px-8 rounded-2xl shadow-xl transition-all active:scale-95 border-b-4 border-indigo-800">
+                Play Again!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game Data combining Vocab and the 4 Sentence Types
+        const gameData = [
+            {
+                prefix: "Wow, the", suffix: "of those fresh cookies is absolutely amazing",
+                targetWord: "aroma", wordOptions: ["aroma", "beverage", "bland", "cluster"],
+                targetType: "exclamatory", punctuation: "!"
+            },
+            {
+                prefix: "Would you like a cold", suffix: "with your lunch",
+                targetWord: "beverage", wordOptions: ["beverage", "equivalent", "brittle", "purchase"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "The soup was too", suffix: ", so I added some salt and pepper",
+                targetWord: "bland", wordOptions: ["bland", "tropical", "crave", "export"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "Handle those", suffix: "glass ornaments with extreme care",
+                targetWord: "brittle", wordOptions: ["brittle", "bland", "tropical", "equivalent"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "A large", suffix: "of bright stars shone in the night sky",
+                targetWord: "cluster", wordOptions: ["cluster", "aroma", "beverage", "export"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "", suffix: "the flour and sugar in a large mixing bowl",
+                targetWord: "Combine", wordOptions: ["Combine", "Extract", "Cultivate", "Introduce"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "Did the wild fire", suffix: "the entire forest",
+                targetWord: "consume", wordOptions: ["consume", "crave", "purchase", "combine"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "I", suffix: "a slice of chocolate cake so much right now",
+                targetWord: "crave", wordOptions: ["crave", "extract", "cultivate", "consume"],
+                targetType: "exclamatory", punctuation: "!"
+            },
+            {
+                prefix: "The farmer plans to", suffix: "corn in this field next year",
+                targetWord: "cultivate", wordOptions: ["cultivate", "export", "combine", "introduce"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "Is one cup", suffix: "to eight fluid ounces",
+                targetWord: "equivalent", wordOptions: ["equivalent", "brittle", "bland", "tropical"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "Our country will", suffix: "these cars across the ocean",
+                targetWord: "export", wordOptions: ["export", "extract", "purchase", "consume"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "Carefully", suffix: "the splinter from your finger",
+                targetWord: "extract", wordOptions: ["extract", "combine", "introduce", "cultivate"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "Please", suffix: "yourself to the new student",
+                targetWord: "introduce", wordOptions: ["introduce", "combine", "extract", "crave"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "I can't believe I finally got to", suffix: "this video game",
+                targetWord: "purchase", wordOptions: ["purchase", "consume", "export", "extract"],
+                targetType: "exclamatory", punctuation: "!"
+            },
+            {
+                prefix: "Have you ever visited a warm,", suffix: "island",
+                targetWord: "tropical", wordOptions: ["tropical", "brittle", "bland", "equivalent"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "The spicy", suffix: "of the pine forest was incredibly refreshing",
+                targetWord: "aroma", wordOptions: ["aroma", "bland", "cluster", "beverage"],
+                targetType: "exclamatory", punctuation: "!"
+            },
+            {
+                prefix: "Grab a sports", suffix: "before you head out to the soccer field",
+                targetWord: "beverage", wordOptions: ["beverage", "equivalent", "tropical", "purchase"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "Why did they paint the walls such a", suffix: "and boring shade of gray",
+                targetWord: "bland", wordOptions: ["bland", "brittle", "tropical", "crave"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "Carefully turn the", suffix: "pages of this ancient history book",
+                targetWord: "brittle", wordOptions: ["brittle", "bland", "equivalent", "tropical"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "A small", suffix: "of tourists gathered around the famous monument",
+                targetWord: "cluster", wordOptions: ["cluster", "aroma", "beverage", "export"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "If we", suffix: "our ideas, we can build the best science project ever",
+                targetWord: "combine", wordOptions: ["combine", "extract", "introduce", "cultivate"],
+                targetType: "exclamatory", punctuation: "!"
+            },
+            {
+                prefix: "Does playing video games", suffix: "all of your free time on the weekends",
+                targetWord: "consume", wordOptions: ["consume", "crave", "export", "combine"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "After months of staying inside, I", suffix: "an exciting outdoor adventure",
+                targetWord: "crave", wordOptions: ["crave", "extract", "cultivate", "consume"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "Always try to", suffix: "good study habits while you are still young",
+                targetWord: "cultivate", wordOptions: ["cultivate", "combine", "export", "introduce"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "Is one gold coin", suffix: "to fifty silver pieces in this board game",
+                targetWord: "equivalent", wordOptions: ["equivalent", "brittle", "bland", "tropical"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "The studio plans to", suffix: "their popular new movie to theaters worldwide",
+                targetWord: "export", wordOptions: ["export", "extract", "purchase", "consume"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "How did the detective", suffix: "the secret code from the hidden message",
+                targetWord: "extract", wordOptions: ["extract", "combine", "introduce", "cultivate"],
+                targetType: "interrogative", punctuation: "?"
+            },
+            {
+                prefix: "Next year, the school will", suffix: "a brand new robotics class",
+                targetWord: "introduce", wordOptions: ["introduce", "combine", "extract", "crave"],
+                targetType: "declarative", punctuation: "."
+            },
+            {
+                prefix: "Please", suffix: "your concert tickets before they sell out completely",
+                targetWord: "purchase", wordOptions: ["purchase", "consume", "export", "extract"],
+                targetType: "imperative", punctuation: "."
+            },
+            {
+                prefix: "Look at all the brightly colored", suffix: "fish swimming in that huge aquarium",
+                targetWord: "tropical", wordOptions: ["tropical", "brittle", "bland", "equivalent"],
+                targetType: "imperative", punctuation: "!"
+            }
+        ];
+
+        // DOM Elements
+        const sentenceContainer = document.getElementById('sentence-container');
+        const wordOptionsContainer = document.getElementById('word-options');
+        const step1Container = document.getElementById('step-1-container');
+        const step2Container = document.getElementById('step-2-container');
+        const typeButtons = document.querySelectorAll('.type-btn');
+        const scoreCount = document.getElementById('score-count');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const endModal = document.getElementById('end-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        // State variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        let isProcessing = false;
+        let currentQ = null;
+
+        function startGame() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+            initGame();
+        }
+
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            scoreCount.textContent = score;
+            
+            endModal.classList.add('hidden');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+
+            shuffledQuestions = shuffleArray([...gameData]);
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isProcessing = false;
+            currentQ = shuffledQuestions[currentQuestionIndex];
+
+            // Reset UI states
+            step1Container.classList.remove('hidden');
+            step2Container.classList.add('hidden');
+            
+            // Re-trigger slide animation
+            const card = document.getElementById('question-card');
+            card.classList.remove('animate-slide-up');
+            void card.offsetWidth;
+            card.classList.add('animate-slide-up');
+
+            // Update Progress
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${shuffledQuestions.length}`;
+            const progressPercent = (currentQuestionIndex / shuffledQuestions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Build Sentence HTML
+            const blankHTML = `<span id="word-blank" class="inline-block min-w-[140px] text-center border-b-4 border-dashed border-purple-300 text-purple-200 pb-1 mx-2 transition-all duration-300">______</span>`;
+            const punctHTML = `<span id="punct-blank" class="inline-block w-8 h-8 rounded-full bg-slate-100 border-2 border-slate-300 shadow-inner align-baseline ml-1 flex-shrink-0"></span>`;
+            
+            sentenceContainer.innerHTML = `
+                ${currentQ.prefix ? `<span>${currentQ.prefix}</span>` : ''} 
+                ${blankHTML} 
+                <span class="${currentQ.suffix.startsWith(',') ? '-ml-2' : ''}">${currentQ.suffix}</span>${punctHTML}
+            `;
+
+            // Render Word Options
+            wordOptionsContainer.innerHTML = '';
+            const shuffledWords = shuffleArray([...currentQ.wordOptions]);
+
+            shuffledWords.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn bg-white border-2 border-purple-200 text-purple-700 hover:bg-purple-50 font-bold text-xl py-4 px-2 rounded-xl text-center w-full';
+                btn.textContent = word;
+                btn.onclick = () => handleWordAnswer(btn, word);
+                wordOptionsContainer.appendChild(btn);
+            });
+
+            // Reset Type buttons
+            typeButtons.forEach(btn => {
+                btn.className = 'type-btn option-btn bg-white border-2 border-green-300 text-green-800 hover:bg-green-50 font-bold text-xl py-4 rounded-xl';
+                btn.disabled = false;
+                // clear old listeners and add fresh one
+                btn.onclick = () => handleTypeAnswer(btn, btn.dataset.type);
+            });
+        }
+
+        function handleWordAnswer(clickedBtn, selectedWord) {
+            if (isProcessing) return;
+            
+            const isCorrect = (selectedWord === currentQ.targetWord);
+            
+            if (isCorrect) {
+                isProcessing = true; // lock word selection
+                clickedBtn.classList.add('correct-btn', 'animate-pop');
+                
+                // Fill the blank
+                const wordBlank = document.getElementById('word-blank');
+                wordBlank.outerHTML = `<span class="text-purple-600 border-b-4 border-purple-600 font-bold px-1 mx-2 animate-pop">${currentQ.targetWord}</span>`;
+                
+                // Hide step 1, show step 2 after a tiny delay
+                setTimeout(() => {
+                    step1Container.classList.add('hidden');
+                    step2Container.classList.remove('hidden');
+                    isProcessing = false; // unlock for step 2
+                }, 600);
+
+            } else {
+                clickedBtn.classList.add('wrong-btn', 'animate-shake');
+                setTimeout(() => {
+                    clickedBtn.classList.remove('wrong-btn', 'animate-shake');
+                }, 500);
+            }
+        }
+
+        function handleTypeAnswer(clickedBtn, selectedType) {
+            if (isProcessing) return;
+            isProcessing = true; // Lock everything
+
+            // Disable all type buttons
+            typeButtons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = (selectedType === currentQ.targetType);
+
+            if (isCorrect) {
+                clickedBtn.classList.add('correct-btn', 'animate-pop');
+                
+                // Add Score (They get 1 point for successfully completing both steps)
+                score++;
+                scoreCount.textContent = score;
+                scoreCount.classList.add('animate-pop');
+                setTimeout(() => scoreCount.classList.remove('animate-pop'), 300);
+
+                // Fill Punctuation visually
+                const punctBlank = document.getElementById('punct-blank');
+                punctBlank.outerHTML = `<span class="text-green-600 font-black text-4xl ml-1 animate-pop drop-shadow-md">${currentQ.punctuation}</span>`;
+
+                // Move to next question
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < shuffledQuestions.length) {
+                        loadQuestion();
+                    } else {
+                        showEndGame();
+                    }
+                }, 2000);
+
+            } else {
+                clickedBtn.classList.add('wrong-btn', 'animate-shake');
+                
+                // Show correct answer
+                typeButtons.forEach(btn => {
+                    if (btn.dataset.type === currentQ.targetType) {
+                        btn.classList.add('correct-btn');
+                    }
+                });
+
+                // Fill Punctuation visually anyway to show them
+                const punctBlank = document.getElementById('punct-blank');
+                punctBlank.outerHTML = `<span class="text-red-500 font-black text-4xl ml-1 animate-pop drop-shadow-md">${currentQ.punctuation}</span>`;
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < shuffledQuestions.length) {
+                        loadQuestion();
+                    } else {
+                        showEndGame();
+                    }
+                }, 2500);
+            }
+        }
+
+        function showEndGame() {
+            progressBar.style.width = '100%';
+            document.getElementById('final-score').textContent = score;
+
+            endModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+    </script>
+</body>
+</html>
