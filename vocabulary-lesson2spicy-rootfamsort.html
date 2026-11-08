@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌶️ Spicy Root Families Sort 🌶️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #fffbeb; /* Light amber */
+            background-image: radial-gradient(#fcd34d 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.4s ease-out forwards;
+        }
+
+        @keyframes plantSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15) translateY(-5px); background-color: #bef264; }
+            100% { transform: scale(1) translateY(0); }
+        }
+        .animate-success {
+            animation: plantSuccess 0.5s ease-out;
+        }
+
+        /* Interactive Elements */
+        .word-chip {
+            transition: all 0.2s;
+            box-shadow: 0 4px 0px 0px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .word-chip:hover:not(.placed) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0px 0px rgba(0,0,0,0.15);
+        }
+        .word-chip:active:not(.placed) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px 0px rgba(0,0,0,0.1);
+        }
+        .word-chip.selected {
+            border-color: #ef4444; /* red-500 */
+            background-color: #fee2e2; /* red-100 */
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.4), 0 6px 0px 0px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+        .word-chip.placed {
+            cursor: default;
+            box-shadow: none;
+            border-bottom-width: 2px;
+            pointer-events: none; /* Can't click once placed */
+        }
+
+        .root-tree {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .root-tree.highlight-target {
+            border-color: #ef4444;
+            background-color: #fff1f2;
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+
+    <!-- Header -->
+    <header class="text-center mb-8 bg-white p-6 rounded-3xl shadow-lg border-4 border-red-400 max-w-4xl w-full animate-pop">
+        <h1 class="text-3xl md:text-5xl font-bold text-red-600 mb-2">🌶️ Spicy Root Families Sort! 🌶️</h1>
+        <p class="text-lg md:text-xl text-gray-700 font-semibold mb-2">Sort the spicy words into their Root Trees!</p>
+        <div class="bg-red-50 inline-block px-4 py-2 rounded-xl border-2 border-red-200">
+            <p class="text-sm md:text-base text-red-800 font-bold">
+                👉 Directions: Click a word in the bank, then click the matching Root Tree to plant it!
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl w-full flex flex-col gap-8">
+        
+        <!-- Word Bank -->
+        <div class="bg-white p-6 rounded-3xl shadow-md border-4 border-orange-300 relative z-20">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-orange-600 flex items-center gap-2">
+                    🔥 Spicy Word Bank
+                </h2>
+                <span id="words-left" class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-bold text-sm">
+                    10 Words Left
+                </span>
+            </div>
+            
+            <div id="word-bank" class="flex flex-wrap gap-3 justify-center min-h-[80px]">
+                <!-- Word chips injected by JS -->
+            </div>
+        </div>
+
+        <!-- Root Trees Grid -->
+        <div id="trees-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 relative z-10">
+            <!-- Root Trees injected by JS -->
+        </div>
+
+    </main>
+
+    <!-- Celebration Modal (Hidden) -->
+    <div id="win-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center border-8 border-green-400 animate-pop">
+            <div class="text-7xl mb-4">🌶️🎉🌳</div>
+            <h2 class="text-4xl font-bold text-green-600 mb-4">Extra Spicy!</h2>
+            <p class="text-xl text-gray-700 font-semibold mb-8">You successfully sorted all the words into their root families!</p>
+            <button onclick="initGame()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-full text-xl shadow-[0_6px_0_0_#b91c1c] active:shadow-[0_2px_0_0_#b91c1c] active:translate-y-1 transition-all w-full">
+                Play Again 🔄
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game Data expanded to 30 words (up to ~8th grade level)
+        const words = [
+            // DUCT (to lead)
+            { text: "introduce", root: "duct" },
+            { text: "conductor", root: "duct" },
+            { text: "induct", root: "duct" },
+            { text: "deduct", root: "duct" },
+            { text: "aqueduct", root: "duct" },
+            { text: "produce", root: "duct" },
+
+            // EQUA (equal or even)
+            { text: "equal", root: "equa" },
+            { text: "equator", root: "equa" },
+            { text: "equitable", root: "equa" },
+            { text: "equation", root: "equa" },
+            { text: "inequity", root: "equa" },
+            { text: "equanimity", root: "equa" },
+
+            // PORT (to carry)
+            { text: "export", root: "port" },
+            { text: "portable", root: "port" },
+            { text: "transport", root: "port" },
+            { text: "deportment", root: "port" },
+            { text: "portfolio", root: "port" },
+            { text: "importation", root: "port" },
+
+            // TRACT (to pull)
+            { text: "extract", root: "tract" },
+            { text: "distract", root: "tract" },
+            { text: "retract", root: "tract" },
+            { text: "intractable", root: "tract" },
+            { text: "subtraction", root: "tract" },
+            { text: "attraction", root: "tract text" },
+
+            // VAL (worth or value)
+            { text: "value", root: "val" },
+            { text: "evaluate", root: "val" },
+            { text: "valiant", root: "val" },
+            { text: "ambivalent", root: "val" },
+            { text: "validity", root: "val" },
+            { text: "devaluate", root: "val" }
+        ];
+
+        const roots = [
+            { id: "duct", meaning: "to lead", icon: "🚂" },
+            { id: "equa", meaning: "equal/even", icon: "⚖️" },
+            { id: "port", meaning: "to carry", icon: "🎒" },
+            { id: "tract", meaning: "to pull", icon: "🚜" },
+            { id: "val", meaning: "worth", icon: "💎" }
+        ];
+
+        // State
+        let selectedWordBtn = null;
+        let wordsRemaining = 0;
+
+        // DOM Elements
+        const wordBankEl = document.getElementById('word-bank');
+        const treesContainerEl = document.getElementById('trees-container');
+        const wordsLeftEl = document.getElementById('words-left');
+        const winModal = document.getElementById('win-modal');
+
+        // Shuffle Array Helper
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Initialize / Reset Game
+        function initGame() {
+            selectedWordBtn = null;
+            wordsRemaining = words.length;
+            winModal.classList.add('hidden');
+            
+            updateCounter();
+            renderWords();
+            renderTrees();
+        }
+
+        function updateCounter() {
+            wordsLeftEl.textContent = `${wordsRemaining} Words Left`;
+            if (wordsRemaining === 0) {
+                wordsLeftEl.classList.remove('bg-orange-100', 'text-orange-800');
+                wordsLeftEl.classList.add('bg-green-100', 'text-green-800');
+                wordsLeftEl.textContent = "All Sorted! 🎉";
+            } else {
+                wordsLeftEl.classList.add('bg-orange-100', 'text-orange-800');
+                wordsLeftEl.classList.remove('bg-green-100', 'text-green-800');
+            }
+        }
+
+        // Render the Word Bank
+        function renderWords() {
+            wordBankEl.innerHTML = '';
+            const shuffledWords = shuffle([...words]);
+
+            shuffledWords.forEach(wordObj => {
+                const btn = document.createElement('button');
+                btn.className = 'word-chip bg-white border-2 border-gray-300 text-gray-800 font-bold py-2 px-4 rounded-xl text-lg md:text-xl';
+                btn.textContent = wordObj.text;
+                btn.dataset.root = wordObj.root;
+                
+                btn.addEventListener('click', (e) => handleWordClick(e, btn));
+                wordBankEl.appendChild(btn);
+            });
+        }
+
+        // Render the Root Trees
+        function renderTrees() {
+            treesContainerEl.innerHTML = '';
+            
+            roots.forEach(rootObj => {
+                const treeCard = document.createElement('div');
+                treeCard.className = 'root-tree bg-white border-4 border-green-300 rounded-3xl p-4 flex flex-col h-full min-h-[250px]';
+                treeCard.dataset.root = rootObj.id;
+                
+                treeCard.innerHTML = `
+                    <div class="text-center mb-3 pb-3 border-b-2 border-green-100 pointer-events-none">
+                        <div class="text-4xl mb-1">${rootObj.icon}</div>
+                        <h3 class="text-2xl font-bold text-green-700 uppercase">${rootObj.id}</h3>
+                        <p class="text-sm text-green-600 font-semibold">${rootObj.meaning}</p>
+                    </div>
+                    <div class="tree-slots flex flex-col gap-2 flex-grow pointer-events-none">
+                        <!-- Sorted words will go here -->
+                    </div>
+                `;
+
+                // Add click listener to the whole tree card
+                treeCard.addEventListener('click', () => handleTreeClick(treeCard));
+                treesContainerEl.appendChild(treeCard);
+            });
+        }
+
+        // Handle clicking a word in the bank
+        function handleWordClick(e, btn) {
+            // Prevent clicking if word is already placed in a tree
+            if (btn.classList.contains('placed')) return;
+
+            // Deselect currently selected word
+            if (selectedWordBtn) {
+                selectedWordBtn.classList.remove('selected');
+            }
+
+            // If clicking the same word, just deselect (toggle off)
+            if (selectedWordBtn === btn) {
+                selectedWordBtn = null;
+                removeTreeHighlights();
+                return;
+            }
+
+            // Select the new word
+            selectedWordBtn = btn;
+            btn.classList.add('selected');
+
+            // Give a subtle hint by highlighting trees slightly
+            highlightTrees();
+        }
+
+        // Handle clicking a root tree
+        function handleTreeClick(treeCard) {
+            // If no word is selected, do nothing
+            if (!selectedWordBtn) return;
+
+            const targetRoot = treeCard.dataset.root;
+            const wordRoot = selectedWordBtn.dataset.root;
+
+            if (targetRoot === wordRoot) {
+                // CORRECT MATCH!
+                moveWordToTree(selectedWordBtn, treeCard);
+                selectedWordBtn = null;
+                removeTreeHighlights();
+                wordsRemaining--;
+                updateCounter();
+                
+                checkWin();
+            } else {
+                // INCORRECT MATCH
+                handleError(selectedWordBtn, treeCard);
+            }
+        }
+
+        function moveWordToTree(wordBtn, treeCard) {
+            // Remove selection styles and add placed styles
+            wordBtn.classList.remove('selected');
+            wordBtn.classList.add('placed', 'bg-green-100', 'border-green-400', 'text-green-900', 'animate-success');
+            wordBtn.classList.remove('border-gray-300', 'text-gray-800');
+
+            // Find the slot container inside the tree and append the word
+            const slots = treeCard.querySelector('.tree-slots');
+            slots.appendChild(wordBtn);
+
+            // Visual feedback on the tree
+            treeCard.classList.add('border-green-500', 'bg-green-50');
+            setTimeout(() => {
+                treeCard.classList.remove('border-green-500', 'bg-green-50');
+            }, 300);
+        }
+
+        function handleError(wordBtn, treeCard) {
+            // Visual shake feedback on the word
+            wordBtn.classList.add('animate-shake', 'bg-red-200', 'border-red-500', 'text-red-900');
+            
+            // Visual flash on the wrong tree
+            treeCard.classList.add('bg-red-50', 'border-red-400');
+            
+            setTimeout(() => {
+                wordBtn.classList.remove('animate-shake', 'bg-red-200', 'border-red-500', 'text-red-900');
+                treeCard.classList.remove('bg-red-50', 'border-red-400');
+            }, 400);
+        }
+
+        function highlightTrees() {
+            document.querySelectorAll('.root-tree').forEach(tree => {
+                tree.classList.add('highlight-target');
+            });
+        }
+
+        function removeTreeHighlights() {
+            document.querySelectorAll('.root-tree').forEach(tree => {
+                tree.classList.remove('highlight-target');
+            });
+        }
+
+        function checkWin() {
+            if (wordsRemaining === 0) {
+                setTimeout(() => {
+                    winModal.classList.remove('hidden');
+                }, 500); // Short delay before showing win screen
+            }
+        }
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
