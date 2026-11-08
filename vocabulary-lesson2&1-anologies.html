@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analogy Challenge: Lessons 1 & 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4; /* emerald-50 */
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+            color: #1e293b;
+        }
+
+        h1, h2, .analogy-text {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+
+        /* Option Buttons */
+        .option-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0px 0px rgba(0,0,0,0.1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0px 0px rgba(0,0,0,0.1);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px 0px transparent;
+        }
+        
+        .correct-btn {
+            background-color: #10b981 !important; /* emerald */
+            border-color: #059669 !important;
+            color: white !important;
+            box-shadow: 0 4px 0px 0px #047857 !important;
+        }
+        .wrong-btn {
+            background-color: #f43f5e !important; /* rose */
+            border-color: #e11d48 !important;
+            color: white !important;
+            box-shadow: 0 4px 0px 0px #be123c !important;
+        }
+
+        .analogy-box {
+            background: white;
+            border: 2px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- Intro Landing Page -->
+    <div id="intro-screen" class="w-full max-w-4xl flex flex-col gap-6 animate-slide-up">
+        <div class="bg-white rounded-[2rem] shadow-xl p-8 md:p-12 border-t-8 border-emerald-500 text-center relative overflow-hidden">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-inner">
+                🧩
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-black text-emerald-800 mb-4 tracking-tight">Analogy Challenge: Lessons 1 & 2</h1>
+            <p class="text-lg md:text-xl text-slate-600 mb-6 max-w-2xl mx-auto">
+                Test your word power across <strong>27 questions</strong>! Review the 13 common analogy relationships below before you begin.
+            </p>
+
+            <!-- 13 Word Relationships Reference Chart -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 md:p-6 mb-8 text-left max-h-80 overflow-y-auto shadow-inner">
+                <table class="w-full text-sm md:text-base">
+                    <thead>
+                        <tr class="text-emerald-800 font-black uppercase tracking-wider border-b-2 border-slate-300">
+                            <th class="pb-3 px-2">Relationship Type</th>
+                            <th class="pb-3 px-2">Example</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-700">
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Antonyms</td><td class="py-2 px-2">up : down</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Synonyms</td><td class="py-2 px-2">great : wonderful</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Part : Whole</td><td class="py-2 px-2">trunk : tree</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Tool : Its action</td><td class="py-2 px-2">crayon : draw</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Tool user : Tool</td><td class="py-2 px-2">carpenter : hammer</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Tool : Object it's used with</td><td class="py-2 px-2">hammer : nails</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Category : Example</td><td class="py-2 px-2">dog : Golden Retriever</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Cause : Effect</td><td class="py-2 px-2">practice : improve</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Intensity</td><td class="py-2 px-2">unhappiness : misery</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Action : Thing acted upon</td><td class="py-2 px-2">read : book</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Action : Subject performing action</td><td class="py-2 px-2">teach : teacher</td></tr>
+                        <tr class="border-b border-slate-200"><td class="py-2 px-2 font-bold text-emerald-600">Object or Place : Its user</td><td class="py-2 px-2">chalk : teacher</td></tr>
+                        <tr><td class="py-2 px-2 font-bold text-emerald-600">Noun : Closely related adjective</td><td class="py-2 px-2">elephant : enormous</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="startGame()" class="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-2xl font-black py-4 px-12 rounded-2xl shadow-[0_6px_0_rgba(5,150,105,0.3)] transition-all active:scale-95 active:shadow-none hover:-translate-y-1">
+                Start 27-Question Challenge!
+            </button>
+        </div>
+    </div>
+
+    <!-- Wrapper for Game UI (Hidden initially) -->
+    <div id="game-screen" class="hidden w-full flex-col items-center">
+        
+        <!-- Header -->
+        <header class="w-full max-w-4xl flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-3xl shadow-sm border border-emerald-100">
+            <div class="flex items-center gap-4 text-center md:text-left">
+                <div class="bg-emerald-100 text-emerald-600 p-4 rounded-2xl shadow-inner transform -rotate-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-black text-emerald-800 tracking-tight">Analogy Challenge</h1>
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Lessons 1 & 2 • 27 Questions</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100 text-center">
+                    <span class="text-xs font-black text-emerald-400 uppercase tracking-widest block mb-1">Score</span>
+                    <div class="text-3xl font-black text-emerald-600 leading-none">
+                        <span id="score-count">0</span><span class="text-xl text-emerald-400">/27</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="w-full max-w-4xl flex-1 flex flex-col gap-6">
+            
+            <!-- Progress Bar -->
+            <div class="w-full mb-2">
+                <div class="flex justify-between text-xs font-bold text-emerald-600 mb-2 uppercase tracking-widest">
+                    <span>Progress</span>
+                    <span id="progress-text">Question 1 of 27</span>
+                </div>
+                <div class="w-full bg-emerald-200 rounded-full h-4 border border-emerald-300">
+                    <div id="progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div id="question-card" class="analogy-box rounded-3xl p-8 md:p-12 text-center relative overflow-hidden shadow-xl">
+                
+                <!-- Toggleable Hint Button & Container -->
+                <div class="flex flex-col items-center justify-center mb-4">
+                    <button id="hint-btn" onclick="toggleHint()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 text-xs md:text-sm font-bold uppercase tracking-wider py-2 px-5 rounded-full shadow-sm transition-all active:scale-95">
+                        💡 Reveal Relationship Hint
+                    </button>
+                    <div id="hint-badge" class="hidden mt-2 bg-emerald-600 text-white text-xs md:text-sm font-bold uppercase tracking-widest py-2 px-6 rounded-full shadow-md animate-pop">
+                        Hint: <span id="hint-text" class="text-white"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex flex-col items-center justify-center gap-6 md:gap-8 analogy-text text-3xl md:text-5xl font-semibold tracking-wide">
+                    
+                    <!-- Top Half of Analogy -->
+                    <div class="flex items-center gap-4 text-slate-700">
+                        <span id="word1" class="text-emerald-700 font-bold">word1</span>
+                        <span class="text-emerald-400 text-2xl md:text-4xl">:</span>
+                        <span id="word2" class="bg-emerald-50 px-4 py-2 rounded-xl border-2 border-emerald-200 text-emerald-500 shadow-inner min-w-[120px]">[ ? ]</span>
+                    </div>
+                    
+                    <!-- The "AS" connector -->
+                    <div class="text-emerald-500 text-xl md:text-2xl italic font-serif">
+                        as
+                    </div>
+
+                    <!-- Bottom Half of Analogy -->
+                    <div class="flex items-center gap-4 text-slate-600 opacity-90">
+                        <span id="word3">word3</span>
+                        <span class="text-emerald-400 text-2xl md:text-4xl">:</span>
+                        <span id="word4">word4</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multiple Choice Options -->
+            <div id="options-container" class="grid grid-cols-2 gap-4 pb-8 mt-4">
+                <!-- Buttons injected here -->
+            </div>
+
+        </main>
+    </div> <!-- End Game Wrapper -->
+
+    <!-- End Game Modal -->
+    <div id="end-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl p-10 max-w-lg w-full text-center transform scale-95 transition-transform duration-300 border-4 border-emerald-100" id="modal-content">
+            <div class="w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-6 bg-emerald-100 text-5xl border-4 border-white shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-pop">
+                🏆
+            </div>
+            <h2 class="text-4xl font-black text-emerald-800 mb-2 font-['Fredoka']">Challenge Complete!</h2>
+            <p class="text-xl text-slate-600 mb-8 font-bold">You mastered <span id="final-score" class="text-emerald-600 text-2xl">0</span> out of 27 analogies!</p>
+            
+            <button onclick="initGame()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-2xl font-black py-4 px-8 rounded-2xl shadow-xl transition-all active:scale-95 border-b-4 border-teal-800">
+                Play Again!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data containing 27 analogy questions with Lessons 1 & 2 vocabulary (100% unique & non-repeating)
+        const gameData = [
+            {
+                relation: "Antonyms (Opposites)",
+                word1: "export", word2: "import", word3: "pedestrian", word4: "[ ? ]",
+                target: "driver",
+                options: ["driver", "companion", "obstacle", "concept"]
+            },
+            {
+                relation: "Category : Example",
+                word1: "beverage", word2: "tea", word3: "companion", word4: "[ ? ]",
+                target: "teammate",
+                options: ["teammate", "aroma", "obstacle", "concept"]
+            },
+            {
+                relation: "Intensity (Weak to Strong)",
+                word1: "prefer", word2: "crave", word3: "nudge", word4: "[ ? ]",
+                target: "jostle",
+                options: ["jostle", "budge", "accustom", "retire"]
+            },
+            {
+                relation: "Part : Whole",
+                word1: "grapes", word2: "cluster", word3: "soldiers", word4: "[ ? ]",
+                target: "army",
+                options: ["army", "obstacle", "companion", "patient"]
+            },
+            {
+                relation: "Tool : Its Action",
+                word1: "plow", word2: "cultivate", word3: "tugboat", word4: "[ ? ]",
+                target: "budge",
+                options: ["budge", "assign", "distract", "retire"]
+            },
+            {
+                relation: "Antonyms (Opposites)",
+                word1: "bland", word2: "flavorful", word3: "obedient", word4: "[ ? ]",
+                target: "rebel",
+                options: ["rebel", "burly", "compatible", "alert"]
+            },
+            {
+                relation: "Synonyms (Same Meaning)",
+                word1: "equivalent", word2: "equal", word3: "obstacle", word4: "[ ? ]",
+                target: "barrier",
+                options: ["barrier", "concept", "assignment", "beverage"]
+            },
+            {
+                relation: "Action : Thing Acted Upon",
+                word1: "extract", word2: "tooth", word3: "assign", word4: "[ ? ]",
+                target: "duty",
+                options: ["duty", "pedestrian", "companion", "alert"]
+            },
+            {
+                relation: "Noun : Closely Related Adjective",
+                word1: "jungle", word2: "tropical", word3: "guard", word4: "[ ? ]",
+                target: "alert",
+                options: ["alert", "brittle", "bland", "burly"]
+            },
+            {
+                relation: "Synonyms (Same Meaning)",
+                word1: "aroma", word2: "fragrance", word3: "companion", word4: "[ ? ]",
+                target: "partner",
+                options: ["partner", "pedestrian", "obstacle", "beverage"]
+            },
+            {
+                relation: "Action : Thing Acted Upon",
+                word1: "consume", word2: "food", word3: "distract", word4: "[ ? ]",
+                target: "attention",
+                options: ["attention", "concept", "assignment", "obstacle"]
+            },
+            {
+                relation: "Noun : Closely Related Adjective",
+                word1: "glass", word2: "brittle", word3: "lumberjack", word4: "[ ? ]",
+                target: "burly",
+                options: ["burly", "obedient", "compatible", "alert"]
+            },
+            {
+                relation: "Action : Thing Acted Upon",
+                word1: "introduce", word2: "stranger", word3: "accustom", word4: "[ ? ]",
+                target: "newcomer",
+                options: ["newcomer", "obstacle", "concept", "pedestrian"]
+            },
+            {
+                relation: "Antonyms (Opposites)",
+                word1: "combine", word2: "divide", word3: "compatible", word4: "[ ? ]",
+                target: "clashing",
+                options: ["clashing", "obedient", "burly", "alert"]
+            },
+            {
+                relation: "Synonyms (Same Meaning)",
+                word1: "purchase", word2: "buy", word3: "retire", word4: "[ ? ]",
+                target: "withdraw",
+                options: ["withdraw", "assign", "distract", "jostle"]
+            },
+            {
+                relation: "Antonyms (Opposites)",
+                word1: "bland", word2: "flavorful", word3: "brittle", word4: "[ ? ]",
+                target: "flexible",
+                options: ["flexible", "compatible", "tropical", "burly"]
+            },
+            {
+                relation: "Synonyms (Same Meaning)",
+                word1: "aroma", word2: "scent", word3: "concept", word4: "[ ? ]",
+                target: "notion",
+                options: ["notion", "beverage", "obstacle", "assignment"]
+            },
+            {
+                relation: "Professional : Person Served",
+                word1: "doctor", word2: "patient", word3: "teacher", word4: "[ ? ]",
+                target: "student",
+                options: ["student", "instructor", "chalk", "assignment"]
+            },
+            {
+                relation: "Noun : Closely Related Adjective",
+                word1: "artist", word2: "creative", word3: "babysitter", word4: "[ ? ]",
+                target: "patient",
+                options: ["patient", "alert", "burly", "obedient"]
+            },
+            {
+                relation: "Action : Thing Acted Upon",
+                word1: "read", word2: "book", word3: "purchase", word4: "[ ? ]",
+                target: "item",
+                options: ["item", "pedestrian", "aroma", "obstacle"]
+            },
+            {
+                relation: "Tool : Its Action",
+                word1: "broom", word2: "sweep", word3: "horn", word4: "[ ? ]",
+                target: "alert",
+                options: ["alert", "distract", "retire", "jostle"]
+            },
+            {
+                relation: "Category : Example",
+                word1: "fruit", word2: "apple", word3: "beverage", word4: "[ ? ]",
+                target: "juice",
+                options: ["juice", "aroma", "cluster", "extract"]
+            },
+            {
+                relation: "Cause : Effect",
+                word1: "study", word2: "learn", word3: "accustom", word4: "[ ? ]",
+                target: "adapt",
+                options: ["adapt", "retire", "distract", "budge"]
+            },
+            {
+                relation: "Part : Whole",
+                word1: "finger", word2: "hand", word3: "grape", word4: "[ ? ]",
+                target: "cluster",
+                options: ["cluster", "obstacle", "concept", "assignment"]
+            },
+            {
+                relation: "Tool : Its Action",
+                word1: "tractor", word2: "cultivate", word3: "lever", word4: "[ ? ]",
+                target: "budge",
+                options: ["budge", "distract", "retire", "export"]
+            },
+            {
+                relation: "Action : Subject",
+                word1: "teach", word2: "teacher", word3: "walk", word4: "[ ? ]",
+                target: "pedestrian",
+                options: ["pedestrian", "companion", "patient", "exporter"]
+            },
+            {
+                relation: "Cause : Effect",
+                word1: "joke", word2: "laugh", word3: "obstacle", word4: "[ ? ]",
+                target: "delay",
+                options: ["delay", "partner", "barrier", "notion"]
+            }
+        ];
+
+        // DOM Elements
+        const hintText = document.getElementById('hint-text');
+        const hintBadge = document.getElementById('hint-badge');
+        const hintBtn = document.getElementById('hint-btn');
+        const word1El = document.getElementById('word1');
+        const word2El = document.getElementById('word2');
+        const word3El = document.getElementById('word3');
+        const word4El = document.getElementById('word4');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreCount = document.getElementById('score-count');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const questionCard = document.getElementById('question-card');
+        const endModal = document.getElementById('end-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        // State variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        let isProcessing = false;
+
+        function startGame() {
+            // Hide intro screen, show game screen
+            document.getElementById('intro-screen').classList.add('hidden');
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+            
+            initGame();
+        }
+
+        function toggleHint() {
+            if (hintBadge.classList.contains('hidden')) {
+                hintBadge.classList.remove('hidden');
+                hintBtn.classList.add('hidden');
+            }
+        }
+
+        // Shuffle utility
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Initialize Game
+        function initGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            scoreCount.textContent = score;
+            isProcessing = false;
+
+            // Hide Modal
+            endModal.classList.add('hidden');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+
+            // Shuffle questions and options
+            shuffledQuestions = shuffleArray([...gameData]);
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isProcessing = false;
+            const currentQ = shuffledQuestions[currentQuestionIndex];
+
+            // Reset Hint Button
+            hintBadge.classList.add('hidden');
+            hintBtn.classList.remove('hidden');
+
+            // Re-trigger slide animation
+            questionCard.classList.remove('animate-slide-up');
+            void questionCard.offsetWidth;
+            questionCard.classList.add('animate-slide-up');
+
+            // Update Progress
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${shuffledQuestions.length}`;
+            const progressPercent = (currentQuestionIndex / shuffledQuestions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Fill Text
+            hintText.textContent = currentQ.relation;
+            
+            // Format the blank space
+            const blankHTML = `<span class="bg-emerald-50 px-4 py-1 md:py-2 rounded-xl border-2 border-emerald-200 border-dashed text-emerald-400 shadow-inner inline-block min-w-[100px] md:min-w-[140px]">[ ? ]</span>`;
+            
+            word1El.innerHTML = currentQ.word1 === "[ ? ]" ? blankHTML : currentQ.word1;
+            word2El.innerHTML = currentQ.word2 === "[ ? ]" ? blankHTML : currentQ.word2;
+            word3El.innerHTML = currentQ.word3 === "[ ? ]" ? blankHTML : currentQ.word3;
+            word4El.innerHTML = currentQ.word4 === "[ ? ]" ? blankHTML : currentQ.word4;
+
+            // Render Options
+            optionsContainer.innerHTML = '';
+            const shuffledOptions = shuffleArray([...currentQ.options]);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn bg-white border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-bold text-xl md:text-2xl py-5 px-4 rounded-2xl text-center w-full flex items-center justify-center';
+                btn.textContent = opt;
+                
+                btn.onclick = () => handleAnswer(btn, opt, currentQ);
+                
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(clickedBtn, selectedWord, currentQ) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const allBtns = optionsContainer.querySelectorAll('button');
+            allBtns.forEach(btn => btn.disabled = true); // Lock buttons
+
+            const isCorrect = (selectedWord === currentQ.target);
+
+            // Fill in the blank visually
+            const filledHTML = `<span class="bg-emerald-500 px-4 py-1 md:py-2 rounded-xl border border-emerald-400 text-white shadow-lg inline-block min-w-[100px] md:min-w-[140px] animate-pop">${currentQ.target}</span>`;
+            
+            if (currentQ.word1 === "[ ? ]") word1El.innerHTML = filledHTML;
+            if (currentQ.word2 === "[ ? ]") word2El.innerHTML = filledHTML;
+            if (currentQ.word3 === "[ ? ]") word3El.innerHTML = filledHTML;
+            if (currentQ.word4 === "[ ? ]") word4El.innerHTML = filledHTML;
+
+            if (isCorrect) {
+                // Correct styling
+                clickedBtn.classList.add('correct-btn', 'animate-pop');
+                score++;
+                scoreCount.textContent = score;
+                scoreCount.classList.add('animate-pop');
+                setTimeout(() => scoreCount.classList.remove('animate-pop'), 300);
+            } else {
+                // Incorrect styling
+                clickedBtn.classList.add('wrong-btn', 'animate-shake');
+                
+                // Show which one was correct
+                allBtns.forEach(btn => {
+                    if (btn.textContent === currentQ.target) {
+                        btn.classList.add('correct-btn');
+                    }
+                });
+            }
+
+            // Next question timer
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < shuffledQuestions.length) {
+                    loadQuestion();
+                } else {
+                    showEndGame();
+                }
+            }, 2000);
+        }
+
+        function showEndGame() {
+            progressBar.style.width = '100%';
+            document.getElementById('final-score').textContent = score;
+
+            endModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+    </script>
+</body>
+</html>
