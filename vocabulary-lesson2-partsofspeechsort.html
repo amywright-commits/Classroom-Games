@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts of Speech Sort - Vocabulary Derivations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fff7ed; /* orange-50 */
+            background-image: 
+                radial-gradient(circle at 15% 40%, rgba(251, 146, 60, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 85% 60%, rgba(244, 114, 182, 0.1) 0%, transparent 40%);
+            color: #1e293b;
+        }
+
+        h1, h2, .sort-title {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+
+        .category-card {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0px 0px rgba(0,0,0,0.06);
+        }
+        .category-card:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0px 0px rgba(0,0,0,0.08);
+        }
+        .category-card:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 0px 0px 0px transparent;
+        }
+
+        .correct-card {
+            background-color: #10b981 !important; /* emerald */
+            border-color: #059669 !important;
+            color: white !important;
+            box-shadow: 0 4px 0px 0px #047857 !important;
+        }
+        .wrong-card {
+            background-color: #f43f5e !important; /* rose */
+            border-color: #e11d48 !important;
+            color: white !important;
+            box-shadow: 0 4px 0px 0px #be123c !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- Intro Landing Screen with Chart -->
+    <div id="intro-screen" class="w-full max-w-5xl flex flex-col gap-6 animate-slide-up">
+        <div class="bg-white rounded-[2rem] shadow-xl p-6 md:p-10 border-t-8 border-orange-500 relative overflow-hidden">
+            
+            <h1 class="text-3xl md:text-5xl font-black text-orange-600 mb-2 tracking-tight text-center">Parts of Speech Sort</h1>
+            <p class="text-base md:text-lg text-slate-600 mb-8 text-center max-w-3xl mx-auto">
+                Review the chart below to understand the 4 parts of speech before sorting our vocabulary words and their derivations!
+            </p>
+            
+            <!-- Recreated Table from Screenshot -->
+            <div class="w-full overflow-x-auto mb-8 shadow-sm rounded-xl border-2 border-slate-300">
+                <table class="w-full text-left min-w-[700px] border-collapse bg-white">
+                    <thead>
+                        <tr class="bg-pink-100 border-b-2 border-slate-300">
+                            <th class="p-4 font-black text-slate-800 text-lg text-center border-r border-slate-300 w-1/4">part of speech</th>
+                            <th class="p-4 font-black text-slate-800 text-lg text-center border-r border-slate-300 w-5/12">definition</th>
+                            <th class="p-4 font-black text-slate-800 text-lg text-center w-1/3">examples</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base md:text-lg text-slate-700 font-medium">
+                        <!-- Verbs -->
+                        <tr class="border-b border-slate-300">
+                            <td class="p-4 border-r border-slate-300 font-black text-slate-800 text-center">
+                                <div class="text-xl font-bold mb-1">verbs</div>
+                            </td>
+                            <td class="p-4 border-r border-slate-300">the action of the sentence; can be in past, present, or future tense</td>
+                            <td class="p-4 italic font-serif leading-relaxed">clipped<br>darting<br>will cackle<br>bickered</td>
+                        </tr>
+                        <!-- Nouns -->
+                        <tr class="border-b border-slate-300">
+                            <td class="p-4 border-r border-slate-300 font-black text-slate-800 text-center">
+                                <div class="text-xl font-bold mb-1">nouns (subjects)</div>
+                            </td>
+                            <td class="p-4 border-r border-slate-300">person, place, thing, or idea; can be common or proper; can be concrete or abstract</td>
+                            <td class="p-4 italic font-serif leading-relaxed">rat / Timmy<br>school / Breck<br>shoe / Nike<br>forgiveness</td>
+                        </tr>
+                        <!-- Descriptive Adjectives -->
+                        <tr class="border-b border-slate-300">
+                            <td class="p-4 border-r border-slate-300 font-black text-slate-800 text-center">
+                                <div class="text-xl font-bold mb-1">descriptive adjectives</div>
+                            </td>
+                            <td class="p-4 border-r border-slate-300">describes, or modifies, a noun; can tell you more about WHAT the noun is LIKE</td>
+                            <td class="p-4 italic font-serif leading-relaxed">rigorous<br>flowing<br>obnoxious<br>vivid</td>
+                        </tr>
+                        <!-- Adverbs -->
+                        <tr>
+                            <td class="p-4 border-r border-slate-300 font-black text-slate-800 text-center">
+                                <div class="text-xl font-bold mb-1">adverbs (of manner)</div>
+                            </td>
+                            <td class="p-4 border-r border-slate-300">describes, or modifies, a verb; can tell you more about HOW the verb is done</td>
+                            <td class="p-4 italic font-serif leading-relaxed">sarcastically<br>delicately<br>expertly<br>gallantly</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center">
+                <button onclick="startGame()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white text-2xl font-black py-4 px-12 rounded-2xl shadow-[0_6px_0_rgba(234,88,12,0.3)] transition-all active:scale-95 hover:-translate-y-1 inline-flex items-center justify-center gap-3">
+                    Start Sorting Practice! 
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Sorting Game View -->
+    <div id="game-screen" class="hidden w-full max-w-4xl flex-col items-center">
+        
+        <!-- Header -->
+        <header class="w-full flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-5 rounded-3xl shadow-sm border border-orange-100">
+            <div class="flex items-center gap-4 text-center md:text-left">
+                <div class="bg-orange-100 text-orange-500 p-3 rounded-xl shadow-inner text-2xl">
+                    📝
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black text-orange-800 tracking-tight">Parts of Speech Sort</h1>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Vocab & Derivations</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-orange-50 px-5 py-2 rounded-xl border border-orange-100 text-center">
+                    <span class="text-[10px] font-black text-orange-400 uppercase tracking-widest block mb-1">Score</span>
+                    <div class="text-2xl font-black text-orange-600 leading-none">
+                        <span id="score-count">0</span><span class="text-lg text-orange-300">/30</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Container -->
+        <main class="w-full flex-1 flex flex-col gap-6">
+            
+            <!-- Progress Bar -->
+            <div class="w-full mb-2">
+                <div class="flex justify-between text-xs font-bold text-orange-500 mb-2 uppercase tracking-widest">
+                    <span>Progress</span>
+                    <span id="progress-text">Word 1 of 20</span>
+                </div>
+                <div class="w-full bg-orange-200 rounded-full h-3 border border-orange-300">
+                    <div id="progress-bar" class="bg-orange-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Target Word Prompt Card -->
+            <div id="word-card" class="bg-white rounded-3xl p-8 md:p-12 text-center relative overflow-hidden shadow-lg border-2 border-orange-100">
+                <span class="text-xs font-black uppercase tracking-widest text-orange-400 block mb-2">Which Part of Speech is this word?</span>
+                <h2 id="current-word" class="text-4xl md:text-6xl font-black text-slate-800 tracking-wide font-['Fredoka'] text-orange-600">
+                    <!-- Word injected via JS -->
+                </h2>
+                <p id="word-context" class="text-base md:text-lg text-slate-500 mt-4 italic">
+                    <!-- Clue/sentence example injected via JS -->
+                </p>
+            </div>
+
+            <!-- 4 Category Choice Buttons -->
+            <div id="categories-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="handleCategorySelect('verb')" data-pos="verb" class="category-card bg-white border-2 border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-orange-400 text-left">
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800">Verbs</h3>
+                        <p class="text-xs text-slate-500">Action of the sentence</p>
+                    </div>
+                </button>
+
+                <button onclick="handleCategorySelect('noun')" data-pos="noun" class="category-card bg-white border-2 border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-orange-400 text-left">
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800">Nouns (Subjects)</h3>
+                        <p class="text-xs text-slate-500">Person, place, thing, or idea</p>
+                    </div>
+                </button>
+
+                <button onclick="handleCategorySelect('adjective')" data-pos="adjective" class="category-card bg-white border-2 border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-orange-400 text-left">
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800">Descriptive Adjectives</h3>
+                        <p class="text-xs text-slate-500">Describes WHAT a noun is LIKE</p>
+                    </div>
+                </button>
+
+                <button onclick="handleCategorySelect('adverb')" data-pos="adverb" class="category-card bg-white border-2 border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-orange-400 text-left">
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800">Adverbs (of Manner)</h3>
+                        <p class="text-xs text-slate-500">Describes HOW a verb is done</p>
+                    </div>
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- End Game Modal -->
+    <div id="end-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl p-10 max-w-lg w-full text-center transform scale-95 transition-transform duration-300 border-4 border-orange-200" id="modal-content">
+            <div class="w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-6 bg-orange-100 text-5xl border-4 border-white shadow-[0_0_20px_rgba(251,146,60,0.4)] animate-pop">
+                ⭐
+            </div>
+            <h2 class="text-4xl font-black text-orange-800 mb-2 font-['Fredoka']">Sorting Master!</h2>
+            <p class="text-xl text-slate-600 mb-8 font-bold">You correctly sorted <span id="final-score" class="text-orange-600 text-2xl">0</span> vocabulary words!</p>
+            
+            <button onclick="initGame()" class="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-2xl font-black py-4 px-8 rounded-2xl shadow-xl transition-all active:scale-95 border-b-4 border-amber-800">
+                Play Again!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Vocabulary Words & Derivations Data
+        const vocabularyData = [
+            { word: "aromatic", type: "adjective", context: "The aromatic tea filled the kitchen with a cinnamon scent." },
+            { word: "beverage", type: "noun", context: "Cold water is a refreshing beverage on a warm day." },
+            { word: "blandly", type: "adverb", context: "He answered blandly, showing no emotion in his voice." },
+            { word: "brittle", type: "adjective", context: "The dry tree branches became brittle and broke easily." },
+            { word: "clustered", type: "verb", context: "The excited children clustered around the storyteller." },
+            { word: "combination", type: "noun", context: "Lockers require a secret combination of three numbers." },
+            { word: "consume", type: "verb", context: "Lions consume large meals after hunting on the savanna." },
+            { word: "craving", type: "noun", context: "She had a strong craving for fresh strawberries." },
+            { word: "cultivate", type: "verb", context: "Gardeners cultivate rich soil to help vegetables grow." },
+            { word: "equivalence", type: "noun", context: "The math teacher explained the equivalence of fractions." },
+            { word: "exporter", type: "noun", context: "The country is a leading exporter of tropical fruits." },
+            { word: "extraction", type: "noun", context: "The dentist completed the tooth extraction quickly." },
+            { word: "reintroduce", type: "verb", context: "Park rangers will reintroduce wild wolves to the forest." },
+            { word: "purchaser", type: "noun", context: "The purchaser paid for the items at the register." },
+            { word: "subtropical", type: "adjective", context: "Florida has a warm, subtropical climate." },
+            { word: "blandness", type: "noun", context: "The blandness of the plain rice needed extra spices." },
+            { word: "extracts", type: "verb", context: "The scientist extracts oil from sunflower seeds." },
+            { word: "brittleness", type: "noun", context: "The brittleness of the thin ice made it unsafe for skating." },
+            { word: "expertly", type: "adverb", context: "She expertly played the piano piece without any mistakes." },
+            { word: "crave", type: "verb", context: "Runners crave cold water after completing a long race." },
+            { word: "cultivation", type: "noun", context: "The cultivation of wheat takes careful farming and water." },
+            { word: "combinable", type: "adjective", context: "These lego bricks are easily combinable into a tall tower." },
+            { word: "consumer", type: "noun", context: "A smart consumer compares prices before buying a new bike." },
+            { word: "exportation", type: "noun", context: "The exportation of coffee beans brings money to the island." },
+            { word: "purchasable", type: "adjective", context: "Extra game coins are purchasable in the online store." },
+            { word: "equivalently", type: "adverb", context: "Both students performed equivalently well on the history test." },
+            { word: "reintroduction", type: "noun", context: "The reintroduction of native wildflowers helped the bees." },
+            { word: "consumable", type: "adjective", context: "Snacks and fruit are consumable items on our camping trip." },
+            { word: "uncultivated", type: "adjective", context: "The wild, uncultivated field was full of tall weeds." },
+            { word: "clustering", type: "verb", context: "Swallowtail butterflies were clustering around the garden." }
+        ];
+
+        // DOM Elements
+<!-- ... existing code -->
