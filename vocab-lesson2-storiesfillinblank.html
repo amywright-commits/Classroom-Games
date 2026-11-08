@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Adventure Story - Lesson 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Blank styles */
+        .blank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+            height: 32px;
+            padding: 0 10px;
+            margin: 0 4px;
+            border-bottom: 2px dashed #818cf8; /* indigo-400 */
+            background-color: #eef2ff; /* indigo-50 */
+            color: #4338ca; /* indigo-700 */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            vertical-align: middle;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .blank:hover {
+            background-color: #e0e7ff; /* indigo-100 */
+        }
+
+        .blank.filled {
+            border-bottom: 2px solid transparent;
+            background-color: #c7d2fe; /* indigo-200 */
+            border-radius: 6px;
+        }
+
+        .blank.correct {
+            background-color: #bbf7d0 !important; /* green-200 */
+            color: #166534 !important; /* green-800 */
+            border-bottom-color: transparent !important;
+        }
+
+        .blank.incorrect {
+            background-color: #fecaca !important; /* red-200 */
+            color: #991b1b !important; /* red-800 */
+            border-bottom-color: #ef4444 !important; /* red-500 */
+        }
+
+        /* Word Bank styles */
+        .word-item {
+            user-select: none;
+            transition: all 0.2s;
+        }
+        
+        .word-item.selected {
+            box-shadow: 0 0 0 4px #818cf8;
+            background-color: #818cf8;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .word-item.used {
+            opacity: 0.4;
+            pointer-events: none;
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col items-center pb-12">
+
+    <!-- Header Section -->
+    <header class="w-full bg-indigo-600 text-white shadow-md py-6 px-4 mb-6 sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold mb-1">Vocab Adventure Story</h1>
+                    <p class="text-indigo-200 text-sm md:text-base font-medium">Lesson 2 • Fill in the blanks to complete the stories!</p>
+                </div>
+                <button onclick="resetGame()" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    Start Over
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl px-4 flex flex-col gap-6">
+        
+        <!-- Instructions -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 border-l-4 border-indigo-500">
+            <p class="text-slate-600 font-medium">
+                <strong>How to play:</strong> Click a word in the word bank to select it, then click an empty blank in the story to place it there. If you change your mind, click the word in the story to put it back!
+            </p>
+        </div>
+
+        <!-- Word Bank (Sticky just under header) -->
+        <div class="bg-white rounded-2xl shadow-md p-6 sticky top-[104px] z-10 border border-slate-200">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Word Bank</h2>
+            <div id="word-bank" class="flex flex-wrap gap-2">
+                <!-- Words injected via JS -->
+            </div>
+        </div>
+
+        <!-- Round Selection Buttons -->
+        <div class="flex flex-wrap justify-center gap-3 mt-4 mb-2 md:gap-6">
+            <button id="btn-round-0" onclick="changeRound(0)" class="px-6 py-3 rounded-xl font-bold text-lg shadow-sm transition-colors bg-indigo-600 text-white">Round 1</button>
+            <button id="btn-round-1" onclick="changeRound(1)" class="px-6 py-3 rounded-xl font-bold text-lg shadow-sm transition-colors bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50">Round 2</button>
+            <button id="btn-round-2" onclick="changeRound(2)" class="px-6 py-3 rounded-xl font-bold text-lg shadow-sm transition-colors bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50">Round 3</button>
+        </div>
+
+        <!-- Stories Container -->
+        <div id="stories-container" class="bg-white rounded-2xl shadow-md p-8 md:p-10 border border-slate-200 text-lg leading-relaxed text-slate-700">
+            <!-- Stories injected via JS -->
+        </div>
+
+        <!-- Check Answers Button -->
+        <div class="flex justify-center mt-2 mb-12">
+            <button onclick="checkAnswers()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold py-4 px-12 rounded-xl shadow-lg transition-transform transform active:scale-95">
+                Check Answers
+            </button>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center transform scale-95 transition-transform duration-300" id="modal-content">
+            <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 bg-green-100 text-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Awesome Job!</h2>
+            <p class="text-lg text-slate-600 mb-6">You successfully completed all the stories with the correct vocabulary words!</p>
+            <button onclick="resetGame()" class="w-full bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-4 px-8 rounded-xl shadow-lg transition-colors active:scale-95">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            "aroma", "beverage", "bland", "brittle", "cluster", 
+            "combine", "consume", "crave", "cultivate", "equivalent", 
+            "export", "extract", "introduce", "purchase", "tropical"
+        ];
+
+        let selectedWordBtn = null;
+        let selectedWordText = "";
+        let currentRound = 0;
+        let blanks = [];
+
+        const roundsData = [
+            // Round 1
+            [
+                { title: "Story 1: The Island Market", content: `The bustling market in the <span class="blank" data-correct="tropical"></span> village was full of life. A thick, sweet <span class="blank" data-correct="aroma"></span> of roasting coffee beans and fresh fruit filled the humid air. Locals gathered in a tight <span class="blank" data-correct="cluster"></span> around the main stall to buy fresh goods from the merchants. I decided to <span class="blank" data-correct="purchase"></span> a cold, refreshing <span class="blank" data-correct="beverage"></span> to help me cool down in the sweltering afternoon heat.` },
+                { title: "Story 2: The Farming Experiment", content: `The scientist wanted to <span class="blank" data-correct="cultivate"></span> a new type of grain that could survive harsh droughts. First, she had to carefully <span class="blank" data-correct="extract"></span> seeds from a rare desert plant. She then attempted to <span class="blank" data-correct="combine"></span> them with ordinary wheat in the greenhouse. Unfortunately, the resulting crop was quite <span class="blank" data-correct="bland"></span> in flavor, making it difficult for the farm animals to <span class="blank" data-correct="consume"></span> it eagerly.` },
+                { title: "Story 3: The Ancient Trade Route", content: `Ancient merchants would often <span class="blank" data-correct="export"></span> valuable spices to distant lands across the sea. In exchange, they received gold and silk that were roughly <span class="blank" data-correct="equivalent"></span> in value. The merchants aimed to <span class="blank" data-correct="introduce"></span> these exotic flavors to kings and queens, who would soon <span class="blank" data-correct="crave"></span> them daily. However, the dried spice leaves were quite <span class="blank" data-correct="brittle"></span> and had to be packed carefully so they wouldn't crumble into dust during the long voyage.` }
+            ],
+            // Round 2
+            [
+                { title: "Story 1: The Mars Colony", content: `When humans finally arrived on Mars, they wanted to <span class="blank" data-correct="introduce"></span> a completely new way of living. Because the journey was exhausting, the first thing they unpacked was a caffeinated <span class="blank" data-correct="beverage"></span> that was roughly <span class="blank" data-correct="equivalent"></span> to Earth coffee. As the rich <span class="blank" data-correct="aroma"></span> filled the station, scientists immediately began trying to <span class="blank" data-correct="cultivate"></span> crops in the red soil.` },
+                { title: "Story 2: The Stolen Artifact", content: `The museum curator was devastated when the ancient clay vase was stolen, as it was incredibly <span class="blank" data-correct="brittle"></span> and fragile. A massive <span class="blank" data-correct="cluster"></span> of detectives gathered around the empty glass display case. The museum had originally managed to <span class="blank" data-correct="purchase"></span> the artifact for millions of dollars, and they feared the thieves would try to <span class="blank" data-correct="export"></span> it to a buyer in another country. The public began to <span class="blank" data-correct="crave"></span> justice for the crime.` },
+                { title: "Story 3: The Jungle Antidote", content: `Deep within the <span class="blank" data-correct="tropical"></span> rainforest, a biologist discovered a rare vine. She carefully managed to <span class="blank" data-correct="extract"></span> a milky sap from its leaves, which she planned to <span class="blank" data-correct="combine"></span> with sterile water. Although the resulting mixture was surprisingly <span class="blank" data-correct="bland"></span> and tasteless, she knew the patient had to <span class="blank" data-correct="consume"></span> the entire dose to be cured of the venom.` }
+            ],
+            // Round 3
+            [
+                { title: "Story 1: The Wizard's Brew", content: `The ancient sorcerer needed to <span class="blank" data-correct="combine"></span> crushed moonstones and dragon scales for his legendary potion. The bubbling cauldron released a terrible <span class="blank" data-correct="aroma"></span>, but the magic it produced was <span class="blank" data-correct="equivalent"></span> to a hundred healing spells. When the king heard of this, he desperately wanted to <span class="blank" data-correct="purchase"></span> the secret formula, as many wealthy nobles began to <span class="blank" data-correct="crave"></span> immortality.` },
+                { title: "Story 2: The Abyss Expedition", content: `Far below the surface of the <span class="blank" data-correct="tropical"></span> ocean, the submarine's lights illuminated a massive <span class="blank" data-correct="cluster"></span> of bioluminescent jellyfish. The robotic arm carefully tried to <span class="blank" data-correct="extract"></span> a sample of coral, but the icy water made the coral extremely <span class="blank" data-correct="brittle"></span> and it snapped. The lead scientist hoped this expedition would <span class="blank" data-correct="introduce"></span> the world to species never seen before, celebrating later with a hot <span class="blank" data-correct="beverage"></span>.` },
+                { title: "Story 3: The Factory City", content: `The sprawling, futuristic city was designed to mass-produce and <span class="blank" data-correct="export"></span> advanced technology to neighboring planets. Unfortunately, the citizens would eagerly <span class="blank" data-correct="consume"></span> so much processed food that they forgot what natural ingredients tasted like. The artificial meals were terribly <span class="blank" data-correct="bland"></span>. To fix this, a group of rebels decided to secretly <span class="blank" data-correct="cultivate"></span> an underground garden of real vegetables.` }
+            ]
+        ];
+
+        const wordBankContainer = document.getElementById('word-bank');
+        const successModal = document.getElementById('success-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        function changeRound(index) {
+            currentRound = index;
+            initGame();
+        }
+
+        function renderRound(index) {
+            // Update buttons UI
+            for(let i=0; i<3; i++) {
+                const btn = document.getElementById(`btn-round-${i}`);
+                if (i === index) {
+                    btn.className = "px-6 py-3 rounded-xl font-bold text-lg shadow-sm transition-colors bg-indigo-600 text-white";
+                } else {
+                    btn.className = "px-6 py-3 rounded-xl font-bold text-lg shadow-sm transition-colors bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50";
+                }
+            }
+
+            // Render stories
+            const container = document.getElementById('stories-container');
+            container.innerHTML = '';
+            
+            roundsData[index].forEach((story, i) => {
+                const isLast = i === roundsData[index].length - 1;
+                const html = `
+                    <section class="${isLast ? 'mb-6' : 'mb-10'}">
+                        <h3 class="text-xl font-bold text-indigo-600 mb-4 border-b border-slate-100 pb-2">${story.title}</h3>
+                        <p class="indent-8 mb-4">${story.content}</p>
+                    </section>
+                `;
+                container.innerHTML += html;
+            });
+            
+            // Re-select newly injected blanks
+            blanks = document.querySelectorAll('.blank');
+        }
+
+        // Initialize Game
+        function initGame() {
+            // Render the current round stories FIRST so blanks exist
+            renderRound(currentRound);
+
+            // Sort words alphabetically for the word bank
+            const sortedWords = [...words].sort();
+            
+            wordBankContainer.innerHTML = '';
+            sortedWords.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'word-item bg-indigo-100 text-indigo-800 font-bold py-2 px-4 rounded-full cursor-pointer hover:bg-indigo-200 shadow-sm border border-indigo-200';
+                btn.textContent = word;
+                btn.dataset.word = word;
+                btn.onclick = () => selectWord(btn);
+                wordBankContainer.appendChild(btn);
+            });
+
+            // Reset all blanks
+            blanks.forEach(blank => {
+                blank.textContent = '';
+                blank.classList.remove('filled', 'correct', 'incorrect');
+                blank.onclick = () => handleBlankClick(blank);
+            });
+
+            selectedWordBtn = null;
+            selectedWordText = "";
+            
+            successModal.classList.add('hidden');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+        }
+
+        // Handle selecting a word from the bank
+        function selectWord(btn) {
+            // If already used, do nothing
+            if (btn.classList.contains('used')) return;
+
+            // Deselect previous
+            if (selectedWordBtn) {
+                selectedWordBtn.classList.remove('selected');
+            }
+
+            // If clicking the same button, just deselect it
+            if (selectedWordBtn === btn) {
+                selectedWordBtn = null;
+                selectedWordText = "";
+                return;
+            }
+
+            // Select new
+            btn.classList.add('selected');
+            selectedWordBtn = btn;
+            selectedWordText = btn.dataset.word;
+        }
+
+        // Handle clicking a blank in the story
+        function handleBlankClick(blank) {
+            // Remove highlighting classes if they exist from a previous check
+            blank.classList.remove('correct', 'incorrect');
+
+            // CASE 1: Blank has a word, and user wants to remove it
+            if (blank.textContent) {
+                const currentWord = blank.textContent;
+                
+                // Find it in the word bank and un-use it
+                const bankBtn = document.querySelector(`.word-item[data-word="${currentWord}"]`);
+                if (bankBtn) {
+                    bankBtn.classList.remove('used');
+                }
+
+                // Empty the blank
+                blank.textContent = '';
+                blank.classList.remove('filled');
+            }
+
+            // CASE 2: User has a word selected from the bank and wants to place it
+            if (selectedWordText) {
+                // If there was already a word here, it was removed in Case 1.
+                // Now place the new word.
+                blank.textContent = selectedWordText;
+                blank.classList.add('filled');
+
+                // Mark word as used in bank
+                selectedWordBtn.classList.remove('selected');
+                selectedWordBtn.classList.add('used');
+
+                // Clear selection
+                selectedWordBtn = null;
+                selectedWordText = "";
+            }
+        }
+
+        // Check Answers
+        function checkAnswers() {
+            let allCorrect = true;
+            let firstIncorrect = null;
+
+            blanks.forEach(blank => {
+                const currentWord = blank.textContent;
+                const correctWord = blank.dataset.correct;
+
+                // Reset animation
+                blank.classList.remove('animate-shake', 'correct', 'incorrect');
+                void blank.offsetWidth; // trigger reflow for animation
+
+                if (!currentWord) {
+                    allCorrect = false;
+                    blank.classList.add('incorrect', 'animate-shake');
+                    if (!firstIncorrect) firstIncorrect = blank;
+                } else if (currentWord === correctWord) {
+                    blank.classList.add('correct');
+                } else {
+                    allCorrect = false;
+                    blank.classList.add('incorrect', 'animate-shake');
+                    if (!firstIncorrect) firstIncorrect = blank;
+                }
+            });
+
+            if (allCorrect) {
+                // Show success modal
+                successModal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.add('scale-100');
+                }, 10);
+            } else if (firstIncorrect) {
+                // Scroll to the first mistake
+                firstIncorrect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function resetGame() {
+            initGame();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Start on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
