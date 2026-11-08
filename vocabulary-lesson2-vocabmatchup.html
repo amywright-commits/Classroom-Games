@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Match-Up - Lesson 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s ease-in-out;
+        }
+
+        /* Card Styles */
+        .card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .card:hover:not(.matched):not(.selected) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .card.selected {
+            background-color: #DBEAFE; /* Tailwind blue-100 */
+            border-color: #3B82F6; /* Tailwind blue-500 */
+            border-width: 2px;
+            transform: scale(1.02);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+        }
+        .card.matched {
+            background-color: #D1FAE5; /* Tailwind green-100 */
+            border-color: #10B981; /* Tailwind green-500 */
+            color: #065F46; /* Tailwind green-900 */
+            cursor: default;
+            opacity: 0.8;
+            pointer-events: none;
+            border-width: 2px;
+        }
+        .card.error {
+            background-color: #FEE2E2; /* Tailwind red-100 */
+            border-color: #EF4444; /* Tailwind red-500 */
+            border-width: 2px;
+        }
+
+        /* Ensure smooth scrolling if content overflows */
+        .game-board {
+            scrollbar-width: thin;
+            scrollbar-color: #CBD5E1 transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col items-center py-8">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-6xl px-4 flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-blue-600 mb-2">Vocabulary Match-Up!</h1>
+            <p class="text-lg text-slate-600 font-medium">Wordly Wise 3000 - Lesson 2</p>
+            <p class="text-sm text-slate-500 mt-1">Click a word, then click its definition to make a match.</p>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Score</span>
+                <div class="text-2xl font-bold text-blue-600"><span id="score">0</span> / 15</div>
+            </div>
+            <button onclick="resetGame()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition-colors shadow-md active:scale-95 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+                Restart
+            </button>
+        </div>
+    </header>
+
+    <!-- Game Board Layout -->
+    <main class="w-full max-w-6xl px-4 grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+        <!-- Words Column -->
+        <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-slate-100 flex flex-col h-[70vh] md:h-[75vh]">
+            <h2 class="text-xl font-bold text-slate-700 mb-4 border-b pb-2">Words</h2>
+            <div id="words-container" class="game-board flex-1 overflow-y-auto space-y-3 pr-2">
+                <!-- Word cards injected here -->
+            </div>
+        </div>
+
+        <!-- Definitions Column -->
+        <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-slate-100 flex flex-col h-[70vh] md:h-[75vh]">
+            <h2 class="text-xl font-bold text-slate-700 mb-4 border-b pb-2">Definitions</h2>
+            <div id="definitions-container" class="game-board flex-1 overflow-y-auto space-y-3 pr-2">
+                <!-- Definition cards injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Congratulatory Modal (Hidden by default) -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center transform scale-95 transition-transform duration-300" id="modal-content">
+            <div class="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Awesome Job!</h2>
+            <p class="text-lg text-slate-600 mb-8">You successfully matched all 15 vocabulary words!</p>
+            <button onclick="resetGame()" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-4 px-8 rounded-xl shadow-lg transition-colors active:scale-95">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Vocabulary Data
+        const vocabularyData = [
+            { id: 1, word: "aroma", definition: "A smell or odor, especially a pleasant one." },
+            { id: 2, word: "beverage", definition: "A liquid used as a drink." },
+            { id: 3, word: "bland", definition: "Lacking strong flavor; not irritating or exciting." },
+            { id: 4, word: "brittle", definition: "Easily broken; not flexible." },
+            { id: 5, word: "cluster", definition: "A number of similar things grouped together; to gather in a group." },
+            { id: 6, word: "combine", definition: "To join or bring together." },
+            { id: 7, word: "consume", definition: "To use up, eat, drink, or destroy." },
+            { id: 8, word: "crave", definition: "To have a strong desire for." },
+            { id: 9, word: "cultivate", definition: "To prepare land for crops, to grow, or to encourage development." },
+            { id: 10, word: "equivalent", definition: "Equal to; that which is equal to something else." },
+            { id: 11, word: "export", definition: "To send goods to another country for sale." },
+            { id: 12, word: "extract", definition: "To remove or take out; something removed or taken out." },
+            { id: 13, word: "introduce", definition: "To make known by name, or to bring into use for the first time." },
+            { id: 14, word: "purchase", definition: "To buy; something that is bought." },
+            { id: 15, word: "tropical", definition: "Of or from regions near the equator; hot and moist." }
+        ];
+
+        // Game State
+        let selectedWordId = null;
+        let selectedDefId = null;
+        let selectedWordElement = null;
+        let selectedDefElement = null;
+        let matchedPairsCount = 0;
+        let isAnimating = false; // Prevent clicks during shake animation
+
+        // DOM Elements
+        const wordsContainer = document.getElementById('words-container');
+        const definitionsContainer = document.getElementById('definitions-container');
+        const scoreElement = document.getElementById('score');
+        const modal = document.getElementById('success-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        // Utility: Shuffle Array (Fisher-Yates)
+        function shuffleArray(array) {
+            const newArr = [...array];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        }
+
+        // Initialize Game
+        function initGame() {
+            // Reset state
+            selectedWordId = null;
+            selectedDefId = null;
+            selectedWordElement = null;
+            selectedDefElement = null;
+            matchedPairsCount = 0;
+            isAnimating = false;
+            scoreElement.textContent = matchedPairsCount;
+            
+            // Hide modal if open
+            modal.classList.add('hidden');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+
+            // Clear containers
+            wordsContainer.innerHTML = '';
+            definitionsContainer.innerHTML = '';
+
+            // Shuffle both columns independently
+            const shuffledWords = shuffleArray(vocabularyData);
+            const shuffledDefs = shuffleArray(vocabularyData);
+
+            // Render Words
+            shuffledWords.forEach(item => {
+                const wordCard = createCard(item.word, item.id, 'word');
+                wordsContainer.appendChild(wordCard);
+            });
+
+            // Render Definitions
+            shuffledDefs.forEach(item => {
+                const defCard = createCard(item.definition, item.id, 'definition');
+                definitionsContainer.appendChild(defCard);
+            });
+        }
+
+        // Create HTML for a Card
+        function createCard(text, id, type) {
+            const card = document.createElement('div');
+            // Base Tailwind classes for cards
+            card.className = `card bg-slate-50 border border-slate-200 rounded-xl p-4 text-center md:text-left flex items-center min-h-[64px] ${type === 'word' ? 'justify-center font-bold text-lg md:text-xl text-blue-900' : 'justify-start text-base md:text-lg text-slate-700'}`;
+            
+            card.dataset.id = id;
+            card.dataset.type = type;
+            
+            // Internal content wrapper for proper flex alignment
+            const contentSpan = document.createElement('span');
+            contentSpan.textContent = text;
+            contentSpan.className = "w-full";
+            card.appendChild(contentSpan);
+
+            // Click listener
+            card.addEventListener('click', () => handleCardClick(card, id, type));
+
+            return card;
+        }
+
+        // Handle interactions
+        function handleCardClick(cardElement, id, type) {
+            if (isAnimating) return; // Ignore clicks during error animation
+            if (cardElement.classList.contains('matched')) return; // Ignore matched cards
+            if (cardElement.classList.contains('selected')) {
+                // Deselect if clicking the already selected card
+                cardElement.classList.remove('selected');
+                if (type === 'word') {
+                    selectedWordId = null;
+                    selectedWordElement = null;
+                } else {
+                    selectedDefId = null;
+                    selectedDefElement = null;
+                }
+                return;
+            }
+
+            // Select logic based on type (Word or Definition)
+            if (type === 'word') {
+                if (selectedWordElement) selectedWordElement.classList.remove('selected');
+                selectedWordElement = cardElement;
+                selectedWordId = id;
+            } else {
+                if (selectedDefElement) selectedDefElement.classList.remove('selected');
+                selectedDefElement = cardElement;
+                selectedDefId = id;
+            }
+
+            // Visually select
+            cardElement.classList.add('selected');
+
+            // Check for match if both are selected
+            if (selectedWordId !== null && selectedDefId !== null) {
+                checkMatch();
+            }
+        }
+
+        // Check if selected pair matches
+        function checkMatch() {
+            isAnimating = true; // Block clicks while resolving
+            
+            if (selectedWordId === selectedDefId) {
+                // Match Correct
+                setTimeout(() => {
+                    // Update classes for matched state
+                    selectedWordElement.classList.remove('selected');
+                    selectedDefElement.classList.remove('selected');
+                    
+                    selectedWordElement.classList.add('matched', 'animate-pop');
+                    selectedDefElement.classList.add('matched', 'animate-pop');
+
+                    // Increment Score
+                    matchedPairsCount++;
+                    scoreElement.textContent = matchedPairsCount;
+
+                    // Clean up animation class after it plays
+                    setTimeout(() => {
+                        selectedWordElement.classList.remove('animate-pop');
+                        selectedDefElement.classList.remove('animate-pop');
+                        resetSelections();
+                        
+                        // Check Win Condition
+                        if (matchedPairsCount === vocabularyData.length) {
+                            showWinModal();
+                        } else {
+                            isAnimating = false;
+                        }
+                    }, 300);
+                }, 150); // slight delay feels better
+                
+            } else {
+                // Match Incorrect
+                setTimeout(() => {
+                    selectedWordElement.classList.remove('selected');
+                    selectedDefElement.classList.remove('selected');
+                    
+                    selectedWordElement.classList.add('error', 'animate-shake');
+                    selectedDefElement.classList.add('error', 'animate-shake');
+
+                    // Remove error styling after animation
+                    setTimeout(() => {
+                        selectedWordElement.classList.remove('error', 'animate-shake');
+                        selectedDefElement.classList.remove('error', 'animate-shake');
+                        resetSelections();
+                        isAnimating = false;
+                    }, 400); // 400ms matches CSS animation duration
+                }, 150);
+            }
+        }
+
+        // Reset current selection state without resetting game
+        function resetSelections() {
+            selectedWordId = null;
+            selectedDefId = null;
+            selectedWordElement = null;
+            selectedDefElement = null;
+        }
+
+        // Full Game Reset tied to the button
+        function resetGame() {
+            initGame();
+        }
+
+        // Win State
+        function showWinModal() {
+            modal.classList.remove('hidden');
+            // Small delay to allow display:block to apply before animating transform
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
