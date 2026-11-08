@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picture Match-Up - Lesson 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #e0f2fe; /* light sky blue */
+            background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Card Styles */
+        .card-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            user-select: none;
+            cursor: pointer;
+        }
+        
+        .card-btn:hover:not(.locked) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-btn:active:not(.locked) {
+            transform: translateY(0);
+        }
+
+        /* Selection States */
+        .selected-word {
+            background-color: #fde047 !important; /* Yellow */
+            border-color: #eab308 !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 4px rgba(253, 224, 71, 0.4);
+        }
+
+        .selected-pic {
+            background-color: #fde047 !important;
+            border-color: #eab308 !important;
+            transform: scale(1.05) rotate(0deg) !important; /* Straighten when selected */
+            box-shadow: 0 0 0 4px rgba(253, 224, 71, 0.4);
+        }
+
+        .matched {
+            background-color: #4ade80 !important; /* Green */
+            border-color: #22c55e !important;
+            color: white !important;
+            opacity: 0.6;
+            cursor: default;
+            transform: scale(0.95) !important;
+            box-shadow: none !important;
+        }
+
+        .matched .pic-bg {
+            background-color: #f0fdf4 !important; /* light green for inner polaroid */
+        }
+
+        .error-shake {
+            background-color: #f87171 !important; /* Red */
+            border-color: #dc2626 !important;
+            color: white !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Polaroid specific styling */
+        .polaroid {
+            background: white;
+            padding: 10px 10px 20px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .polaroid-inner {
+            background: #f8fafc;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            border: 1px solid #f1f5f9;
+            transition: background-color 0.2s;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4 text-slate-800">
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-3xl shadow-md border-b-4 border-sky-200">
+        <div class="flex items-center gap-4 text-center md:text-left">
+            <div class="bg-sky-500 text-white p-4 rounded-2xl shadow-inner transform -rotate-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black text-sky-800 tracking-tight">Picture Match-Up</h1>
+                <p class="text-sm font-bold text-sky-500 uppercase tracking-widest mt-1">Lesson 2 • Wordly Wise 3000</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="bg-sky-50 px-6 py-3 rounded-2xl border-2 border-sky-100 text-center">
+                <span class="text-xs font-black text-sky-400 uppercase tracking-widest block mb-1">Matches</span>
+                <div class="text-3xl font-black text-sky-600 leading-none">
+                    <span id="score-count">0</span><span class="text-xl text-sky-300">/15</span>
+                </div>
+            </div>
+            <button onclick="initGame()" class="bg-sky-100 hover:bg-sky-200 text-sky-700 p-4 rounded-2xl font-bold transition-all shadow-sm active:scale-95 border-2 border-sky-200" title="Restart Game">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="w-full max-w-5xl flex flex-col md:flex-row gap-8">
+        
+        <!-- Left Column: Words -->
+        <div class="flex-1 bg-white p-6 rounded-3xl shadow-sm border-2 border-white">
+            <h2 class="text-lg font-black text-slate-400 uppercase tracking-widest mb-6 text-center border-b-2 border-slate-100 pb-3">1. Select a Word</h2>
+            <div id="words-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Words injected via JS -->
+            </div>
+        </div>
+
+        <!-- Right Column: Pictures (Emojis) -->
+        <div class="flex-1 bg-sky-900 p-6 rounded-3xl shadow-inner relative overflow-hidden">
+            <!-- Decorative background elements -->
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 text-sky-800 opacity-50">
+                <svg width="150" height="150" viewBox="0 0 100 100" fill="currentColor"><circle cx="50" cy="50" r="50"/></svg>
+            </div>
+            
+            <h2 class="text-lg font-black text-sky-300 uppercase tracking-widest mb-6 text-center border-b-2 border-sky-700 pb-3 relative z-10">2. Find the Picture</h2>
+            <div id="pics-container" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 relative z-10">
+                <!-- Pictures injected via JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- End Game Modal -->
+    <div id="end-modal" class="fixed inset-0 bg-sky-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl p-10 max-w-lg w-full text-center transform scale-95 transition-transform duration-300 border-8 border-sky-100" id="modal-content">
+            <div class="w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6 bg-sky-100 text-5xl animate-pop">
+                🏆
+            </div>
+            <h2 class="text-4xl font-black text-slate-800 mb-4">Picture Perfect!</h2>
+            <p class="text-xl text-slate-600 mb-8 font-bold">You matched all 15 vocabulary words correctly!</p>
+            
+            <button onclick="initGame()" class="w-full bg-sky-500 hover:bg-sky-600 text-white text-2xl font-black py-4 px-8 rounded-2xl shadow-xl transition-all active:scale-95 border-b-4 border-sky-700">
+                Play Again!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Vocabulary & Emoji Data
+        const gameData = [
+            { word: "aroma", emoji: "☕" },      // Smell of coffee
+            { word: "beverage", emoji: "🥤" },   // A drink
+            { word: "bland", emoji: "🍞" },      // Plain bread
+            { word: "brittle", emoji: "🍪" },    // Crumbling cookie
+            { word: "cluster", emoji: "🍇" },    // Group of grapes
+            { word: "combine", emoji: "🧩" },    // Puzzle pieces fitting together
+            { word: "consume", emoji: "🍽️" },    // Eating a meal
+            { word: "crave", emoji: "🤤" },      // Drooling face
+            { word: "cultivate", emoji: "🌱" },  // Growing a plant
+            { word: "equivalent", emoji: "⚖️" }, // Scales/Equal
+            { word: "export", emoji: "🚛" },     // Shipping truck
+            { word: "extract", emoji: "⛏️" },    // Mining/taking out
+            { word: "introduce", emoji: "👋" },  // Waving/meeting
+            { word: "purchase", emoji: "🛒" },   // Shopping cart
+            { word: "tropical", emoji: "🌴" }    // Palm tree
+        ];
+
+        // DOM Elements
+        const wordsContainer = document.getElementById('words-container');
+        const picsContainer = document.getElementById('pics-container');
+        const scoreCount = document.getElementById('score-count');
+        const endModal = document.getElementById('end-modal');
+        const modalContent = document.getElementById('modal-content');
+
+        // Game State
+        let selectedWordBtn = null;
+        let selectedPicBtn = null;
+        let matchedPairs = 0;
+        let isProcessing = false;
+
+        // Utility: Shuffle Array
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Initialize Game
+        function initGame() {
+            // Reset State
+            selectedWordBtn = null;
+            selectedPicBtn = null;
+            matchedPairs = 0;
+            isProcessing = false;
+            scoreCount.textContent = matchedPairs;
+            
+            // Hide Modal
+            endModal.classList.add('hidden');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+
+            // Clear Containers
+            wordsContainer.innerHTML = '';
+            picsContainer.innerHTML = '';
+
+            // Shuffle Data
+            const shuffledWords = shuffleArray(gameData);
+            const shuffledPics = shuffleArray(gameData);
+
+            // Render Words
+            shuffledWords.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'card-btn bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold text-lg md:text-xl py-4 px-2 rounded-xl text-center w-full hover:bg-slate-100';
+                btn.textContent = item.word;
+                btn.dataset.word = item.word;
+                btn.onclick = () => handleWordClick(btn);
+                wordsContainer.appendChild(btn);
+            });
+
+            // Render Pictures (Polaroids)
+            shuffledPics.forEach((item, index) => {
+                const btn = document.createElement('button');
+                // Give them a slight random rotation for the messy desk polaroid look
+                const rotation = (Math.random() * 10 - 5).toFixed(1); 
+                btn.className = 'card-btn polaroid w-full';
+                btn.style.transform = `rotate(${rotation}deg)`;
+                btn.dataset.word = item.word; // hidden link back to the word
+                
+                btn.innerHTML = `
+                    <div class="polaroid-inner pic-bg">
+                        ${item.emoji}
+                    </div>
+                `;
+                btn.onclick = () => handlePicClick(btn, rotation);
+                picsContainer.appendChild(btn);
+            });
+        }
+
+        function handleWordClick(btn) {
+            if (isProcessing || btn.classList.contains('locked')) return;
+
+            // Deselect if clicking the same one
+            if (selectedWordBtn === btn) {
+                btn.classList.remove('selected-word');
+                selectedWordBtn = null;
+                return;
+            }
+
+            // Remove highlight from previously selected word
+            if (selectedWordBtn) {
+                selectedWordBtn.classList.remove('selected-word');
+            }
+
+            // Highlight new selection
+            btn.classList.add('selected-word');
+            selectedWordBtn = btn;
+
+            checkMatch();
+        }
+
+        function handlePicClick(btn, originalRotation) {
+            if (isProcessing || btn.classList.contains('locked')) return;
+
+            // Deselect if clicking the same one
+            if (selectedPicBtn === btn) {
+                btn.classList.remove('selected-pic');
+                btn.style.transform = `rotate(${originalRotation}deg)`; // restore tilt
+                selectedPicBtn = null;
+                return;
+            }
+
+            // Remove highlight from previously selected pic
+            if (selectedPicBtn) {
+                selectedPicBtn.classList.remove('selected-pic');
+                selectedPicBtn.style.transform = selectedPicBtn.dataset.rot; // restore previous tilt
+            }
+
+            // Highlight new selection
+            btn.dataset.rot = `rotate(${originalRotation}deg)`; // save original tilt
+            btn.classList.add('selected-pic');
+            selectedPicBtn = btn;
+
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (!selectedWordBtn || !selectedPicBtn) return;
+
+            isProcessing = true;
+            const word = selectedWordBtn.dataset.word;
+            const picWord = selectedPicBtn.dataset.word;
+
+            if (word === picWord) {
+                // MATCH!
+                selectedWordBtn.classList.remove('selected-word');
+                selectedPicBtn.classList.remove('selected-pic');
+                
+                selectedWordBtn.classList.add('matched', 'locked', 'animate-pop');
+                selectedPicBtn.classList.add('matched', 'locked', 'animate-pop');
+                
+                // Ensure it stays straight when matched
+                selectedPicBtn.style.transform = 'scale(0.95)';
+
+                matchedPairs++;
+                scoreCount.textContent = matchedPairs;
+                scoreCount.classList.add('animate-pop');
+                setTimeout(() => scoreCount.classList.remove('animate-pop'), 400);
+
+                resetSelection();
+                
+                if (matchedPairs === gameData.length) {
+                    setTimeout(showEndGame, 600);
+                }
+            } else {
+                // MISMATCH!
+                selectedWordBtn.classList.add('error-shake');
+                selectedPicBtn.classList.add('error-shake');
+
+                setTimeout(() => {
+                    selectedWordBtn.classList.remove('error-shake', 'selected-word');
+                    selectedPicBtn.classList.remove('error-shake', 'selected-pic');
+                    // Restore pic tilt
+                    selectedPicBtn.style.transform = selectedPicBtn.dataset.rot;
+                    resetSelection();
+                }, 600);
+            }
+        }
+
+        function resetSelection() {
+            selectedWordBtn = null;
+            selectedPicBtn = null;
+            isProcessing = false;
+        }
+
+        function showEndGame() {
+            endModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
