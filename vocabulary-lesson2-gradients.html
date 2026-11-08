@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shades of Meaning - Paint Chips</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdfa; /* Light teal background */
+            background-image: radial-gradient(#ccfbf1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s ease-in-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        /* Paint Chip Card Styling */
+        .paint-chip-card {
+            background: white;
+            padding: 16px 16px 24px 16px;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .paint-chip-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+            pointer-events: none;
+            border-radius: 4px;
+        }
+
+        .color-block {
+            height: 80px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            margin-bottom: 4px;
+        }
+        
+        .color-block:first-child {
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+        
+        .color-block:nth-child(4) {
+            margin-bottom: 0;
+        }
+
+        .color-block:hover {
+            filter: brightness(1.05);
+        }
+
+        .word-btn {
+            transition: all 0.2s;
+        }
+        .word-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .word-btn.selected {
+            ring: 4px;
+            ring-color: #0d9488;
+            background-color: #f0fdfa;
+            border-color: #0d9488;
+            transform: scale(1.05);
+        }
+        
+        .placed-word {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4 text-slate-800">
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-teal-100">
+        <div class="flex items-center gap-4">
+            <div class="bg-teal-500 text-white p-3 rounded-full shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-teal-700 tracking-tight">Shades of Meaning</h1>
+                <p class="text-sm font-semibold text-teal-600/80 uppercase tracking-widest">Paint Chips • Lesson 2</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-right">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Progress</span>
+                <div class="text-xl font-black text-teal-600 leading-none"><span id="progress-text">1 / 5</span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Instructions -->
+    <div class="w-full max-w-5xl mb-6 text-center animate-slide-up">
+        <p class="text-lg text-slate-600 font-medium bg-white/80 inline-block px-6 py-2 rounded-full shadow-sm border border-teal-50">
+            Synonyms have different intensities! Order the words from <strong class="text-slate-400">weakest (lightest)</strong> to <strong class="text-slate-900">strongest (darkest)</strong>.
+        </p>
+    </div>
+
+    <!-- Main Game Area -->
+    <main class="w-full max-w-5xl flex flex-col lg:flex-row gap-10 items-center justify-center animate-slide-up" style="animation-delay: 0.1s;">
+        
+        <!-- Left: Paint Chip -->
+        <div class="w-full max-w-sm shrink-0">
+            <div class="paint-chip-card" id="paint-chip">
+                <!-- Color Blocks injected here -->
+                <div id="blocks-container"></div>
+                
+                <!-- Paint Chip Footer / Brand -->
+                <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-end">
+                    <div>
+                        <div class="font-black text-slate-800 text-lg tracking-tight">WORDLY<span class="text-teal-500">PAINTS</span></div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="target-word-label">Target: CRAVE</div>
+                    </div>
+                    <div class="mono text-[10px] text-slate-400 tracking-widest">
+                        NO. <span id="chip-number">01</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Controls & Word Bank -->
+        <div class="w-full max-w-md flex flex-col gap-6">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 text-center">Word Bank</h3>
+                <div class="grid grid-cols-2 gap-3" id="word-bank">
+                    <!-- Word buttons injected here -->
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="checkOrder()" id="check-btn" class="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-colors active:scale-95 flex items-center justify-center gap-2">
+                    Check Order
+                </button>
+                <button onclick="resetCurrentChip()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-4 px-4 rounded-xl shadow-sm transition-colors active:scale-95" title="Reset this chip">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Feedback Area -->
+            <div id="feedback-area" class="hidden rounded-xl p-4 text-center font-bold text-lg animate-pop">
+                <!-- Feedback injected here -->
+            </div>
+
+            <!-- Next Button (Hidden by default) -->
+            <button onclick="nextChip()" id="next-btn" class="hidden w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-colors active:scale-95 items-center justify-center gap-2">
+                Next Paint Chip
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+
+        </div>
+    </main>
+
+    <!-- End Game Modal -->
+    <div id="end-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center transform scale-95 transition-transform duration-300" id="modal-content">
+            <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 bg-teal-100 text-teal-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Master Painter!</h2>
+            <p class="text-lg text-slate-600 mb-6">You successfully sorted all the shades of meaning.</p>
+            <button onclick="initGame()" class="w-full bg-teal-500 hover:bg-teal-600 text-white text-xl font-bold py-4 px-8 rounded-xl shadow-lg transition-colors active:scale-95">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data: Arrays from Weakest (index 0) to Strongest (index 3)
+        const paintChipsData = [
+            {
+                targetWord: "CRAVE",
+                colors: ["#fecdd3", "#fb7185", "#e11d48", "#9f1239"], // Rose
+                textColors: ["#881337", "#4c0519", "#fff1f2", "#fff1f2"],
+                words: ["prefer", "want", "desire", "crave"]
+            },
+            {
+                targetWord: "BLAND",
+                colors: ["#f3f4f6", "#9ca3af", "#4b5563", "#1f2937"], // Gray
+                textColors: ["#111827", "#111827", "#f9fafb", "#f9fafb"],
+                words: ["mild", "plain", "bland", "tasteless"]
+            },
+            {
+                targetWord: "TROPICAL",
+                colors: ["#fde047", "#fb923c", "#ea580c", "#9a3412"], // Yellow-Orange
+                textColors: ["#713f12", "#431407", "#fff7ed", "#fff7ed"],
+                words: ["warm", "balmy", "hot", "tropical"]
+            },
+            {
+                targetWord: "BRITTLE",
+                colors: ["#e9d5ff", "#c084fc", "#9333ea", "#581c87"], // Purple
+                textColors: ["#3b0764", "#3b0764", "#faf5ff", "#faf5ff"],
+                words: ["delicate", "fragile", "breakable", "brittle"]
+            },
+            {
+                targetWord: "CLUSTER",
+                colors: ["#bbf7d0", "#4ade80", "#16a34a", "#14532d"], // Green
+                textColors: ["#052e16", "#052e16", "#f0fdf4", "#f0fdf4"],
+                words: ["single", "pair", "bunch", "cluster"]
+            },
+            {
+                targetWord: "AROMA",
+                colors: ["#dbeafe", "#93c5fd", "#3b82f6", "#1d4ed8"], // Blue
+                textColors: ["#1e3a8a", "#1e3a8a", "#eff6ff", "#eff6ff"],
+                words: ["hint", "scent", "smell", "aroma"]
+            },
+            {
+                targetWord: "CONSUME",
+                colors: ["#ffedd5", "#fdba74", "#ea580c", "#9a3412"], // Orange
+                textColors: ["#7c2d12", "#7c2d12", "#fff7ed", "#fff7ed"],
+                words: ["nibble", "taste", "eat", "consume"]
+            },
+            {
+                targetWord: "EXTRACT",
+                colors: ["#cffafe", "#67e8f9", "#06b6d4", "#155e75"], // Cyan
+                textColors: ["#164e63", "#164e63", "#ecfeff", "#ecfeff"],
+                words: ["tug", "pull", "yank", "extract"]
+            },
+            {
+                targetWord: "COMBINE",
+                colors: ["#fae8ff", "#f0abfc", "#d946ef", "#86198f"], // Fuchsia
+                textColors: ["#4a044e", "#4a044e", "#fdf4ff", "#fdf4ff"],
+                words: ["add", "mix", "blend", "combine"]
+            }
+        ];
+
+        let currentChipIndex = 0;
+        let selectedWord = null;
+        let placedWords = [null, null, null, null]; // Represents the 4 slots
+
+        const blocksContainer = document.getElementById('blocks-container');
+        const wordBank = document.getElementById('word-bank');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const feedbackArea = document.getElementById('feedback-area');
+        const endModal = document.getElementById('end-modal');
+
+        // Utility to shuffle array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            currentChipIndex = 0;
+            endModal.classList.add('hidden');
+            loadChip();
+        }
+
+        function loadChip() {
+            const data = paintChipsData[currentChipIndex];
+            placedWords = [null, null, null, null];
+            selectedWord = null;
+
+            // Update Header info
+            document.getElementById('progress-text').textContent = `${currentChipIndex + 1} / ${paintChipsData.length}`;
+            document.getElementById('target-word-label').textContent = `TARGET: ${data.targetWord}`;
+            document.getElementById('chip-number').textContent = `0${currentChipIndex + 1}`;
+
+            // Reset UI
+            feedbackArea.classList.add('hidden');
+            nextBtn.style.display = 'none';
+            checkBtn.style.display = 'flex';
+            checkBtn.disabled = false;
+            checkBtn.className = "flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-colors active:scale-95 flex items-center justify-center gap-2";
+            
+            renderPaintChip();
+            renderWordBank();
+        }
+
+        function renderPaintChip() {
+            blocksContainer.innerHTML = '';
+            const data = paintChipsData[currentChipIndex];
+
+            for (let i = 0; i < 4; i++) {
+                const block = document.createElement('div');
+                block.className = 'color-block border-2 border-transparent';
+                block.style.backgroundColor = data.colors[i];
+                block.style.color = data.textColors[i];
+                
+                // Add an empty placeholder or the placed word
+                if (placedWords[i]) {
+                    block.innerHTML = `<span class="placed-word animate-pop">${placedWords[i]}</span>`;
+                } else {
+                    // Small number indicator for intensity
+                    block.innerHTML = `<span class="opacity-30 font-bold text-sm absolute left-4">Intensity ${i+1}</span>`;
+                }
+
+                // Click event to place or remove word
+                block.onclick = () => handleSlotClick(i);
+                
+                blocksContainer.appendChild(block);
+            }
+        }
+
+        function renderWordBank() {
+            wordBank.innerHTML = '';
+            const data = paintChipsData[currentChipIndex];
+            
+            // Get words that haven't been placed yet
+            const availableWords = data.words.filter(w => !placedWords.includes(w));
+            
+            // Scramble available words
+            const scrambled = shuffle([...availableWords]);
+
+            scrambled.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = `word-btn bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 px-2 rounded-lg text-center uppercase tracking-wide ${selectedWord === word ? 'ring-4 ring-teal-500 border-teal-500 bg-teal-50 scale-105' : ''}`;
+                btn.textContent = word;
+                btn.onclick = () => {
+                    if (selectedWord === word) {
+                        selectedWord = null; // deselect
+                    } else {
+                        selectedWord = word; // select
+                    }
+                    renderWordBank(); // re-render to show selection styling
+                };
+                wordBank.appendChild(btn);
+            });
+
+            // Add empty placeholders if words are used to keep grid structure steady
+            const emptySpots = 4 - availableWords.length;
+            for(let i=0; i<emptySpots; i++){
+                 const emptyBtn = document.createElement('div');
+                 emptyBtn.className = 'border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50 py-3';
+                 wordBank.appendChild(emptyBtn);
+            }
+        }
+
+        function handleSlotClick(slotIndex) {
+            // If there's a word already there, put it back in bank
+            if (placedWords[slotIndex]) {
+                placedWords[slotIndex] = null;
+                selectedWord = null;
+                renderPaintChip();
+                renderWordBank();
+                return;
+            }
+
+            // If a word is selected, place it in the slot
+            if (selectedWord !== null) {
+                placedWords[slotIndex] = selectedWord;
+                selectedWord = null;
+                renderPaintChip();
+                renderWordBank();
+            }
+        }
+
+        function resetCurrentChip() {
+            placedWords = [null, null, null, null];
+            selectedWord = null;
+            feedbackArea.classList.add('hidden');
+            renderPaintChip();
+            renderWordBank();
+        }
+
+        function checkOrder() {
+            // Ensure all slots are filled
+            if (placedWords.includes(null)) {
+                showFeedback("Fill all the color slots first!", "error");
+                return;
+            }
+
+            const data = paintChipsData[currentChipIndex];
+            let allCorrect = true;
+            const blocks = blocksContainer.children;
+
+            // Check against correct order
+            for (let i = 0; i < 4; i++) {
+                if (placedWords[i] !== data.words[i]) {
+                    allCorrect = false;
+                    blocks[i].classList.add('animate-shake');
+                    blocks[i].style.borderColor = '#ef4444'; // Red border
+                    setTimeout(() => {
+                        blocks[i].classList.remove('animate-shake');
+                        blocks[i].style.borderColor = 'transparent';
+                    }, 500);
+                } else {
+                    blocks[i].style.borderColor = '#22c55e'; // Green border
+                }
+            }
+
+            if (allCorrect) {
+                showFeedback("Perfect Shades!", "success");
+                checkBtn.style.display = 'none';
+                nextBtn.style.display = 'flex';
+            } else {
+                showFeedback("Not quite! The red outlines are out of order.", "error");
+            }
+        }
+
+        function showFeedback(message, type) {
+            feedbackArea.textContent = message;
+            feedbackArea.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            
+            // Re-trigger animation
+            feedbackArea.classList.remove('animate-pop');
+            void feedbackArea.offsetWidth;
+            feedbackArea.classList.add('animate-pop');
+
+            if (type === 'success') {
+                feedbackArea.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                feedbackArea.classList.add('bg-red-100', 'text-red-700');
+            }
+        }
+
+        function nextChip() {
+            currentChipIndex++;
+            if (currentChipIndex < paintChipsData.length) {
+                loadChip();
+            } else {
+                // Game Over
+                document.getElementById('modal-content').classList.remove('scale-95');
+                document.getElementById('modal-content').classList.add('scale-100');
+                endModal.classList.remove('hidden');
+            }
+        }
+
+        // Start game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
