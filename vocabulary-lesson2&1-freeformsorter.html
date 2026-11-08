@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free-Form Vocab Sorter: Lessons 1 & 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            user-select: none;
+        }
+
+        h1, h2, h3, .font-title {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Card styles */
+        .vocab-card {
+            touch-action: none;
+            cursor: grab;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+        }
+        .vocab-card:active {
+            cursor: grabbing;
+        }
+        .vocab-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        /* Bin drop target styling */
+        .category-bin {
+            transition: all 0.2s ease;
+        }
+        .category-bin.drag-over {
+            background-color: #f1f5f9;
+            border-color: #3b82f6;
+            transform: scale(1.01);
+        }
+
+        /* Animations */
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-100">
+
+    <!-- Top Header & Toolbar -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-30">
+        <div class="flex items-center gap-3">
+            <div class="bg-emerald-500 text-white p-2.5 rounded-2xl shadow-md font-black text-xl">
+                🗂️
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">Free-Form Vocab Sorter</h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Wordly Wise 3000 • Lessons 1 & 2 (30 Words)</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-3">
+            <!-- Add Category Bin Button -->
+            <button onclick="openAddBinModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-sm transition-all shadow-sm active:scale-95 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Category Bin
+            </button>
+
+            <!-- Pre-made Preset Templates -->
+            <div class="relative inline-block text-left">
+                <select id="preset-select" onchange="applyPreset(this.value)" class="bg-slate-100 border border-slate-300 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <option value="" disabled selected>📂 Load Sorting Preset...</option>
+                    <option value="pos">Parts of Speech (Nouns, Verbs, Adj)</option>
+                    <option value="syllables">By Syllables (1 vs 2 vs 3 vs 4)</option>
+                    <option value="clear">Clear All Bins (Empty Tabletop)</option>
+                </select>
+            </div>
+
+            <!-- Reset Board -->
+            <button onclick="resetBoard()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3.5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 border border-slate-200" title="Reset all cards to bank">
+                🔄 Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Tabletop Workspace -->
+    <main class="flex-1 p-6 flex flex-col xl:flex-row gap-6 max-w-[1800px] w-full mx-auto">
+        
+        <!-- Unsorted Word Bank Sidebar / Tray -->
+        <div class="xl:w-80 bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h2 class="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <span>📥 Unsorted Cards</span>
+                </h2>
+                <span id="unsorted-count" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200">
+                    30 cards
+                </span>
+            </div>
+
+            <p class="text-xs text-slate-400 font-semibold leading-relaxed">
+                Drag cards into category bins on the tabletop. Double-click any card to view its definition!
+            </p>
+
+            <!-- Scrollable Bank Area -->
+            <div id="unsorted-bank" 
+                 ondragover="handleDragOver(event)" 
+                 ondrop="handleDrop(event, 'bank')"
+                 class="flex-1 min-h-[160px] xl:min-h-[500px] flex flex-wrap xl:flex-col gap-2.5 overflow-y-auto p-1 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+
+        <!-- Dynamic Category Bins Grid -->
+        <div class="flex-1 flex flex-col gap-4">
+            <div id="bins-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 flex-1">
+                <!-- Category Bins injected via JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Card Inspector (Definitions) -->
+    <div id="inspector-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full border-4 border-slate-100 text-left relative animate-pop-in">
+            <button onclick="closeInspector()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
+                ✕
+            </button>
+            <div class="flex items-center gap-3 mb-2">
+                <span id="inspect-lesson" class="text-xs font-black uppercase px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-700">Lesson 1</span>
+                <span id="inspect-pos" class="text-xs font-bold uppercase text-slate-400">Verb</span>
+            </div>
+            <h3 id="inspect-word" class="text-3xl font-black text-slate-800 tracking-tight font-title mb-3">word</h3>
+            <p id="inspect-def" class="text-slate-600 font-medium text-base leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                Definition goes here.
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal: Add Custom Category Bin -->
+    <div id="add-bin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full border-4 border-slate-100 text-left relative animate-pop-in">
+            <h3 class="text-2xl font-black text-slate-800 font-title mb-4">Create Category Bin</h3>
+            
+            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Bin Name</label>
+            <input type="text" id="new-bin-title" placeholder="e.g., Verbs, Words with 3 Syllables, Positive Words..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 font-bold mb-5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+
+            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Color Accent</label>
+            <div class="flex gap-3 mb-6">
+                <button type="button" onclick="selectColor('emerald')" class="color-opt w-10 h-10 rounded-xl bg-emerald-500 border-4 border-white shadow-md ring-2 ring-emerald-500" data-color="emerald"></button>
+                <button type="button" onclick="selectColor('purple')" class="color-opt w-10 h-10 rounded-xl bg-purple-500 border-4 border-white shadow-md" data-color="purple"></button>
+                <button type="button" onclick="selectColor('rose')" class="color-opt w-10 h-10 rounded-xl bg-rose-500 border-4 border-white shadow-md" data-color="rose"></button>
+                <button type="button" onclick="selectColor('amber')" class="color-opt w-10 h-10 rounded-xl bg-amber-500 border-4 border-white shadow-md" data-color="amber"></button>
+                <button type="button" onclick="selectColor('blue')" class="color-opt w-10 h-10 rounded-xl bg-blue-500 border-4 border-white shadow-md" data-color="blue"></button>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeAddBinModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-4 rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button onclick="submitNewBin()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-colors">
+                    Create Bin
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Combined Vocabulary Data (15 from Lesson 1 + 15 from Lesson 2)
+        const allVocabData = [
+            // Lesson 1 Words
+            { id: 1, word: "accustom", lesson: 1, pos: "Verb", def: "To make familiar." },
+            { id: 2, word: "alert", lesson: 1, pos: "Adjective / Verb", def: "Watchful; wide-awake. Or to warn to be ready." },
+            { id: 3, word: "assign", lesson: 1, pos: "Verb", def: "To select for a position or give out as work." },
+            { id: 4, word: "budge", lesson: 1, pos: "Verb", def: "To move or shift slightly." },
+            { id: 5, word: "burly", lesson: 1, pos: "Adjective", def: "Big and strongly built." },
+            { id: 6, word: "companion", lesson: 1, pos: "Noun", def: "One who spends time with or does things with another." },
+            { id: 7, word: "compatible", lesson: 1, pos: "Adjective", def: "Getting along well together." },
+            { id: 8, word: "concept", lesson: 1, pos: "Noun", def: "A general idea or thought about something." },
+            { id: 9, word: "distract", lesson: 1, pos: "Verb", def: "To draw one's thoughts or attention away." },
+            { id: 10, word: "jostle", lesson: 1, pos: "Verb", def: "To push or shove roughly." },
+            { id: 11, word: "obedient", lesson: 1, pos: "Adjective", def: "Doing what one is asked or told." },
+            { id: 12, word: "obstacle", lesson: 1, pos: "Noun", def: "Something that prevents one from moving forward." },
+            { id: 13, word: "patient", lesson: 1, pos: "Adjective / Noun", def: "Willing to wait without complaining. Or a doctor's care recipient." },
+            { id: 14, word: "pedestrian", lesson: 1, pos: "Noun", def: "A person traveling on foot." },
+            { id: 15, word: "retire", lesson: 1, pos: "Verb", def: "To stop working because of age, or to go to bed." },
+            
+            // Lesson 2 Words
+            { id: 16, word: "aroma", lesson: 2, pos: "Noun", def: "A pleasant smell or odor." },
+            { id: 17, word: "beverage", lesson: 2, pos: "Noun", def: "A liquid used as a drink." },
+            { id: 18, word: "bland", lesson: 2, pos: "Adjective", def: "Lacking strong flavor; not irritating or exciting." },
+            { id: 19, word: "brittle", lesson: 2, pos: "Adjective", def: "Easily broken; not flexible." },
+            { id: 20, word: "cluster", lesson: 2, pos: "Noun / Verb", def: "A group of similar things together, or to gather." },
+            { id: 21, word: "combine", lesson: 2, pos: "Verb", def: "To join or bring together." },
+            { id: 22, word: "consume", lesson: 2, pos: "Verb", def: "To use up, eat, drink, or destroy." },
+            { id: 23, word: "crave", lesson: 2, pos: "Verb", def: "To have a strong desire for." },
+            { id: 24, word: "cultivate", lesson: 2, pos: "Verb", def: "To prepare land for crops, grow, or encourage development." },
+            { id: 25, word: "equivalent", lesson: 2, pos: "Adjective / Noun", def: "Equal to; that which is equal to something else." },
+            { id: 26, word: "export", lesson: 2, pos: "Verb / Noun", def: "To send goods to another country for sale." },
+            { id: 27, word: "extract", lesson: 2, pos: "Verb / Noun", def: "To remove or take out." },
+            { id: 28, word: "introduce", lesson: 2, pos: "Verb", def: "To make known by name or bring into use." },
+            { id: 29, word: "purchase", lesson: 2, pos: "Verb / Noun", def: "To buy; or something that is bought." },
+            { id: 30, word: "tropical", lesson: 2, pos: "Adjective", def: "Of or from regions near the equator; hot and moist." }
+        ];
+
+        // App State
+        let cardLocations = {}; // { wordId: 'bank' or binIndex }
+        let categories = [];
+        let draggedCardId = null;
+        let selectedColor = 'emerald';
+
+        const colorClasses = {
+            emerald: { bg: 'bg-emerald-500', light: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-800' },
+            purple:  { bg: 'bg-purple-500',  light: 'bg-purple-50 border-purple-200',   text: 'text-purple-700',  badge: 'bg-purple-100 text-purple-800' },
+            rose:    { bg: 'bg-rose-500',    light: 'bg-rose-50 border-rose-200',     text: 'text-rose-700',    badge: 'bg-rose-100 text-rose-800' },
+            amber:   { bg: 'bg-amber-500',   light: 'bg-amber-50 border-amber-200',   text: 'text-amber-700',   badge: 'bg-amber-100 text-amber-800' },
+            blue:    { bg: 'bg-blue-500',    light: 'bg-blue-50 border-blue-200',     text: 'text-blue-700',    badge: 'bg-blue-100 text-blue-800' }
+        };
+
+        // Init function
+        function initApp() {
+            // Default preset: Parts of Speech (open tabletop experience without Lesson 1 vs 2 preset)
+            applyPreset('pos');
+        }
+
+        // Apply Preset Sorting Layouts
+        function applyPreset(presetType) {
+            if (presetType === 'pos') {
+                categories = [
+                    { title: "Verbs (Actions)", color: "emerald", cards: [] },
+                    { title: "Nouns (Things / Ideas)", color: "purple", cards: [] },
+                    { title: "Adjectives (Descriptive)", color: "rose", cards: [] }
+                ];
+            } else if (presetType === 'syllables') {
+                categories = [
+                    { title: "1 Syllable", color: "blue", cards: [] },
+                    { title: "2 Syllables", color: "emerald", cards: [] },
+                    { title: "3 Syllables", color: "amber", cards: [] },
+                    { title: "4 Syllables", color: "purple", cards: [] }
+                ];
+            } else if (presetType === 'clear') {
+                categories = [];
+            }
+
+            // Put all cards back into the unsorted bank
+            allVocabData.forEach(item => {
+                cardLocations[item.id] = 'bank';
+            });
+
+            document.getElementById('preset-select').value = "";
+            renderAllCards();
+        }
+
+        // Reset Board (Move all cards to bank)
+        function resetBoard() {
+            allVocabData.forEach(item => {
+                cardLocations[item.id] = 'bank';
+            });
+            renderAllCards();
+        }
+
+        // Render Everything
+        function renderAllCards() {
+            const bankContainer = document.getElementById('unsorted-bank');
+            const binsContainer = document.getElementById('bins-container');
+            
+            bankContainer.innerHTML = '';
+            binsContainer.innerHTML = '';
+
+            let unsortedCount = 0;
+
+            // Render Category Bins
+            categories.forEach((cat, binIndex) => {
+                const colorStyle = colorClasses[cat.color] || colorClasses.emerald;
+                
+                const binDiv = document.createElement('div');
+                binDiv.className = `category-bin flex flex-col bg-white rounded-3xl border-2 ${colorStyle.light} shadow-sm overflow-hidden transition-all min-h-[220px]`;
+                binDiv.ondragover = (e) => handleDragOver(e);
+                binDiv.ondragleave = (e) => handleDragLeave(e, binDiv);
+                binDiv.ondrop = (e) => handleDrop(e, binIndex);
+
+                // Count cards inside this bin
+                const countInBin = Object.values(cardLocations).filter(loc => loc === binIndex).length;
+
+                binDiv.innerHTML = `
+                    <div class="${colorStyle.bg} p-4 text-white flex justify-between items-center">
+                        <h3 class="font-black text-lg tracking-tight font-title">${cat.title}</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                                ${countInBin}
+                            </span>
+                            <button onclick="removeBin(${binIndex})" class="text-white/70 hover:text-white p-1 rounded-lg" title="Delete bin">✕</button>
+                        </div>
+                    </div>
+                    <div id="bin-contents-${binIndex}" class="flex-1 p-3 flex flex-wrap gap-2.5 content-start">
+                        <!-- Cards inside bin injected here -->
+                    </div>
+                `;
+                binsContainer.appendChild(binDiv);
+            });
+
+            // Populate Cards into Bank or Bins
+            allVocabData.forEach(item => {
+                const cardEl = createCardElement(item);
+                const location = cardLocations[item.id];
+
+                if (location === 'bank') {
+                    bankContainer.appendChild(cardEl);
+                    unsortedCount++;
+                } else if (typeof location === 'number' && categories[location]) {
+                    const binContent = document.getElementById(`bin-contents-${location}`);
+                    if (binContent) binContent.appendChild(cardEl);
+                }
+            });
+
+            document.getElementById('unsorted-count').textContent = `${unsortedCount} cards`;
+        }
+
+        // Create HTML Card Element
+        function createCardElement(item) {
+            const card = document.createElement('div');
+            card.className = `vocab-card bg-white border border-slate-200 text-slate-800 font-bold px-3.5 py-2.5 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-300 flex items-center gap-2 animate-pop-in text-sm md:text-base`;
+            card.draggable = true;
+            card.dataset.id = item.id;
+
+            const lessonBadgeColor = item.lesson === 1 ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-amber-100 text-amber-700 border-amber-200';
+
+            card.innerHTML = `
+                <span class="text-[10px] font-black uppercase px-1.5 py-0.5 rounded border ${lessonBadgeColor}">L${item.lesson}</span>
+                <span>${item.word}</span>
+            `;
+
+            // Drag Events
+            card.ondragstart = (e) => {
+                draggedCardId = item.id;
+                card.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', item.id);
+            };
+
+            card.ondragend = () => {
+                card.classList.remove('dragging');
+            };
+
+            // Double Click -> Inspect Definition
+            card.ondblclick = () => {
+                openInspector(item);
+            };
+
+            return card;
+        }
+
+        // Drag & Drop Handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (e.currentTarget.classList.contains('category-bin')) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e, element) {
+            element.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, targetLocation) {
+            e.preventDefault();
+            if (e.currentTarget.classList.contains('category-bin')) {
+                e.currentTarget.classList.remove('drag-over');
+            }
+
+            if (draggedCardId !== null) {
+                cardLocations[draggedCardId] = targetLocation;
+                draggedCardId = null;
+                renderAllCards();
+            }
+        }
+
+        // Custom Category Bin Functions
+        function openAddBinModal() {
+            document.getElementById('add-bin-modal').classList.remove('hidden');
+            document.getElementById('new-bin-title').value = '';
+            selectColor('emerald');
+        }
+
+        function closeAddBinModal() {
+            document.getElementById('add-bin-modal').classList.add('hidden');
+        }
+
+        function selectColor(colorName) {
+            selectedColor = colorName;
+            document.querySelectorAll('.color-opt').forEach(btn => {
+                if (btn.dataset.color === colorName) {
+                    btn.classList.add('ring-2', `ring-${colorName}-500`);
+                } else {
+                    btn.className = btn.className.replace(/ring-2 ring-\w+-500/g, '');
+                }
+            });
+        }
+
+        function submitNewBin() {
+            const titleInput = document.getElementById('new-bin-title').value.trim();
+            if (!titleInput) return;
+
+            categories.push({
+                title: titleInput,
+                color: selectedColor,
+                cards: []
+            });
+
+            closeAddBinModal();
+            renderAllCards();
+        }
+
+        function removeBin(index) {
+            // Return all cards in this bin back to bank
+            Object.keys(cardLocations).forEach(cardId => {
+                if (cardLocations[cardId] === index) {
+                    cardLocations[cardId] = 'bank';
+                } else if (cardLocations[cardId] > index) {
+                    cardLocations[cardId] -= 1; // shift index
+                }
+            });
+
+            categories.splice(index, 1);
+            renderAllCards();
+        }
+
+        // Inspector Modal
+        function openInspector(item) {
+            document.getElementById('inspect-word').textContent = item.word;
+            document.getElementById('inspect-pos').textContent = item.pos;
+            document.getElementById('inspect-def').textContent = item.def;
+            
+            const badge = document.getElementById('inspect-lesson');
+            badge.textContent = `Lesson ${item.lesson}`;
+            badge.className = item.lesson === 1 ? 'text-xs font-black uppercase px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-700' : 'text-xs font-black uppercase px-2.5 py-1 rounded-md bg-amber-100 text-amber-700';
+
+            document.getElementById('inspector-modal').classList.remove('hidden');
+        }
+
+        function closeInspector() {
+            document.getElementById('inspector-modal').classList.add('hidden');
+        }
+
+        // Initialize on page load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
