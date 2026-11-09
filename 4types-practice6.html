@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Types Interactive Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdfa; /* Light teal background */
+            color: #0f172a;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .option-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .correct {
+            background-color: #10b981 !important; /* Emerald 500 */
+            color: white !important;
+            border-color: #059669 !important;
+        }
+
+        .incorrect {
+            background-color: #ef4444 !important; /* Red 500 */
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+
+        .disabled-option {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Landing Screen -->
+    <div id="landing-screen" class="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col fade-in">
+        <div class="bg-indigo-600 p-6 text-center text-white">
+            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Sentence Types Challenge</h1>
+            <p class="mt-2 text-indigo-100 text-lg">Test your knowledge of the four sentence purposes!</p>
+        </div>
+        
+        <div class="p-6 md:p-10 flex flex-col items-center">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 text-center">Directions</h2>
+            <p class="text-gray-600 mb-6 text-center max-w-2xl text-lg">
+                Review the chart below. When you start the practice, you will be asked to identify a specific type of sentence. 
+                <strong>Warning:</strong> The end punctuation has been hidden! You must use the <em>purpose</em> and <em>structure</em> of the sentence to find the correct answer.
+            </p>
+
+            <!-- Recreated Chart natively in HTML/CSS so it always loads -->
+            <div class="w-full max-w-4xl border border-gray-300 rounded-xl overflow-hidden mb-8 shadow-sm text-sm md:text-base">
+                <table class="w-full text-left border-collapse bg-white">
+                    <thead>
+                        <tr class="bg-purple-100 text-purple-900">
+                            <th class="p-4 border border-gray-200 font-bold text-center w-1/4">Purpose</th>
+                            <th class="p-4 border border-gray-200 font-bold text-center w-1/5">Type</th>
+                            <th class="p-4 border border-gray-200 font-bold text-center w-1/6">End Punctuation</th>
+                            <th class="p-4 border border-gray-200 font-bold text-center">Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="p-4 border border-gray-200 text-gray-700">Statement: You are stating or declaring something.</td>
+                            <td class="p-4 border border-gray-200 font-extrabold text-green-800 text-center">declarative</td>
+                            <td class="p-4 border border-gray-200 font-black text-center text-2xl text-indigo-900">.</td>
+                            <td class="p-4 border border-gray-200 text-gray-700">The heart of a shrimp is located in its head.</td>
+                        </tr>
+                        <tr class="bg-white">
+                            <td class="p-4 border border-gray-200 text-gray-700">Exclamation: You are stating or exclaiming with emotion.</td>
+                            <td class="p-4 border border-gray-200 font-extrabold text-green-800 text-center">exclamatory</td>
+                            <td class="p-4 border border-gray-200 font-black text-center text-2xl text-indigo-900">!</td>
+                            <td class="p-4 border border-gray-200 text-gray-700">That birthday party was so much fun!</td>
+                        </tr>
+                        <tr class="bg-green-50">
+                            <td class="p-4 border border-gray-200 text-gray-700">Question: You are wondering or interrogating.</td>
+                            <td class="p-4 border border-gray-200 font-extrabold text-green-800 text-center">interrogative</td>
+                            <td class="p-4 border border-gray-200 font-black text-center text-2xl text-indigo-900">?</td>
+                            <td class="p-4 border border-gray-200 text-gray-700">Why do I always forget where I put my car?</td>
+                        </tr>
+                        <tr class="bg-white">
+                            <td class="p-4 border border-gray-200 text-gray-700">Demand: You are demanding something, and it's imperative it be done! It starts with a verb.</td>
+                            <td class="p-4 border border-gray-200 font-extrabold text-green-800 text-center">imperative</td>
+                            <td class="p-4 border border-gray-200 font-black text-center text-xl text-indigo-900">! <span class="text-base font-normal">or</span> .</td>
+                            <td class="p-4 border border-gray-200 text-gray-700">Come fold your laundry.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                Start Practice 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden hidden flex-col">
+        
+        <!-- Header / Progress -->
+        <div class="bg-gray-50 p-4 border-b border-gray-200 flex justify-between items-center">
+            <span id="progress-text" class="text-gray-600 font-bold text-lg">Question 1 of 30</span>
+            <span class="text-indigo-600 font-bold bg-indigo-100 py-1 px-3 rounded-full">Score: <span id="score-text">0</span></span>
+        </div>
+        
+        <div class="w-full bg-gray-200 h-2">
+            <div id="progress-bar" class="bg-indigo-600 h-2 transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <!-- Question Area -->
+        <div class="p-6 md:p-8 flex flex-col flex-grow">
+            <h2 id="question-text" class="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6 text-center">
+                Which one is the imperative sentence?
+            </h2>
+
+            <!-- Options -->
+            <div id="options-container" class="flex flex-col gap-4">
+                <!-- Buttons injected via JS -->
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback-area" class="mt-8 hidden flex-col items-center fade-in">
+                <p id="feedback-msg" class="text-xl font-bold mb-4 text-center"></p>
+                <button id="next-btn" onclick="nextQuestion()" class="bg-gray-800 hover:bg-black text-white font-bold py-3 px-8 rounded-xl text-lg shadow-md transition-transform transform hover:scale-105 active:scale-95">
+                    Next Question ➡️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 text-center hidden flex-col items-center">
+        <div class="text-6xl mb-4">🏆</div>
+        <h2 class="text-3xl font-extrabold text-gray-800 mb-2">Practice Complete!</h2>
+        <p class="text-gray-600 text-lg mb-6">Let's see how well you know your sentence types.</p>
+        
+        <div class="bg-indigo-50 border-2 border-indigo-100 rounded-xl p-6 mb-8 w-full">
+            <p class="text-gray-500 font-bold uppercase tracking-wider mb-1">Final Score</p>
+            <p id="final-score" class="text-5xl font-black text-indigo-600">30 / 30</p>
+        </div>
+
+        <button onclick="resetQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-transform transform hover:scale-105 active:scale-95 w-full">
+            Play Again 🔄
+        </button>
+    </div>
+
+    <script>
+        // --- Data Bank ---
+        // 30 Questions: 7 Declarative, 8 Exclamatory, 8 Interrogative, 7 Imperative.
+        // End punctuation is strictly omitted from the answer choices.
+        const rawQuestions = [
+            // --- TARGET: IMPERATIVE (7) ---
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Finish your homework before dinner", type: "imperative" },
+                    { text: "You will finish your homework before dinner", type: "declarative" },
+                    { text: "I cannot believe how much homework you have", type: "exclamatory" },
+                    { text: "Did you finish your homework before dinner", type: "interrogative" }
+                ]
+            },
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Take the trash out to the curb", type: "imperative" },
+                    { text: "The trash needs to go out to the curb", type: "declarative" },
+                    { text: "The trash smells so incredibly bad", type: "exclamatory" },
+                    { text: "Will you take the trash out to the curb", type: "interrogative" }
+                ]
+            },
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Pour a glass of cold milk", type: "imperative" },
+                    { text: "You poured a glass of cold milk", type: "declarative" },
+                    { text: "This glass of cold milk is so refreshing", type: "exclamatory" },
+                    { text: "Did you pour a glass of cold milk", type: "interrogative" }
+                ]
+            },
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Plant these yellow flowers in the garden", type: "imperative" },
+                    { text: "You planted yellow flowers in the garden", type: "declarative" },
+                    { text: "These yellow flowers are absolutely beautiful", type: "exclamatory" },
+                    { text: "Did you plant yellow flowers in the garden", type: "interrogative" }
+                ]
+            },
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Wash your hands with warm water", type: "imperative" },
+                    { text: "You washed your hands with warm water", type: "declarative" },
+                    { text: "Your hands are finally clean", type: "exclamatory" },
+                    { text: "Did you wash your hands with warm water", type: "interrogative" }
+                ]
+            },
+
+            // --- TARGET: EXCLAMATORY (5) ---
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "What an incredibly fast dog that is", type: "exclamatory" },
+                    { text: "That dog is incredibly fast", type: "declarative" },
+                    { text: "Is that dog incredibly fast", type: "interrogative" },
+                    { text: "Look at that incredibly fast dog", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "That was the best soccer game ever", type: "exclamatory" },
+                    { text: "That was a good soccer game", type: "declarative" },
+                    { text: "Did you watch the soccer game", type: "interrogative" },
+                    { text: "Watch the soccer game with me", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "This rollercoaster is so insanely tall", type: "exclamatory" },
+                    { text: "This rollercoaster is very tall", type: "declarative" },
+                    { text: "Is this rollercoaster very tall", type: "interrogative" },
+                    { text: "Ride this tall rollercoaster with me", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "I have never seen such a giant spider", type: "exclamatory" },
+                    { text: "A giant spider is on the wall", type: "declarative" },
+                    { text: "Is that a giant spider on the wall", type: "interrogative" },
+                    { text: "Get rid of that giant spider", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "This surprise party is absolutely incredible", type: "exclamatory" },
+                    { text: "This is a surprise party", type: "declarative" },
+                    { text: "Is this a surprise party", type: "interrogative" },
+                    { text: "Keep this surprise party a secret", type: "imperative" }
+                ]
+            },
+
+            // --- TARGET: INTERROGATIVE (5) ---
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Will you bake a chocolate cake today", type: "interrogative" },
+                    { text: "You are baking a chocolate cake today", type: "declarative" },
+                    { text: "What a delicious chocolate cake you baked", type: "exclamatory" },
+                    { text: "Bake a chocolate cake today", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Are you reading that new mystery novel", type: "interrogative" },
+                    { text: "You are reading that new mystery novel", type: "declarative" },
+                    { text: "That new mystery novel is so thrilling", type: "exclamatory" },
+                    { text: "Read that new mystery novel", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Where did you buy those red shoes", type: "interrogative" },
+                    { text: "You bought those red shoes", type: "declarative" },
+                    { text: "I absolutely love those red shoes", type: "exclamatory" },
+                    { text: "Buy those red shoes", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Can you turn the music down please", type: "interrogative" },
+                    { text: "The music is very loud", type: "declarative" },
+                    { text: "The music is way too loud", type: "exclamatory" },
+                    { text: "Turn the music down please", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Have you seen my car keys anywhere", type: "interrogative" },
+                    { text: "You have seen my car keys", type: "declarative" },
+                    { text: "I finally found my car keys", type: "exclamatory" },
+                    { text: "Help me find my car keys", type: "imperative" }
+                ]
+            },
+
+            // --- TARGET: DECLARATIVE (5) ---
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "The new movie starts at seven o'clock", type: "declarative" },
+                    { text: "I am so excited the new movie starts at seven", type: "exclamatory" },
+                    { text: "Does the new movie start at seven o'clock", type: "interrogative" },
+                    { text: "Go to the new movie at seven o'clock", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "Heavy rain is expected later this afternoon", type: "declarative" },
+                    { text: "It is raining so hard out there", type: "exclamatory" },
+                    { text: "Is heavy rain expected later this afternoon", type: "interrogative" },
+                    { text: "Bring an umbrella for the heavy rain", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "The express train arrives on track four", type: "declarative" },
+                    { text: "I can't believe we missed the express train", type: "exclamatory" },
+                    { text: "Does the express train arrive on track four", type: "interrogative" },
+                    { text: "Wait for the express train on track four", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "We are having sandwiches for lunch today", type: "declarative" },
+                    { text: "These are the best sandwiches ever", type: "exclamatory" },
+                    { text: "Are we having sandwiches for lunch today", type: "interrogative" },
+                    { text: "Make some sandwiches for lunch today", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "A blue bird is sitting on the fence", type: "declarative" },
+                    { text: "What a gorgeous blue bird that is", type: "exclamatory" },
+                    { text: "Is a blue bird sitting on the fence", type: "interrogative" },
+                    { text: "Look at the blue bird on the fence", type: "imperative" }
+                ]
+            },
+            
+            // --- NEW ADDITIONS (10 MORE) ---
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Lock the front door before you leave", type: "imperative" },
+                    { text: "You locked the front door before you left", type: "declarative" },
+                    { text: "I can't believe you forgot to lock the front door", type: "exclamatory" },
+                    { text: "Did you lock the front door before you left", type: "interrogative" }
+                ]
+            },
+            {
+                question: "Which one is the imperative sentence?",
+                targetType: "imperative",
+                options: [
+                    { text: "Feed the cat right after school", type: "imperative" },
+                    { text: "The cat needs to be fed right after school", type: "declarative" },
+                    { text: "The cat is so incredibly hungry right now", type: "exclamatory" },
+                    { text: "Will you feed the cat right after school", type: "interrogative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "This salsa is ridiculously spicy", type: "exclamatory" },
+                    { text: "This salsa has a lot of spice in it", type: "declarative" },
+                    { text: "Is this salsa very spicy", type: "interrogative" },
+                    { text: "Try this spicy salsa with a chip", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "That magic trick was absolutely mind-blowing", type: "exclamatory" },
+                    { text: "The magician performed a card trick", type: "declarative" },
+                    { text: "How did he do that magic trick", type: "interrogative" },
+                    { text: "Watch this magic trick closely", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the exclamatory sentence?",
+                targetType: "exclamatory",
+                options: [
+                    { text: "It is freezing cold outside today", type: "exclamatory" },
+                    { text: "The temperature is very low today", type: "declarative" },
+                    { text: "Is it cold outside today", type: "interrogative" },
+                    { text: "Wear a heavy coat outside today", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "What color are you painting your bedroom", type: "interrogative" },
+                    { text: "You are painting your bedroom a new color", type: "declarative" },
+                    { text: "That new paint color looks fantastic", type: "exclamatory" },
+                    { text: "Paint your bedroom a new color", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Have you seen my library book anywhere", type: "interrogative" },
+                    { text: "My library book is missing", type: "declarative" },
+                    { text: "I finally found my lost library book", type: "exclamatory" },
+                    { text: "Look for my library book on the shelf", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the interrogative sentence?",
+                targetType: "interrogative",
+                options: [
+                    { text: "Should we order a cheese pizza for dinner", type: "interrogative" },
+                    { text: "We are ordering a cheese pizza for dinner", type: "declarative" },
+                    { text: "This cheese pizza is amazingly delicious", type: "exclamatory" },
+                    { text: "Order a cheese pizza for dinner", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "The sun rises in the east every morning", type: "declarative" },
+                    { text: "What a gorgeous sunrise that is", type: "exclamatory" },
+                    { text: "Does the sun rise in the east", type: "interrogative" },
+                    { text: "Wake up early to see the sunrise", type: "imperative" }
+                ]
+            },
+            {
+                question: "Which one is the declarative sentence?",
+                targetType: "declarative",
+                options: [
+                    { text: "He takes guitar lessons on Tuesday afternoons", type: "declarative" },
+                    { text: "He plays the guitar so beautifully", type: "exclamatory" },
+                    { text: "Does he take guitar lessons on Tuesday afternoons", type: "interrogative" },
+                    { text: "Practice the guitar for an hour today", type: "imperative" }
+                ]
+            }
+        ];
+
+        // --- State Variables ---
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+
+        // --- DOM Elements ---
+        const landingScreen = document.getElementById('landing-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackArea = document.getElementById('feedback-area');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreText = document.getElementById('score-text');
+        const finalScore = document.getElementById('final-score');
+
+        // --- Utilities ---
+        // Fisher-Yates Shuffle
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        // --- Game Logic ---
+        function startQuiz() {
+            // Hide landing, show quiz
+            landingScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            quizScreen.classList.add('fade-in');
+
+            // Deep clone and shuffle questions
+            currentQuestions = JSON.parse(JSON.stringify(rawQuestions));
+            shuffleArray(currentQuestions);
+
+            // Shuffle options within each question
+            currentQuestions.forEach(q => shuffleArray(q.options));
+
+            currentIndex = 0;
+            score = 0;
+            updateScore();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            feedbackArea.classList.add('hidden');
+            feedbackArea.classList.remove('flex');
+            
+            const questionData = currentQuestions[currentIndex];
+            
+            // Update UI
+            progressText.innerText = `Question ${currentIndex + 1} of ${currentQuestions.length}`;
+            let percent = ((currentIndex) / currentQuestions.length) * 100;
+            progressBar.style.width = `${percent}%`;
+            
+            questionText.innerText = questionData.question;
+
+            // Render Options
+            optionsContainer.innerHTML = '';
+            questionData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-4 rounded-xl border-2 border-gray-200 bg-white text-gray-700 font-bold text-lg hover:border-indigo-500 hover:bg-indigo-50 focus:outline-none';
+                btn.innerText = opt.text;
+                btn.onclick = () => checkAnswer(opt, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOption, selectedBtn) {
+            const questionData = currentQuestions[currentIndex];
+            const isCorrect = selectedOption.type === questionData.targetType;
+
+            // Disable all buttons
+            const allButtons = optionsContainer.querySelectorAll('button');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled-option');
+            });
+
+            // Show feedback
+            feedbackArea.classList.remove('hidden');
+            feedbackArea.classList.add('flex');
+
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                selectedBtn.classList.remove('disabled-option', 'hover:border-indigo-500', 'hover:bg-indigo-50');
+                feedbackMsg.innerText = "✅ Correct! Great job identifying the structure.";
+                feedbackMsg.className = "text-xl font-bold mb-4 text-center text-emerald-600";
+                score++;
+                updateScore();
+            } else {
+                selectedBtn.classList.add('incorrect');
+                selectedBtn.classList.remove('disabled-option', 'hover:border-indigo-500', 'hover:bg-indigo-50');
+                
+                // Highlight the correct one
+                allButtons.forEach((btn, index) => {
+                    if (questionData.options[index].type === questionData.targetType) {
+                        btn.classList.add('correct');
+                        btn.classList.remove('disabled-option');
+                    }
+                });
+
+                feedbackMsg.innerHTML = `❌ Incorrect. Look closely at the purpose of the highlighted correct sentence!`;
+                feedbackMsg.className = "text-xl font-bold mb-4 text-center text-red-600";
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            
+            if (currentIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateScore() {
+            scoreText.innerText = score;
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            resultsScreen.classList.add('fade-in', 'flex');
+            
+            finalScore.innerText = `${score} / ${currentQuestions.length}`;
+            
+            // Just for fun, adjust the icon based on score
+            const iconDiv = resultsScreen.querySelector('.text-6xl');
+            if (score === 30) iconDiv.innerText = "🏆";
+            else if (score >= 25) iconDiv.innerText = "⭐";
+            else iconDiv.innerText = "📚";
+        }
+
+        function resetQuiz() {
+            resultsScreen.classList.add('hidden');
+            resultsScreen.classList.remove('flex');
+            landingScreen.classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
