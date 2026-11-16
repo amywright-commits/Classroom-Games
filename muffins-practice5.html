@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frosting Tub Sort: Sentence Bakery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fff1f2; /* Rose 50 */
+            background-image: repeating-linear-gradient(45deg, #ffe4e6 0, #ffe4e6 20px, #fff1f2 20px, #fff1f2 40px);
+            color: #4c1d95;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .fredoka {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .bakery-card {
+            background-color: #ffffff;
+            border: 4px solid #fbcfe8;
+            border-radius: 32px;
+            box-shadow: 0 20px 25px -5px rgba(244, 63, 94, 0.1), 0 8px 10px -6px rgba(244, 63, 94, 0.1), 0 0 0 6px #ffffff;
+        }
+
+        /* Sentence Chunk Styling */
+        .sentence-chunk {
+            display: inline-block;
+            padding: 6px 14px;
+            margin: 4px;
+            border-radius: 16px;
+            font-size: 1.35rem;
+            font-weight: 800;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            line-height: 1.4;
+        }
+
+        @media (min-width: 640px) {
+            .sentence-chunk {
+                font-size: 1.65rem;
+                padding: 8px 18px;
+            }
+        }
+
+        /* The Core Muffin Base */
+        .chunk-muffin {
+            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 2px solid #f59e0b;
+        }
+
+        /* Frosting Chunk Waiting in Queue */
+        .chunk-waiting {
+            background-color: #fce7f3;
+            color: #be185d;
+            border: 2px dashed #f472b6;
+            opacity: 0.85;
+        }
+
+        /* Active Frosting Chunk Being Scraped Right Now */
+        .chunk-active {
+            background: linear-gradient(180deg, #f472b6 0%, #ec4899 100%);
+            color: #ffffff;
+            border: 3px solid #be185d;
+            box-shadow: 0 6px 0 #9d174d, 0 10px 20px rgba(236, 72, 153, 0.35);
+            transform: scale(1.06) translateY(-2px);
+            position: relative;
+        }
+
+        /* Scraped / Sorted Chunk */
+        .chunk-sorted {
+            background-color: #f8fafc;
+            color: #94a3b8;
+            border: 2px solid #e2e8f0;
+            text-decoration: line-through;
+            transform: scale(0.95);
+        }
+
+        /* Frosting Tub Styling */
+        .frosting-tub {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+        }
+
+        .frosting-tub:hover:not(:disabled) {
+            transform: translateY(-6px) scale(1.04);
+        }
+
+        .frosting-tub:active:not(:disabled) {
+            transform: translateY(2px) scale(0.96);
+        }
+
+        .tub-lid {
+            width: 106%;
+            height: 16px;
+            border-radius: 8px;
+            border: 3px solid rgba(0,0,0,0.15);
+            box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+
+        .tub-body {
+            width: 100%;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            padding: 14px 8px 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(0,0,0,0.12);
+            border-top: none;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Frosting drip effect inside tub */
+        .tub-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: rgba(255,255,255,0.35);
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .tub-label-sticker {
+            background-color: #ffffff;
+            width: 90%;
+            padding: 6px 4px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        /* Animations */
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-3deg); }
+            75% { transform: translateX(8px) rotate(3deg); }
+        }
+
+        .pop-in {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Sound Effects -->
+    <audio id="sfx-scrape" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfx-ding" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+
+    <main class="w-full max-w-5xl">
+        
+        <!-- Start Screen -->
+        <section id="start-screen" class="bakery-card p-8 sm:p-12 flex flex-col items-center text-center">
+            
+            <div class="text-6xl mb-4">🧁</div>
+            <h1 class="text-4xl sm:text-6xl font-black text-pink-600 mb-2 fredoka">
+                Frosting Tub Sort
+            </h1>
+            <p class="text-xl text-amber-600 font-bold mb-6 fredoka tracking-wide uppercase">Sentence Bakery: Detail Detective</p>
+            
+            <div class="bg-amber-50 border-2 border-amber-200 p-6 rounded-3xl max-w-3xl text-left mb-8 shadow-inner">
+                <h2 class="text-2xl font-bold text-amber-800 mb-3 fredoka flex items-center gap-2">
+                    <span>👩‍🍳</span> How to Sort the Frosting:
+                </h2>
+                <p class="text-slate-700 text-lg font-semibold mb-4">
+                    Every cupcake sentence has a simple <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-lg font-bold">Muffin Base</span> plus extra <span class="bg-pink-500 text-white px-2 py-0.5 rounded-lg font-bold">Frosting Chunks</span>! Your job is to scrape each highlighted frosting chunk into the right frosting tub:
+                </p>
+
+                <!-- Example Breakdown -->
+                <div class="bg-white p-4 rounded-2xl border-2 border-pink-100 mb-4">
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">Example Cupcake:</div>
+                    <div class="flex flex-wrap items-center gap-2 text-base sm:text-lg font-bold">
+                        <span class="bg-sky-100 text-sky-800 px-3 py-1 rounded-xl border border-sky-300">During lunch, <span class="text-xs uppercase bg-sky-500 text-white px-1.5 py-0.5 rounded ml-1">When?</span></span>
+                        <span class="bg-amber-100 text-amber-900 px-3 py-1 rounded-xl border border-amber-300">Jerry slipped <span class="text-xs uppercase bg-amber-500 text-white px-1.5 py-0.5 rounded ml-1">Muffin</span></span>
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-xl border border-purple-300">on a banana peel <span class="text-xs uppercase bg-purple-500 text-white px-1.5 py-0.5 rounded ml-1">What/How?</span></span>
+                        <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-300">across the lunchroom floor. <span class="text-xs uppercase bg-emerald-500 text-white px-1.5 py-0.5 rounded ml-1">Where?</span></span>
+                    </div>
+                </div>
+
+                <!-- 5 Tubs Legend -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-sm font-bold">
+                    <div class="bg-sky-100 text-sky-900 p-2 rounded-xl border border-sky-200">
+                        <div class="fredoka text-base text-sky-700">WHEN</div>
+                        <div class="text-xs font-semibold">Time / Order</div>
+                    </div>
+                    <div class="bg-emerald-100 text-emerald-900 p-2 rounded-xl border border-emerald-200">
+                        <div class="fredoka text-base text-emerald-700">WHERE</div>
+                        <div class="text-xs font-semibold">Place / Direction</div>
+                    </div>
+                    <div class="bg-purple-100 text-purple-900 p-2 rounded-xl border border-purple-200">
+                        <div class="fredoka text-base text-purple-700">HOW</div>
+                        <div class="text-xs font-semibold">Way / Manner</div>
+                    </div>
+                    <div class="bg-orange-100 text-orange-900 p-2 rounded-xl border border-orange-200">
+                        <div class="fredoka text-base text-orange-700">WHY</div>
+                        <div class="text-xs font-semibold">Reason / Purpose</div>
+                    </div>
+                    <div class="bg-pink-100 text-pink-900 p-2 rounded-xl border border-pink-200 col-span-2 sm:col-span-1">
+                        <div class="fredoka text-base text-pink-700">WHAT ELSE / WHO</div>
+                        <div class="text-xs font-semibold">Extra Objects / People</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="fredoka bg-pink-500 hover:bg-pink-400 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-pink-700 shadow-lg hover:-translate-y-1 transition-all">
+                Open the Bakery!
+            </button>
+        </section>
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="hidden-screen bakery-card p-6 sm:p-10 flex flex-col min-h-[580px]">
+            
+            <!-- Top HUD -->
+            <header class="flex flex-col sm:flex-row justify-between items-center gap-4 pb-5 border-b-2 border-pink-100">
+                <div class="flex items-center gap-3 w-full sm:w-1/2">
+                    <span class="fredoka font-bold text-pink-600 text-lg whitespace-nowrap">Order <span id="order-counter">1</span> of 20</span>
+                    <div class="w-full h-4 bg-pink-100 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-pink-400 to-amber-400 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="bg-amber-100 border-2 border-amber-300 px-4 py-1.5 rounded-2xl flex items-center gap-2">
+                        <span class="text-xl">🧁</span>
+                        <span class="fredoka font-bold text-amber-800">Sorted: <span id="score-counter" class="text-pink-600 text-xl">0</span></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Workspace -->
+            <div class="flex-grow flex flex-col items-center justify-between py-6">
+                
+                <!-- Prompt Badge -->
+                <div id="prompt-badge" class="mb-4 bg-pink-100 text-pink-800 px-5 py-2 rounded-full font-bold text-sm sm:text-base flex items-center gap-2 shadow-sm border border-pink-200">
+                    <span>🔍</span>
+                    <span>What is the bright pink frosting chunk telling the reader?</span>
+                </div>
+
+                <!-- Sentence Display -->
+                <div id="sentence-plate" class="bg-slate-50 border-4 border-slate-200 rounded-3xl p-6 sm:p-8 w-full flex flex-wrap justify-center items-center shadow-inner min-h-[140px] my-2">
+                    <!-- Chunks injected here -->
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="feedback-box" class="my-4 min-h-[48px] flex items-center justify-center text-center px-4">
+                    <p id="feedback-text" class="text-lg sm:text-xl font-bold fredoka text-slate-400 transition-all">
+                        Click the matching frosting tub below!
+                    </p>
+                </div>
+
+                <!-- 5 Frosting Tubs Grid -->
+                <div id="tubs-container" class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 w-full max-w-4xl mt-2">
+                    
+                    <!-- TUB 1: WHEN -->
+                    <button onclick="selectTub('When', this)" class="frosting-tub group focus:outline-none">
+                        <div class="tub-lid bg-sky-300"></div>
+                        <div class="tub-body bg-sky-500">
+                            <span class="text-2xl mb-1">⏰</span>
+                            <div class="tub-label-sticker">
+                                <div class="fredoka font-black text-sky-700 text-lg sm:text-xl leading-tight">WHEN</div>
+                                <div class="text-[11px] font-bold text-slate-500">Time / Order</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <!-- TUB 2: WHERE -->
+                    <button onclick="selectTub('Where', this)" class="frosting-tub group focus:outline-none">
+                        <div class="tub-lid bg-emerald-300"></div>
+                        <div class="tub-body bg-emerald-500">
+                            <span class="text-2xl mb-1">📍</span>
+                            <div class="tub-label-sticker">
+                                <div class="fredoka font-black text-emerald-700 text-lg sm:text-xl leading-tight">WHERE</div>
+                                <div class="text-[11px] font-bold text-slate-500">Place / Location</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <!-- TUB 3: HOW -->
+                    <button onclick="selectTub('How', this)" class="frosting-tub group focus:outline-none">
+                        <div class="tub-lid bg-purple-300"></div>
+                        <div class="tub-body bg-purple-500">
+                            <span class="text-2xl mb-1">⚡</span>
+                            <div class="tub-label-sticker">
+                                <div class="fredoka font-black text-purple-700 text-lg sm:text-xl leading-tight">HOW</div>
+                                <div class="text-[11px] font-bold text-slate-500">Way / Manner</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <!-- TUB 4: WHY -->
+                    <button onclick="selectTub('Why', this)" class="frosting-tub group focus:outline-none">
+                        <div class="tub-lid bg-orange-300"></div>
+                        <div class="tub-body bg-orange-500">
+                            <span class="text-2xl mb-1">💡</span>
+                            <div class="tub-label-sticker">
+                                <div class="fredoka font-black text-orange-700 text-lg sm:text-xl leading-tight">WHY</div>
+                                <div class="text-[11px] font-bold text-slate-500">Reason / Purpose</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <!-- TUB 5: WHAT ELSE / WHO -->
+                    <button onclick="selectTub('What Else / Who', this)" class="frosting-tub group col-span-2 sm:col-span-1 focus:outline-none">
+                        <div class="tub-lid bg-pink-300"></div>
+                        <div class="tub-body bg-pink-500">
+                            <span class="text-2xl mb-1">🎁</span>
+                            <div class="tub-label-sticker">
+                                <div class="fredoka font-black text-pink-700 text-base sm:text-lg leading-tight">WHAT / WHO</div>
+                                <div class="text-[11px] font-bold text-slate-500">Extra Things / People</div>
+                            </div>
+                        </div>
+                    </button>
+
+                </div>
+
+                <!-- Next Order Button -->
+                <button id="next-btn" onclick="nextOrder()" class="hidden mt-6 fredoka bg-amber-500 hover:bg-amber-400 text-white text-2xl font-bold py-3 px-10 rounded-full border-b-4 border-amber-700 shadow-lg hover:-translate-y-1 transition-all pop-in">
+                    Next Cupcake Order ➔
+                </button>
+
+            </div>
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen bakery-card p-8 sm:p-14 flex flex-col items-center text-center">
+            <div class="text-7xl mb-4 pop-in">🏆🧁</div>
+            <h2 class="text-4xl sm:text-6xl font-black text-pink-600 mb-2 fredoka">Head Pastry Chef!</h2>
+            <p class="text-xl text-slate-600 font-bold mb-8">You sorted every single frosting detail into the right tub!</p>
+            
+            <div class="bg-amber-100 border-4 border-amber-300 rounded-3xl p-8 mb-8 max-w-md w-full">
+                <div class="text-sm font-bold text-amber-700 uppercase tracking-widest mb-1">First-Try Sorts</div>
+                <div class="text-5xl font-black text-amber-600 fredoka" id="final-score">0 / 0</div>
+                <p class="text-sm text-amber-800 font-semibold mt-2">Frosting chunks sorted on the first try!</p>
+            </div>
+
+            <button onclick="resetGame()" class="fredoka bg-pink-500 hover:bg-pink-400 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-pink-700 shadow-lg hover:-translate-y-1 transition-all">
+                Sort Again!
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 20 6th-Grade Cupcake Sentences broken into Muffin Base + Frosting Chunks
+        // Categories: "When", "Where", "How", "Why", "What Else / Who"
+        const cupcakeOrders = [
+            {
+                chunks: [
+                    { text: "During lunch,", type: "frosting", category: "When", hint: "'During lunch' tells us the time this happened!" },
+                    { text: "Jerry slipped", type: "muffin" },
+                    { text: "on a banana peel", type: "frosting", category: "How", hint: "It tells us how (the way) he slipped!" },
+                    { text: "across the entire lunchroom floor.", type: "frosting", category: "Where", hint: "It tells us the place/location where he slid!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Before sunrise,", type: "frosting", category: "When", hint: "'Before sunrise' gives a time clue!" },
+                    { text: "the determined hikers packed", type: "muffin" },
+                    { text: "heavy water bottles", type: "frosting", category: "What Else / Who", hint: "It tells what else they packed!" },
+                    { text: "for the steep mountain climb.", type: "frosting", category: "Why", hint: "It explains the reason/purpose they packed!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "In the secret underground lab,", type: "frosting", category: "Where", hint: "It tells us the location of the scientist!" },
+                    { text: "Dr. Vance mixed", type: "muffin" },
+                    { text: "two glowing chemicals", type: "frosting", category: "What Else / Who", hint: "It tells what else Dr. Vance mixed!" },
+                    { text: "with extreme caution.", type: "frosting", category: "How", hint: "It describes the careful manner in which he mixed them!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "The stray puppy barked", type: "muffin" },
+                    { text: "frantically", type: "frosting", category: "How", hint: "It describes the way the puppy barked!" },
+                    { text: "at the back door", type: "frosting", category: "Where", hint: "It tells us the location where the puppy was barking!" },
+                    { text: "to escape the thunderstorm.", type: "frosting", category: "Why", hint: "It tells us the reason why the puppy was barking!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "After the final bell,", type: "frosting", category: "When", hint: "It tells us when the students rushed out!" },
+                    { text: "the excited sixth graders rushed", type: "muffin" },
+                    { text: "out of the building", type: "frosting", category: "Where", hint: "It tells us where they rushed!" },
+                    { text: "like a stampede of wild horses.", type: "frosting", category: "How", hint: "It compares how they rushed!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "The master chef sliced", type: "muffin" },
+                    { text: "fresh strawberries", type: "frosting", category: "What Else / Who", hint: "It tells what else the chef sliced!" },
+                    { text: "with lightning speed", type: "frosting", category: "How", hint: "It tells how fast the chef sliced!" },
+                    { text: "to finish the wedding cake on time.", type: "frosting", category: "Why", hint: "It explains why the chef worked so fast!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Beneath the crashing ocean waves,", type: "frosting", category: "Where", hint: "It tells us the underwater location!" },
+                    { text: "a giant octopus hid", type: "muffin" },
+                    { text: "inside a sunken pirate ship", type: "frosting", category: "Where", hint: "It tells us the exact spot where it hid!" },
+                    { text: "until nightfall.", type: "frosting", category: "When", hint: "It tells us how long / until when it hid!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Yesterday afternoon,", type: "frosting", category: "When", hint: "It tells us when the game happened!" },
+                    { text: "Maya kicked", type: "muffin" },
+                    { text: "the soccer ball", type: "frosting", category: "What Else / Who", hint: "It tells what else Maya kicked!" },
+                    { text: "past the diving goalie", type: "frosting", category: "Where", hint: "It tells where the ball went!" },
+                    { text: "to win the championship.", type: "frosting", category: "Why", hint: "It tells why she took the shot!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Without making a single sound,", type: "frosting", category: "How", hint: "It describes how the ninja moved!" },
+                    { text: "the sneaky ninja crept", type: "muffin" },
+                    { text: "across the wooden rooftop", type: "frosting", category: "Where", hint: "It tells where the ninja crept!" },
+                    { text: "at midnight.", type: "frosting", category: "When", hint: "It tells the time of night!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Our science class built", type: "muffin" },
+                    { text: "cardboard rockets", type: "frosting", category: "What Else / Who", hint: "It tells what else the class built!" },
+                    { text: "in the gymnasium", type: "frosting", category: "Where", hint: "It tells where they built them!" },
+                    { text: "to test air pressure.", type: "frosting", category: "Why", hint: "It explains the scientific reason why they built them!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "During the fierce blizzard,", type: "frosting", category: "When", hint: "It tells when the pilot landed!" },
+                    { text: "the brave pilot landed", type: "muffin" },
+                    { text: "the cargo plane", type: "frosting", category: "What Else / Who", hint: "It tells what else the pilot landed!" },
+                    { text: "on the icy runway", type: "frosting", category: "Where", hint: "It tells where the plane landed!" },
+                    { text: "with steady hands.", type: "frosting", category: "How", hint: "It describes how the pilot flew!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Because of the sudden power outage,", type: "frosting", category: "Why", hint: "It gives the reason why they lit candles!" },
+                    { text: "my family lit", type: "muffin" },
+                    { text: "three scented candles", type: "frosting", category: "What Else / Who", hint: "It tells what else the family lit!" },
+                    { text: "in the living room.", type: "frosting", category: "Where", hint: "It tells where they lit the candles!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Every Saturday morning,", type: "frosting", category: "When", hint: "It tells how often / when Leo practices!" },
+                    { text: "Leo practices", type: "muffin" },
+                    { text: "his electric guitar", type: "frosting", category: "What Else / Who", hint: "It tells what else Leo practices!" },
+                    { text: "with his garage band.", type: "frosting", category: "What Else / Who", hint: "It tells who else he practices with!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "The clever raccoon opened", type: "muffin" },
+                    { text: "the metal trash can", type: "frosting", category: "What Else / Who", hint: "It tells what else the raccoon opened!" },
+                    { text: "using its nimble paws", type: "frosting", category: "How", hint: "It explains how the raccoon got it open!" },
+                    { text: "to search for leftover pizza.", type: "frosting", category: "Why", hint: "It tells why the raccoon opened the can!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "High above the clouds,", type: "frosting", category: "Where", hint: "It tells where the eagle glided!" },
+                    { text: "a majestic golden eagle glided", type: "muffin" },
+                    { text: "effortlessly", type: "frosting", category: "How", hint: "It describes how smoothly the eagle glided!" },
+                    { text: "on the warm wind currents.", type: "frosting", category: "Where", hint: "It tells where/on what it was riding!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "At the stroke of noon,", type: "frosting", category: "When", hint: "It tells the exact time the parade began!" },
+                    { text: "the marching band paraded", type: "muffin" },
+                    { text: "down Main Street", type: "frosting", category: "Where", hint: "It tells where they marched!" },
+                    { text: "with booming drums and shiny trumpets.", type: "frosting", category: "How", hint: "It describes how they paraded!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "To earn extra allowance,", type: "frosting", category: "Why", hint: "It tells the reason why Sam mowed the lawn!" },
+                    { text: "Sam mowed", type: "muffin" },
+                    { text: "the overgrown backyard", type: "frosting", category: "What Else / Who", hint: "It tells what else Sam mowed!" },
+                    { text: "before dinner.", type: "frosting", category: "When", hint: "It tells when he finished mowing!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Inside the dusty attic,", type: "frosting", category: "Where", hint: "It tells where Elena found the trunk!" },
+                    { text: "Elena discovered", type: "muffin" },
+                    { text: "an ancient wooden treasure chest", type: "frosting", category: "What Else / Who", hint: "It tells what else Elena discovered!" },
+                    { text: "hidden behind old boxes.", type: "frosting", category: "Where", hint: "It tells where the chest was hidden!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "With a nervous smile,", type: "frosting", category: "How", hint: "It shows how the magician stepped onto the stage!" },
+                    { text: "the young magician stepped", type: "muffin" },
+                    { text: "onto the brightly lit stage", type: "frosting", category: "Where", hint: "It tells where the magician stepped!" },
+                    { text: "in front of three hundred people.", type: "frosting", category: "What Else / Who", hint: "It tells who else was there watching!" }
+                ]
+            },
+            {
+                chunks: [
+                    { text: "Since early this morning,", type: "frosting", category: "When", hint: "It tells when the snow started falling!" },
+                    { text: "heavy snow fell", type: "muffin" },
+                    { text: "silently", type: "frosting", category: "How", hint: "It describes how quietly the snow fell!" },
+                    { text: "over the quiet mountain village.", type: "frosting", category: "Where", hint: "It tells where the snow landed!" }
+                ]
+            }
+        ];
+
+        // Game State
+        let currentOrderIdx = 0;
+        let frostingQueue = []; // Indices of frosting chunks in current order
+        let currentQueuePos = 0;
+        let totalFrostingChunks = 0;
+        let firstTryCorrect = 0;
+        let missedCurrentChunk = false;
+        let isOrderDone = false;
+
+        // UI References
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen')
+            },
+            orderCounter: document.getElementById('order-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            scoreCounter: document.getElementById('score-counter'),
+            sentencePlate: document.getElementById('sentence-plate'),
+            feedbackText: document.getElementById('feedback-text'),
+            tubsContainer: document.getElementById('tubs-container'),
+            promptBadge: document.getElementById('prompt-badge'),
+            nextBtn: document.getElementById('next-btn'),
+            finalScore: document.getElementById('final-score')
+        };
+
+        const sounds = {
+            scrape: document.getElementById('sfx-scrape'),
+            error: document.getElementById('sfx-error'),
+            ding: document.getElementById('sfx-ding')
+        };
+
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(s => s.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        function startGame() {
+            currentOrderIdx = 0;
+            firstTryCorrect = 0;
+            totalFrostingChunks = cupcakeOrders.reduce((acc, order) => {
+                return acc + order.chunks.filter(c => c.type === 'frosting').length;
+            }, 0);
+            
+            UI.scoreCounter.textContent = "0";
+            loadOrder();
+            showScreen('game');
+        }
+
+        function loadOrder() {
+            const order = cupcakeOrders[currentOrderIdx];
+            isOrderDone = false;
+            missedCurrentChunk = false;
+
+            // Find all frosting chunk indices in order from left to right
+            frostingQueue = [];
+            order.chunks.forEach((chunk, idx) => {
+                if (chunk.type === 'frosting') {
+                    frostingQueue.push(idx);
+                }
+            });
+            currentQueuePos = 0;
+
+            // Update HUD
+            UI.orderCounter.textContent = currentOrderIdx + 1;
+            UI.progressBar.style.width = `${(currentOrderIdx / cupcakeOrders.length) * 100}%`;
+            
+            UI.nextBtn.classList.add('hidden');
+            UI.tubsContainer.classList.remove('opacity-40', 'pointer-events-none');
+            UI.promptBadge.classList.remove('hidden');
+
+            UI.feedbackText.textContent = "Click the matching frosting tub below!";
+            UI.feedbackText.className = "text-lg sm:text-xl font-bold fredoka text-slate-400 transition-all";
+
+            renderSentence();
+        }
+
+        function renderSentence() {
+            const order = cupcakeOrders[currentOrderIdx];
+            const activeChunkIndex = frostingQueue[currentQueuePos];
+
+            UI.sentencePlate.innerHTML = '';
+
+            order.chunks.forEach((chunk, idx) => {
+                const span = document.createElement('span');
+                span.textContent = chunk.text;
+
+                if (chunk.type === 'muffin') {
+                    span.className = 'sentence-chunk chunk-muffin';
+                    span.title = "Core Muffin Base (Subject + Verb)";
+                } else {
+                    // Check if sorted, active, or waiting
+                    const queuePosition = frostingQueue.indexOf(idx);
+                    if (isOrderDone || queuePosition < currentQueuePos) {
+                        span.className = 'sentence-chunk chunk-sorted';
+                    } else if (idx === activeChunkIndex) {
+                        span.className = 'sentence-chunk chunk-active pop-in';
+                    } else {
+                        span.className = 'sentence-chunk chunk-waiting';
+                    }
+                }
+
+                UI.sentencePlate.appendChild(span);
+            });
+        }
+
+        function selectTub(selectedCategory, tubElement) {
+            if (isOrderDone) return;
+
+            const order = cupcakeOrders[currentOrderIdx];
+            const activeChunkIndex = frostingQueue[currentQueuePos];
+            const activeChunk = order.chunks[activeChunkIndex];
+
+            if (selectedCategory === activeChunk.category) {
+                // CORRECT!
+                playSound('scrape');
+                if (!missedCurrentChunk) {
+                    firstTryCorrect++;
+                    UI.scoreCounter.textContent = firstTryCorrect;
+                }
+
+                // Bounce animation on tub
+                tubElement.classList.remove('pop-in');
+                void tubElement.offsetWidth;
+                tubElement.classList.add('pop-in');
+
+                UI.feedbackText.innerHTML = `✅ Yes! <span class="text-pink-600">"${activeChunk.text}"</span> tells us <strong>${activeChunk.category.toUpperCase()}</strong>!`;
+                UI.feedbackText.className = "text-lg sm:text-xl font-bold fredoka text-emerald-600 transition-all";
+
+                // Move to next frosting chunk
+                currentQueuePos++;
+                missedCurrentChunk = false;
+
+                if (currentQueuePos >= frostingQueue.length) {
+                    completeOrder();
+                } else {
+                    renderSentence();
+                }
+
+            } else {
+                // INCORRECT
+                playSound('error');
+                missedCurrentChunk = true;
+
+                tubElement.classList.remove('shake-error');
+                void tubElement.offsetWidth;
+                tubElement.classList.add('shake-error');
+
+                UI.feedbackText.innerHTML = `Not quite! Hint: ${activeChunk.hint}`;
+                UI.feedbackText.className = "text-lg sm:text-xl font-bold fredoka text-red-500 transition-all";
+            }
+        }
+
+        function completeOrder() {
+            isOrderDone = true;
+            playSound('ding');
+            renderSentence();
+
+            UI.progressBar.style.width = `${((currentOrderIdx + 1) / cupcakeOrders.length) * 100}%`;
+            UI.tubsContainer.classList.add('opacity-40', 'pointer-events-none');
+            UI.promptBadge.classList.add('hidden');
+
+            UI.feedbackText.innerHTML = `🧁 All frosting sorted! Only the plain <strong>Muffin Base</strong> is left!`;
+            UI.feedbackText.className = "text-xl sm:text-2xl font-bold fredoka text-amber-600 transition-all pop-in";
+
+            UI.nextBtn.classList.remove('hidden');
+        }
+
+        function nextOrder() {
+            currentOrderIdx++;
+            if (currentOrderIdx < cupcakeOrders.length) {
+                loadOrder();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            UI.finalScore.textContent = `${firstTryCorrect} / ${totalFrostingChunks}`;
+            showScreen('results');
+            playSound('ding');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
