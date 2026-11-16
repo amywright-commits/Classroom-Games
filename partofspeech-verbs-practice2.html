@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Sorter: Noun, Verb, or Both</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            min-height: 100vh;
+        }
+
+        .category-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-btn:hover:not(:disabled) {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .category-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .correct-anim {
+            animation: bounce-success 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes bounce-success {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .incorrect-anim {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .word-entrance {
+            animation: slide-up-fade 0.4s ease-out forwards;
+        }
+
+        @keyframes slide-up-fade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Main Container -->
+    <main class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white/50 relative">
+        
+        <!-- Audio Elements -->
+        <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+        <audio id="error-sound" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+
+        <!-- Start Screen -->
+        <section id="start-screen" class="p-8 sm:p-12 flex flex-col items-center">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-indigo-600 mb-6 drop-shadow-sm text-center">Word Sorter!</h1>
+            <p class="text-xl text-gray-600 mb-8 text-center font-bold">Noun, Verb, or Both?</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 w-full">
+                <!-- Noun Def -->
+                <div class="bg-blue-50 border-t-4 border-blue-500 p-6 rounded-b-2xl shadow-sm">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-2">Noun</h2>
+                    <p class="text-gray-700 font-semibold mb-2">A person, place, thing, or idea.</p>
+                    <p class="text-sm text-gray-500 italic">Example: teacher, school, apple, freedom</p>
+                </div>
+                
+                <!-- Verb Def -->
+                <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-b-2xl shadow-sm">
+                    <h2 class="text-2xl font-bold text-green-700 mb-2">Verb</h2>
+                    <p class="text-gray-700 font-semibold mb-2">An action word. It tells what someone or something does.</p>
+                    <p class="text-sm text-gray-500 italic">Example: sprint, explore, listen, build</p>
+                </div>
+
+                <!-- Both Def -->
+                <div class="bg-purple-50 border-t-4 border-purple-500 p-6 rounded-b-2xl shadow-sm">
+                    <h2 class="text-2xl font-bold text-purple-700 mb-2">Both</h2>
+                    <p class="text-gray-700 font-semibold mb-2">Words that can be a noun OR a verb depending on the sentence.</p>
+                    <p class="text-sm text-gray-500 italic">Example: "watch" (I wear a <b>watch</b>. / I <b>watch</b> TV.)</p>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                Start Sorting!
+            </button>
+        </section>
+
+        <!-- Practice Screen -->
+        <section id="practice-screen" class="hidden-screen p-6 sm:p-10 min-h-[550px] flex flex-col">
+            <!-- Header Status -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <div class="w-full sm:w-1/2 bg-gray-200 rounded-full h-4 overflow-hidden relative">
+                    <div id="progress-bar" class="bg-indigo-500 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex gap-4 sm:gap-6 text-base sm:text-lg font-bold text-gray-600">
+                    <div class="bg-indigo-100 px-4 py-2 rounded-xl text-indigo-800 shadow-sm">
+                        Word <span id="question-counter">1</span> / 30
+                    </div>
+                    <div class="bg-amber-100 px-4 py-2 rounded-xl text-amber-800 shadow-sm">
+                        Score: <span id="score-counter">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="flex-grow flex flex-col items-center justify-center w-full">
+                
+                <!-- The Target Word -->
+                <div class="mb-10 text-center">
+                    <h3 class="text-gray-500 uppercase tracking-widest font-bold text-sm mb-2">Sort This Word:</h3>
+                    <div id="current-word" class="text-5xl sm:text-6xl font-black text-gray-800 px-8 py-4 bg-gray-50 rounded-2xl border-4 border-dashed border-gray-300 inline-block shadow-sm">
+                        word
+                    </div>
+                </div>
+
+                <!-- Sorting Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-2xl mb-8">
+                    <button onclick="checkAnswer('Noun')" id="btn-Noun" class="category-btn bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-6 px-4 rounded-2xl shadow-md border-b-4 border-blue-700 focus:outline-none">
+                        Noun
+                    </button>
+                    <button onclick="checkAnswer('Verb')" id="btn-Verb" class="category-btn bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-6 px-4 rounded-2xl shadow-md border-b-4 border-green-700 focus:outline-none">
+                        Verb
+                    </button>
+                    <button onclick="checkAnswer('Both')" id="btn-Both" class="category-btn bg-purple-500 hover:bg-purple-600 text-white text-2xl font-bold py-6 px-4 rounded-2xl shadow-md border-b-4 border-purple-700 focus:outline-none">
+                        Both
+                    </button>
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="feedback-container" class="min-h-[90px] w-full max-w-2xl text-center flex flex-col items-center justify-center">
+                    <p id="feedback-text" class="text-xl sm:text-2xl font-bold opacity-0 transition-opacity duration-300 mb-2"></p>
+                    <p id="feedback-hint" class="text-gray-600 italic font-semibold opacity-0 transition-opacity duration-300 hidden"></p>
+                </div>
+
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-gray-900 text-white text-xl font-bold py-3 px-10 rounded-full shadow-lg transition-all transform hover:-translate-y-1 mt-4">
+                    Next Word ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen p-8 sm:p-12 flex flex-col items-center">
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-indigo-600 mb-4 text-center">Sorting Complete!</h2>
+            
+            <div class="bg-white border-4 border-indigo-100 rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-xl mb-8 relative overflow-hidden">
+                <span class="text-5xl font-black text-gray-800 relative z-10" id="final-score">0/30</span>
+                <span class="text-2xl font-bold text-gray-500 relative z-10" id="final-percentage">0%</span>
+                <div class="absolute bottom-0 w-full bg-indigo-100 h-1/3"></div>
+            </div>
+
+            <div id="review-section" class="w-full max-w-3xl hidden mb-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Words to Review:</h3>
+                <div class="bg-gray-50 p-6 rounded-3xl shadow-inner max-h-72 overflow-y-auto border border-gray-200">
+                    <ul id="review-list" class="space-y-4">
+                        <!-- Missed words injected via JS -->
+                    </ul>
+                </div>
+            </div>
+
+            <button onclick="resetGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                Play Again
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 30 Words: 10 Nouns, 10 Verbs, 10 Both
+        const wordBank = [
+            // Nouns ONLY (Person, place, thing, idea)
+            { word: "ocean", category: "Noun", explanation: "A large body of saltwater (a thing/place)." },
+            { word: "happiness", category: "Noun", explanation: "A feeling or emotion (an idea)." },
+            { word: "teacher", category: "Noun", explanation: "A person who educates." },
+            { word: "library", category: "Noun", explanation: "A place with many books." },
+            { word: "giraffe", category: "Noun", explanation: "An animal with a long neck (a thing)." },
+            { word: "courage", category: "Noun", explanation: "Bravery (an idea)." },
+            { word: "elephant", category: "Noun", explanation: "A large animal with a trunk (a thing)." },
+            { word: "guitar", category: "Noun", explanation: "A musical instrument (a thing)." },
+            { word: "island", category: "Noun", explanation: "Land surrounded by water (a place)." },
+            { word: "planet", category: "Noun", explanation: "A large object in space (a thing/place)." },
+            
+            // Verbs ONLY (Actions)
+            { word: "decide", category: "Verb", explanation: "To make a choice about something." },
+            { word: "devour", category: "Verb", explanation: "To eat quickly and hungrily." },
+            { word: "realize", category: "Verb", explanation: "To understand clearly." },
+            { word: "breathe", category: "Verb", explanation: "To take air in and out." },
+            { word: "hesitate", category: "Verb", explanation: "To pause before doing something." },
+            { word: "calculate", category: "Verb", explanation: "To find an answer using math." },
+            { word: "interrupt", category: "Verb", explanation: "To stop someone from speaking." },
+            { word: "celebrate", category: "Verb", explanation: "To do something special for an event." },
+            { word: "destroy", category: "Verb", explanation: "To break something completely." },
+            { word: "achieve", category: "Verb", explanation: "To reach a goal successfully." },
+
+            // BOTH (Can be Noun or Verb depending on sentence)
+            { word: "book", category: "Both", explanation: "Noun: I read a book. / Verb: I will book a flight." },
+            { word: "watch", category: "Both", explanation: "Noun: I wear a watch. / Verb: We watch the game." },
+            { word: "water", category: "Both", explanation: "Noun: I drink water. / Verb: I water the plants." },
+            { word: "park", category: "Both", explanation: "Noun: We play at the park. / Verb: Please park the car." },
+            { word: "bark", category: "Both", explanation: "Noun: Tree bark is rough. / Verb: The dog will bark." },
+            { word: "play", category: "Both", explanation: "Noun: We watched a play. / Verb: We play outside." },
+            { word: "jump", category: "Both", explanation: "Noun: That was a big jump. / Verb: I can jump high." },
+            { word: "ship", category: "Both", explanation: "Noun: The ship sailed. / Verb: We will ship the box." },
+            { word: "record", category: "Both", explanation: "Noun: A world record. / Verb: Let's record a song." },
+            { word: "color", category: "Both", explanation: "Noun: Red is my favorite color. / Verb: Color the picture." }
+        ];
+
+        // Game State Variables
+        let practiceWords = [];
+        let currentWordIndex = 0;
+        let score = 0;
+        let missedWords = [];
+        let hasFailedCurrent = false;
+        let isQuestionComplete = false;
+
+        // UI Elements
+        const screens = {
+            start: document.getElementById('start-screen'),
+            practice: document.getElementById('practice-screen'),
+            results: document.getElementById('results-screen')
+        };
+        const UI = {
+            currentWord: document.getElementById('current-word'),
+            feedbackText: document.getElementById('feedback-text'),
+            feedbackHint: document.getElementById('feedback-hint'),
+            nextBtn: document.getElementById('next-btn'),
+            questionCounter: document.getElementById('question-counter'),
+            scoreCounter: document.getElementById('score-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            finalScore: document.getElementById('final-score'),
+            finalPercentage: document.getElementById('final-percentage'),
+            reviewSection: document.getElementById('review-section'),
+            reviewList: document.getElementById('review-list'),
+            buttons: {
+                Noun: document.getElementById('btn-Noun'),
+                Verb: document.getElementById('btn-Verb'),
+                Both: document.getElementById('btn-Both')
+            }
+        };
+        const sounds = {
+            success: document.getElementById('success-sound'),
+            error: document.getElementById('error-sound')
+        };
+
+        // Colors for categories for styling feedback
+        const categoryColors = {
+            Noun: 'text-blue-600',
+            Verb: 'text-green-600',
+            Both: 'text-purple-600'
+        };
+
+        // Utility: Fisher-Yates Shuffle
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        // Play Sound Safely
+        function playSound(type) {
+            const sound = sounds[type];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play prevented by browser settings."));
+            }
+        }
+
+        // Screen Navigation
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.add('hidden-screen'));
+            screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Start Game
+        function startGame() {
+            practiceWords = shuffleArray([...wordBank]);
+            currentWordIndex = 0;
+            score = 0;
+            missedWords = [];
+            
+            updateTopStats();
+            loadWord();
+            showScreen('practice');
+        }
+
+        // Load Word
+        function loadWord() {
+            hasFailedCurrent = false;
+            isQuestionComplete = false;
+            
+            // Reset UI
+            UI.feedbackText.style.opacity = '0';
+            UI.feedbackHint.style.opacity = '0';
+            setTimeout(() => { UI.feedbackHint.classList.add('hidden'); }, 300); // hide after fade
+            
+            UI.nextBtn.classList.add('hidden');
+            
+            // Re-enable and reset buttons
+            Object.values(UI.buttons).forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'correct-anim', 'incorrect-anim', 'cursor-not-allowed', 'scale-105');
+            });
+
+            // Set Word and trigger animation
+            const currentItem = practiceWords[currentWordIndex];
+            UI.currentWord.textContent = currentItem.word;
+            UI.currentWord.classList.remove('word-entrance');
+            void UI.currentWord.offsetWidth; // Trigger reflow to restart animation
+            UI.currentWord.classList.add('word-entrance');
+
+            updateTopStats();
+        }
+
+        // Check Answer (Called by Category Buttons)
+        function checkAnswer(selectedCategory) {
+            if (isQuestionComplete) return;
+
+            const currentItem = practiceWords[currentWordIndex];
+            const isCorrect = selectedCategory === currentItem.category;
+            const clickedBtn = UI.buttons[selectedCategory];
+
+            if (isCorrect) {
+                isQuestionComplete = true;
+                playSound('success');
+                
+                // Style correct button
+                clickedBtn.classList.add('correct-anim', 'scale-105');
+                
+                // Update score if it's the first try
+                if (!hasFailedCurrent) {
+                    score++;
+                } else {
+                    missedWords.push(currentItem);
+                }
+                
+                updateTopStats();
+
+                // Show feedback
+                UI.feedbackText.innerHTML = `Correct! <b>${currentItem.word}</b> belongs in <b>${currentItem.category}</b>.`;
+                UI.feedbackText.className = `text-2xl sm:text-3xl font-extrabold transition-opacity duration-300 opacity-100 ${categoryColors[currentItem.category]} mb-2`;
+                
+                // Show Explanation Hint
+                UI.feedbackHint.innerHTML = currentItem.explanation;
+                UI.feedbackHint.classList.remove('hidden');
+                setTimeout(() => { UI.feedbackHint.style.opacity = '1'; }, 50);
+
+                // Disable all buttons and dim incorrect ones
+                Object.keys(UI.buttons).forEach(key => {
+                    const btn = UI.buttons[key];
+                    btn.disabled = true;
+                    if(key !== selectedCategory) btn.classList.add('opacity-50');
+                });
+
+                // Show next button
+                UI.nextBtn.classList.remove('hidden');
+
+            } else {
+                hasFailedCurrent = true;
+                playSound('error');
+                
+                // Style incorrect button
+                clickedBtn.classList.add('incorrect-anim', 'opacity-50', 'cursor-not-allowed');
+                clickedBtn.disabled = true;
+                
+                // Remove animation class after it plays so it can be re-triggered if needed (though it's disabled now)
+                setTimeout(() => clickedBtn.classList.remove('incorrect-anim'), 400);
+
+                // Show hint feedback
+                UI.feedbackText.textContent = "Not quite! Try another category.";
+                UI.feedbackText.className = 'text-xl sm:text-2xl font-bold text-red-500 transition-opacity duration-300 opacity-100 mb-2';
+            }
+        }
+
+        // Next Word
+        function nextQuestion() {
+            currentWordIndex++;
+            
+            if (currentWordIndex < practiceWords.length) {
+                loadWord();
+            } else {
+                endGame();
+            }
+        }
+
+        // Update Progress & Score UI
+        function updateTopStats() {
+            UI.questionCounter.textContent = currentWordIndex + 1;
+            UI.scoreCounter.textContent = score;
+            const progress = ((currentWordIndex) / practiceWords.length) * 100;
+            UI.progressBar.style.width = `${progress}%`;
+        }
+
+        // End Game and Show Results
+        function endGame() {
+            UI.finalScore.textContent = `${score}/${practiceWords.length}`;
+            const percentage = Math.round((score / practiceWords.length) * 100);
+            UI.finalPercentage.textContent = `${percentage}%`;
+
+            if (missedWords.length > 0) {
+                UI.reviewSection.classList.remove('hidden');
+                UI.reviewList.innerHTML = '';
+                
+                // Create review list items
+                missedWords.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = "flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-sm gap-2";
+                    
+                    let badgeClass = '';
+                    if(item.category === 'Noun') badgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
+                    if(item.category === 'Verb') badgeClass = 'bg-green-100 text-green-800 border-green-300';
+                    if(item.category === 'Both') badgeClass = 'bg-purple-100 text-purple-800 border-purple-300';
+
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <span class="text-2xl font-black text-gray-800">${item.word}</span>
+                            <span class="px-3 py-1 rounded-lg text-sm font-bold border ${badgeClass}">${item.category}</span>
+                        </div>
+                        <span class="text-sm text-gray-600 italic font-semibold">${item.explanation}</span>
+                    `;
+                    UI.reviewList.appendChild(li);
+                });
+            } else {
+                UI.reviewSection.classList.add('hidden');
+            }
+
+            showScreen('results');
+        }
+
+        // Reset Game from Results Screen
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
