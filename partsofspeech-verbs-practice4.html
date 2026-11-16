@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Time Machine: Verb Tenses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@500;700;900&display=swap');
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: #020617; /* Slate 950 */
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Sci-Fi Container Themes */
+        .theme-default {
+            background-color: #0f172a;
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+        
+        .theme-past {
+            background-color: #451a03; /* Amber 950 */
+            border-color: #d97706; /* Amber 500 */
+            box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
+        }
+
+        .theme-present {
+            background-color: #064e3b; /* Emerald 900 */
+            border-color: #10b981; /* Emerald 500 */
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .theme-future {
+            background-color: #4a044e; /* Fuchsia 900 */
+            border-color: #d946ef; /* Fuchsia 500 */
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.3);
+        }
+
+        /* Time Travel Button Styling */
+        .time-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .time-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        .time-btn:hover::after {
+            width: 200%; height: 200%;
+        }
+        .time-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Animations */
+        .warp-animation {
+            animation: warp-drive 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes warp-drive {
+            0% { transform: scale(1); filter: blur(0px); opacity: 1; }
+            40% { transform: scale(1.5); filter: blur(10px); opacity: 0; }
+            60% { transform: scale(0.8); filter: blur(10px); opacity: 0; }
+            100% { transform: scale(1); filter: blur(0px); opacity: 1; }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .glitch-text {
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+
+        /* Terminal typing effect cursor */
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Sound Effects (Using standard mixkit placeholders for UI feedback) -->
+    <audio id="sfx-beep" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="sfx-success" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfx-warp" src="https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3"></audio>
+
+    <!-- Main Game Console -->
+    <main id="game-console" class="w-full max-w-4xl rounded-3xl border-4 theme-default transition-colors duration-500 overflow-hidden relative flex flex-col min-h-[600px]">
+        
+        <!-- CRT scanline overlay effect -->
+        <div class="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] z-50 opacity-20"></div>
+
+        <!-- Start Screen -->
+        <section id="start-screen" class="flex-grow p-8 sm:p-12 flex flex-col items-center justify-center text-center z-10">
+            <div class="mb-8">
+                <svg class="w-24 h-24 mx-auto text-cyan-400 mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h1 class="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-4 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+                    TIME MACHINE
+                </h1>
+                <h2 class="text-xl sm:text-2xl text-cyan-200 tracking-widest uppercase">Temporal Verb Override</h2>
+            </div>
+            
+            <div class="bg-black/40 border border-cyan-800 p-6 rounded-xl mb-10 max-w-2xl text-left backdrop-blur-sm">
+                <p class="text-cyan-300 font-bold mb-3 flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                    MISSION BRIEFING:
+                </p>
+                <p class="text-gray-300 mb-2 leading-relaxed">
+                    Agent, the timeline has been corrupted! Sentences are stuck in the wrong verb tenses.
+                </p>
+                <ul class="list-disc pl-5 text-gray-400 space-y-1 mb-4">
+                    <li>Read the corrupted sentence.</li>
+                    <li>Select the correct era (<span class="text-amber-400">PAST</span>, <span class="text-emerald-400">PRESENT</span>, or <span class="text-fuchsia-400">FUTURE</span>) to travel to.</li>
+                    <li>Choose the correct verb form to repair the timeline.</li>
+                </ul>
+                <p class="text-xs text-cyan-600 uppercase tracking-widest mt-4 text-center">Clearance Level: Grade 6 Syntax</p>
+            </div>
+
+            <button onclick="startGame()" class="orbitron text-2xl font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-900 py-4 px-12 rounded-none border-b-4 border-cyan-700 hover:border-cyan-600 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] uppercase tracking-wider">
+                Initialize Drive
+            </button>
+        </section>
+
+        <!-- Gameplay Dashboard -->
+        <section id="game-screen" class="hidden-screen flex-grow flex flex-col z-10 h-full p-4 sm:p-8">
+            
+            <!-- HUD Top Bar -->
+            <header class="flex justify-between items-center border-b-2 border-cyan-800/50 pb-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="text-cyan-500 text-sm font-bold tracking-widest uppercase">
+                        Anomaly: <span id="mission-counter" class="text-cyan-300 text-lg">1</span>/20
+                    </div>
+                    <!-- Power Bar -->
+                    <div class="w-32 sm:w-48 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-cyan-500 text-sm font-bold tracking-widest uppercase">Stability Score</div>
+                    <div id="score-counter" class="text-2xl orbitron text-cyan-300">0</div>
+                </div>
+            </header>
+
+            <!-- Mission Display Area -->
+            <div id="mission-briefing-panel" class="bg-black/50 border border-slate-700 rounded-lg p-6 mb-8 flex-grow">
+                <h3 class="text-slate-400 text-sm tracking-widest uppercase mb-4 flex justify-between">
+                    <span>Current Timeline State</span>
+                    <span id="status-indicator" class="text-red-400 animate-pulse">UNSTABLE</span>
+                </h3>
+                
+                <div class="text-2xl sm:text-3xl text-white mb-6 leading-relaxed bg-slate-800/50 p-4 rounded border-l-4 border-red-500 font-bold" id="current-sentence">
+                    <!-- Base sentence goes here -->
+                </div>
+
+                <div class="bg-cyan-950/40 p-4 border border-cyan-900 rounded text-lg">
+                    <span class="text-cyan-500 font-bold uppercase tracking-widest">Directive:</span> 
+                    <span class="text-gray-300">Travel to the</span> 
+                    <span id="target-era" class="font-black text-xl px-2 py-1 bg-cyan-900/50 rounded text-cyan-300 uppercase shadow-[0_0_10px_rgba(34,211,238,0.2)]">FUTURE</span>
+                    <span class="text-gray-300">to correct the anomaly.</span>
+                </div>
+            </div>
+
+            <!-- Time Travel Controls -->
+            <div id="time-controls-panel" class="mb-4">
+                <h3 class="text-center text-slate-500 text-xs tracking-[0.2em] uppercase mb-4">Set Destination Coordinates</h3>
+                <div class="grid grid-cols-3 gap-2 sm:gap-6">
+                    <button onclick="attemptTimeTravel('Past')" class="time-btn orbitron py-4 sm:py-6 rounded-lg border-2 border-amber-700 bg-amber-950/40 text-amber-500 hover:bg-amber-900 hover:text-amber-300 font-bold text-lg sm:text-xl shadow-[0_0_15px_rgba(217,119,6,0.1)] focus:outline-none">
+                        PAST
+                    </button>
+                    <button onclick="attemptTimeTravel('Present')" class="time-btn orbitron py-4 sm:py-6 rounded-lg border-2 border-emerald-700 bg-emerald-950/40 text-emerald-500 hover:bg-emerald-900 hover:text-emerald-300 font-bold text-lg sm:text-xl shadow-[0_0_15px_rgba(16,185,129,0.1)] focus:outline-none">
+                        PRESENT
+                    </button>
+                    <button onclick="attemptTimeTravel('Future')" class="time-btn orbitron py-4 sm:py-6 rounded-lg border-2 border-fuchsia-700 bg-fuchsia-950/40 text-fuchsia-500 hover:bg-fuchsia-900 hover:text-fuchsia-300 font-bold text-lg sm:text-xl shadow-[0_0_15px_rgba(217,70,239,0.1)] focus:outline-none">
+                        FUTURE
+                    </button>
+                </div>
+            </div>
+
+            <!-- Repair Verb Panel (Hidden initially) -->
+            <div id="repair-panel" class="hidden flex-col items-center justify-center flex-grow mb-4">
+                <h3 class="text-center text-white text-sm tracking-[0.2em] uppercase mb-6 bg-black/60 px-4 py-2 rounded-full border border-white/20 inline-block mx-auto">
+                    Timeline Re-Entry: Select Correct Form
+                </h3>
+                
+                <div class="text-2xl sm:text-3xl text-white mb-10 leading-relaxed text-center" id="repair-sentence">
+                    <!-- Sentence with blank -->
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl" id="verb-options">
+                    <!-- Option buttons injected via JS -->
+                </div>
+            </div>
+
+            <!-- Terminal Feedback -->
+            <div class="mt-auto h-12 flex items-center bg-black/80 border border-slate-800 rounded px-4">
+                <span class="text-cyan-600 mr-2">></span>
+                <span id="terminal-feedback" class="text-slate-400 text-sm">System standing by...<span class="cursor-blink">_</span></span>
+            </div>
+
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen flex-grow p-8 sm:p-12 flex flex-col items-center justify-center z-10 text-center">
+            <h2 class="text-4xl sm:text-6xl font-black text-cyan-400 mb-2 orbitron uppercase drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">Mission Complete</h2>
+            <p class="text-xl text-slate-300 mb-10 tracking-widest uppercase">Timeline Restored</p>
+            
+            <div class="bg-black/50 border-2 border-cyan-800 rounded-full w-56 h-56 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.2)] mb-10 relative">
+                <span class="text-slate-500 font-bold uppercase tracking-widest text-sm mb-1">Final Score</span>
+                <span class="text-6xl font-black text-white orbitron" id="final-score">0/20</span>
+                <span class="text-cyan-400 font-bold mt-2" id="final-rating">Excellent</span>
+            </div>
+
+            <button onclick="resetGame()" class="orbitron text-xl font-bold bg-transparent text-cyan-400 border-2 border-cyan-500 hover:bg-cyan-500 hover:text-slate-900 py-3 px-10 rounded transition-all shadow-[0_0_15px_rgba(34,211,238,0.3)] uppercase tracking-wider">
+                Initiate New Loop
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 6th Grade Level Vocabulary & Sentences
+        const missionBank = [
+            {
+                subject: "The meteor",
+                baseVerb: "strikes",
+                rest: "the barren landscape.",
+                currentEra: "Present",
+                targetEra: "Past",
+                correct: "struck",
+                options: ["strikes", "struck", "will strike", "was striking"]
+            },
+            {
+                subject: "The brilliant architect",
+                baseVerb: "builds",
+                rest: "a sustainable skyscraper.",
+                currentEra: "Present",
+                targetEra: "Future",
+                correct: "will build",
+                options: ["builds", "built", "will build", "building"]
+            },
+            {
+                subject: "The Arctic explorers",
+                baseVerb: "froze",
+                rest: "during the fierce blizzard.",
+                currentEra: "Past",
+                targetEra: "Present",
+                correct: "freeze",
+                options: ["freeze", "froze", "will freeze", "freezing"]
+            },
+            {
+                subject: "The lead engineers",
+                baseVerb: "will construct",
+                rest: "a revolutionary energy grid.",
+                currentEra: "Future",
+                targetEra: "Past",
+                correct: "constructed",
+                options: ["construct", "constructed", "will construct", "constructing"]
+            },
+            {
+                subject: "The fragile ecosystem",
+                baseVerb: "adapts",
+                rest: "to the sudden climate shift.",
+                currentEra: "Present",
+                targetEra: "Future",
+                correct: "will adapt",
+                options: ["adapts", "adapted", "will adapt", "is adapting"]
+            },
+            {
+                subject: "The international delegates",
+                baseVerb: "spoke",
+                rest: "at the peace conference.",
+                currentEra: "Past",
+                targetEra: "Present",
+                correct: "speak",
+                options: ["speaks", "spoke", "will speak", "speak"] // Tricky: Plural subject requires 'speak' not 'speaks'
+            },
+            {
+                subject: "The microscopic particles",
+                baseVerb: "accelerate",
+                rest: "inside the massive collider.",
+                currentEra: "Present",
+                targetEra: "Past",
+                correct: "accelerated",
+                options: ["accelerates", "accelerated", "will accelerate", "accelerate"]
+            },
+            {
+                subject: "The robotic submarine",
+                baseVerb: "will sink",
+                rest: "into the Mariana Trench.",
+                currentEra: "Future",
+                targetEra: "Past",
+                correct: "sank",
+                options: ["sinks", "sank", "will sink", "sinked"]
+            },
+            {
+                subject: "The powerful monarch",
+                baseVerb: "decreed",
+                rest: "a new law for the realm.",
+                currentEra: "Past",
+                targetEra: "Future",
+                correct: "will decree",
+                options: ["decrees", "decreed", "will decree", "decreeing"]
+            },
+            {
+                subject: "The ancient glaciers",
+                baseVerb: "withdraw",
+                rest: "from the mountain valleys.",
+                currentEra: "Present",
+                targetEra: "Past",
+                correct: "withdrew",
+                options: ["withdraws", "withdrew", "will withdraw", "withdrawed"]
+            },
+            {
+                subject: "The symphony orchestra",
+                baseVerb: "performed",
+                rest: "a complex masterpiece.",
+                currentEra: "Past",
+                targetEra: "Present",
+                correct: "performs",
+                options: ["performs", "performed", "will perform", "perform"]
+            },
+            {
+                subject: "The scholars",
+                baseVerb: "will debate",
+                rest: "the origins of the universe.",
+                currentEra: "Future",
+                targetEra: "Past",
+                correct: "debated",
+                options: ["debate", "debated", "will debate", "debates"]
+            },
+            {
+                subject: "The communication satellites",
+                baseVerb: "orbit",
+                rest: "the planet in perfect sync.",
+                currentEra: "Present",
+                targetEra: "Future",
+                correct: "will orbit",
+                options: ["orbits", "orbited", "will orbit", "orbiting"]
+            },
+            {
+                subject: "The renowned author",
+                baseVerb: "wrote",
+                rest: "a trilogy of epic fantasy.",
+                currentEra: "Past",
+                targetEra: "Present",
+                correct: "writes",
+                options: ["write", "wrote", "will write", "writes"]
+            },
+            {
+                subject: "The diligent archaeologists",
+                baseVerb: "find",
+                rest: "a tomb filled with artifacts.",
+                currentEra: "Present",
+                targetEra: "Future",
+                correct: "will find",
+                options: ["finds", "found", "will find", "finding"]
+            },
+            {
+                subject: "The galactic federation",
+                baseVerb: "will sign",
+                rest: "the universal peace treaty.",
+                currentEra: "Future",
+                targetEra: "Past",
+                correct: "signed",
+                options: ["signs", "signed", "will sign", "signing"]
+            },
+            {
+                subject: "The synthetic bio-plants",
+                baseVerb: "purify",
+                rest: "the toxic atmosphere.",
+                currentEra: "Present",
+                targetEra: "Future",
+                correct: "will purify",
+                options: ["purifies", "purified", "will purify", "purifying"]
+            },
+            {
+                subject: "The brilliant cryptographer",
+                baseVerb: "decoded",
+                rest: "the alien transmission.",
+                currentEra: "Past",
+                targetEra: "Present",
+                correct: "decodes",
+                options: ["decodes", "decoded", "will decode", "decode"]
+            },
+            {
+                subject: "The hovering transports",
+                baseVerb: "will deliver",
+                rest: "supplies to the colony.",
+                currentEra: "Future",
+                targetEra: "Past",
+                correct: "delivered",
+                options: ["delivers", "delivered", "will deliver", "deliver"]
+            },
+            {
+                subject: "The rogue AI",
+                baseVerb: "bypasses",
+                rest: "the mainframe security.",
+                currentEra: "Present",
+                targetEra: "Past",
+                correct: "bypassed",
+                options: ["bypasses", "bypassed", "will bypass", "bypassing"]
+            }
+        ];
+
+        // Game State Variables
+        let missions = [];
+        let currentMissionIndex = 0;
+        let score = 0;
+        let hasFailedCurrent = false;
+
+        // UI Elements
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen')
+            },
+            console: document.getElementById('game-console'),
+            panels: {
+                briefing: document.getElementById('mission-briefing-panel'),
+                timeControls: document.getElementById('time-controls-panel'),
+                repair: document.getElementById('repair-panel')
+            },
+            indicators: {
+                missionCounter: document.getElementById('mission-counter'),
+                scoreCounter: document.getElementById('score-counter'),
+                progressBar: document.getElementById('progress-bar'),
+                status: document.getElementById('status-indicator'),
+                terminal: document.getElementById('terminal-feedback')
+            },
+            content: {
+                currentSentence: document.getElementById('current-sentence'),
+                targetEra: document.getElementById('target-target-era'), // ID fix below
+                targetEraText: document.getElementById('target-era'),
+                repairSentence: document.getElementById('repair-sentence'),
+                verbOptions: document.getElementById('verb-options')
+            },
+            results: {
+                score: document.getElementById('final-score'),
+                rating: document.getElementById('final-rating')
+            }
+        };
+
+        const sounds = {
+            beep: document.getElementById('sfx-beep'),
+            success: document.getElementById('sfx-success'),
+            error: document.getElementById('sfx-error'),
+            warp: document.getElementById('sfx-warp')
+        };
+
+        // Utility: Shuffle
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        // Play Sound
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        // Write to Terminal
+        function writeTerminal(text, isError = false) {
+            UI.indicators.terminal.innerHTML = `${text}<span class="cursor-blink">_</span>`;
+            if (isError) {
+                UI.indicators.terminal.classList.remove('text-slate-400', 'text-green-400');
+                UI.indicators.terminal.classList.add('text-red-400');
+            } else {
+                UI.indicators.terminal.classList.remove('text-red-400', 'text-green-400');
+                UI.indicators.terminal.classList.add('text-slate-400');
+            }
+        }
+
+        // Switch Screen
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(screen => screen.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Initialize Game
+        function startGame() {
+            playSound('beep');
+            missions = shuffleArray([...missionBank]);
+            currentMissionIndex = 0;
+            score = 0;
+            updateStats();
+            loadMission();
+            showScreen('game');
+        }
+
+        // Load Mission
+        function loadMission() {
+            hasFailedCurrent = false;
+            const mission = missions[currentMissionIndex];
+
+            // Reset UI states
+            UI.console.className = 'w-full max-w-4xl rounded-3xl border-4 theme-default transition-colors duration-500 overflow-hidden relative flex flex-col min-h-[600px]';
+            UI.panels.briefing.classList.remove('hidden');
+            UI.panels.timeControls.classList.remove('hidden');
+            UI.panels.repair.classList.add('hidden');
+            UI.panels.repair.classList.remove('flex');
+
+            UI.indicators.status.textContent = 'UNSTABLE';
+            UI.indicators.status.className = 'text-red-400 animate-pulse font-bold';
+            
+            writeTerminal('Awaiting temporal coordinates...');
+
+            // Populate Briefing
+            UI.content.currentSentence.innerHTML = `${mission.subject} <span class="text-red-400 line-through decoration-2">${mission.baseVerb}</span> ${mission.rest}`;
+            
+            // Style the Target Era text based on what it is
+            let eraColor = '';
+            if(mission.targetEra === 'Past') eraColor = 'text-amber-400 bg-amber-900/30 border-amber-700/50 shadow-[0_0_10px_rgba(217,119,6,0.2)]';
+            if(mission.targetEra === 'Present') eraColor = 'text-emerald-400 bg-emerald-900/30 border-emerald-700/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]';
+            if(mission.targetEra === 'Future') eraColor = 'text-fuchsia-400 bg-fuchsia-900/30 border-fuchsia-700/50 shadow-[0_0_10px_rgba(217,70,239,0.2)]';
+            
+            UI.content.targetEraText.className = `font-black text-xl px-2 py-1 rounded uppercase border ${eraColor}`;
+            UI.content.targetEraText.textContent = mission.targetEra;
+        }
+
+        // Step 1: Click Time Button
+        function attemptTimeTravel(selectedEra) {
+            const mission = missions[currentMissionIndex];
+            
+            if (selectedEra !== mission.targetEra) {
+                // Incorrect Destination
+                playSound('error');
+                UI.console.classList.remove('shake-error');
+                void UI.console.offsetWidth; // reflow
+                UI.console.classList.add('shake-error');
+                writeTerminal(`ERROR: Coordinates rejected. Target is ${mission.targetEra.toUpperCase()}.`, true);
+                return;
+            }
+
+            // Correct Destination - Trigger Warp!
+            playSound('warp');
+            writeTerminal(`Initiating jump to the ${selectedEra.toUpperCase()}...`);
+            
+            // Disable buttons temporarily
+            const btns = UI.panels.timeControls.querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+
+            // Apply Warp Animation to Console
+            UI.console.classList.remove('warp-animation');
+            void UI.console.offsetWidth;
+            UI.console.classList.add('warp-animation');
+
+            // Change theme halfway through animation
+            setTimeout(() => {
+                UI.console.classList.remove('theme-default');
+                UI.console.classList.add(`theme-${selectedEra.toLowerCase()}`);
+                
+                // Hide Briefing, Show Repair Panel
+                UI.panels.briefing.classList.add('hidden');
+                UI.panels.timeControls.classList.add('hidden');
+                UI.panels.repair.classList.remove('hidden');
+                UI.panels.repair.classList.add('flex');
+                
+                setupRepairPanel(mission);
+                writeTerminal('Jump successful. Awaiting verb insertion.');
+                
+                // Re-enable buttons for next time
+                btns.forEach(b => b.disabled = false);
+
+            }, 500); // 500ms matches the middle of the 1s warp-drive keyframe
+        }
+
+        // Step 2: Setup Repair Choices
+        function setupRepairPanel(mission) {
+            UI.content.repairSentence.innerHTML = `${mission.subject} <span class="inline-block min-w-[120px] border-b-4 border-white/50 pb-1 mx-2 text-transparent">_______</span> ${mission.rest}`;
+            
+            UI.content.verbOptions.innerHTML = '';
+            
+            // Shuffle options slightly
+            const shuffledOptions = shuffleArray([...mission.options]);
+            
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'orbitron bg-black/40 hover:bg-white/10 text-white font-bold py-4 px-6 rounded border border-white/20 hover:border-white/60 transition-all text-lg focus:outline-none';
+                btn.textContent = opt;
+                btn.onclick = () => checkVerbChoice(opt, mission.correct, btn);
+                UI.content.verbOptions.appendChild(btn);
+            });
+        }
+
+        // Step 3: Check Verb
+        function checkVerbChoice(selectedVerb, correctVerb, btnElement) {
+            const isCorrect = selectedVerb === correctVerb;
+            const mission = missions[currentMissionIndex];
+
+            if (isCorrect) {
+                playSound('success');
+                if (!hasFailedCurrent) score++;
+                
+                updateStats();
+                
+                // Success styling
+                btnElement.classList.replace('bg-black/40', 'bg-green-600/80');
+                btnElement.classList.replace('border-white/20', 'border-green-400');
+                
+                // Fill in the blank
+                UI.content.repairSentence.innerHTML = `${mission.subject} <span class="text-green-400 font-bold drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]">${selectedVerb}</span> ${mission.rest}`;
+                
+                writeTerminal('Timeline verified and stabilized.', false);
+                UI.indicators.terminal.classList.add('text-green-400');
+
+                // Disable all options
+                const allBtns = UI.content.verbOptions.querySelectorAll('button');
+                allBtns.forEach(b => {
+                    b.disabled = true;
+                    if(b !== btnElement) b.classList.add('opacity-30');
+                });
+
+                // Next mission delay
+                setTimeout(() => {
+                    nextMission();
+                }, 2000);
+
+            } else {
+                hasFailedCurrent = true;
+                playSound('error');
+                
+                btnElement.classList.replace('bg-black/40', 'bg-red-900/80');
+                btnElement.classList.replace('border-white/20', 'border-red-500');
+                btnElement.classList.add('shake-error', 'opacity-50');
+                btnElement.disabled = true;
+                
+                setTimeout(() => btnElement.classList.remove('shake-error'), 400);
+                
+                writeTerminal('Temporal collapse! Incorrect verb form detected.', true);
+            }
+        }
+
+        function nextMission() {
+            currentMissionIndex++;
+            if (currentMissionIndex < missions.length) {
+                loadMission();
+                updateStats();
+            } else {
+                endGame();
+            }
+        }
+
+        function updateStats() {
+            UI.indicators.missionCounter.textContent = Math.min(currentMissionIndex + 1, missions.length);
+            UI.indicators.scoreCounter.textContent = score;
+            const progress = (currentMissionIndex / missions.length) * 100;
+            UI.indicators.progressBar.style.width = `${progress}%`;
+        }
+
+        function endGame() {
+            UI.results.score.textContent = `${score}/${missions.length}`;
+            
+            let rating = "Temporal Master";
+            if (score < 18) rating = "Senior Agent";
+            if (score < 14) rating = "Field Recruit";
+            if (score < 8) rating = "Trainee (Review Required)";
+            
+            UI.results.rating.textContent = rating;
+            showScreen('results');
+            playSound('success');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
