@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Verb Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+        }
+
+        .word-pill {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .word-pill:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .word-pill:active:not(:disabled) {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .correct-anim {
+            animation: bounce-success 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes bounce-success {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .incorrect-anim {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Main Container -->
+    <main class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white/50 relative">
+        
+        <!-- Audio Elements -->
+        <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+        <audio id="error-sound" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+
+        <!-- Start Screen -->
+        <section id="start-screen" class="p-8 sm:p-12 text-center flex flex-col items-center">
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-blue-600 mb-6 drop-shadow-sm">Action Verb Quest</h1>
+            
+            <div class="bg-yellow-50 border-l-8 border-yellow-400 p-6 rounded-r-2xl mb-8 max-w-2xl text-left shadow-sm">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">What is a verb?</h2>
+                <p class="text-lg text-gray-700 font-semibold">
+                    A verb is the <span class="text-blue-600 underline decoration-4 underline-offset-2">main action word</span> in a sentence. It tells what the subject does.
+                </p>
+            </div>
+
+            <div class="bg-blue-50 p-6 rounded-2xl mb-10 max-w-2xl w-full shadow-inner border border-blue-100">
+                <p class="text-gray-600 mb-3 font-bold uppercase tracking-wide text-sm">Example:</p>
+                <div class="text-xl sm:text-2xl text-gray-800 flex flex-wrap justify-center gap-2 items-end">
+                    <span>The</span>
+                    <span>clumsy</span>
+                    <span>puppy</span>
+                    <span class="bg-green-500 text-white px-4 py-1 rounded-full font-bold shadow-md transform -rotate-2">spilled</span>
+                    <span>the</span>
+                    <span>water</span>
+                    <span>bowl.</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="bg-blue-600 hover:bg-blue-700 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                Start Practice!
+            </button>
+        </section>
+
+        <!-- Practice Screen -->
+        <section id="practice-screen" class="hidden-screen p-6 sm:p-10 min-h-[500px] flex flex-col">
+            <!-- Header Status -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <div class="w-full sm:w-1/2 bg-gray-200 rounded-full h-4 overflow-hidden relative">
+                    <div id="progress-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex gap-6 text-lg font-bold text-gray-600">
+                    <div class="bg-blue-100 px-4 py-2 rounded-xl text-blue-800">
+                        Question <span id="question-counter">1</span> of 30
+                    </div>
+                    <div class="bg-green-100 px-4 py-2 rounded-xl text-green-800">
+                        Score: <span id="score-counter">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="flex-grow flex flex-col items-center justify-center">
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-8 text-center">Find the action verb!</h3>
+                
+                <div id="sentence-container" class="flex flex-wrap justify-center gap-3 sm:gap-4 mb-10 text-2xl sm:text-4xl">
+                    <!-- Word pills injected via JS -->
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="feedback-container" class="min-h-[80px] w-full max-w-xl text-center mb-6">
+                    <p id="feedback-text" class="text-xl sm:text-2xl font-bold opacity-0 transition-opacity duration-300"></p>
+                </div>
+
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-3 px-10 rounded-full shadow-lg transition-all transform hover:-translate-y-1">
+                    Next Question ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen p-8 sm:p-12 flex flex-col items-center">
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-blue-600 mb-4">Quest Complete!</h2>
+            
+            <div class="bg-white border-4 border-blue-100 rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-lg mb-8">
+                <span class="text-5xl font-black text-gray-800" id="final-score">0/30</span>
+                <span class="text-2xl font-bold text-gray-500" id="final-percentage">0%</span>
+            </div>
+
+            <div id="review-section" class="w-full max-w-3xl hidden mb-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Sentences to Review:</h3>
+                <ul id="review-list" class="space-y-4 text-lg text-gray-700 bg-gray-50 p-6 rounded-2xl shadow-inner max-h-64 overflow-y-auto">
+                    <!-- Missed sentences injected via JS -->
+                </ul>
+            </div>
+
+            <button onclick="resetGame()" class="bg-blue-600 hover:bg-blue-700 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                Play Again
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 30 Sentences with strict rules (No linking/helping verbs, 1 action verb)
+        const sentenceBank = [
+            { text: "The swift cheetah sprints across the savanna.", verb: "sprints" },
+            { text: "A sudden thunderstorm drenched the campers.", verb: "drenched" },
+            { text: "The majestic eagle soared over the mountains.", verb: "soared" },
+            { text: "My little sister built a tall tower.", verb: "built" },
+            { text: "The hungry bear ate the sweet berries.", verb: "ate" },
+            { text: "A loud alarm woke the sleeping neighborhood.", verb: "woke" },
+            { text: "The brave astronaut explored the unknown planet.", verb: "explored" },
+            { text: "Our school choir sang a beautiful song.", verb: "sang" },
+            { text: "The clever detective solved the mysterious puzzle.", verb: "solved" },
+            { text: "A strong wind blew the autumn leaves.", verb: "blew" },
+            { text: "The tiny kitten chased the red yarn.", verb: "chased" },
+            { text: "Our soccer team won the championship game.", verb: "won" },
+            { text: "The talented artist painted a colorful mural.", verb: "painted" },
+            { text: "A heavy rock shattered the glass window.", verb: "shattered" },
+            { text: "The friendly dolphin splashed the excited tourists.", verb: "splashed" },
+            { text: "My older brother fixed the broken bicycle.", verb: "fixed" },
+            { text: "The bright sun warmed the cold earth.", verb: "warmed" },
+            { text: "A quiet mouse scurried under the sofa.", verb: "scurried" },
+            { text: "The busy chef chopped the fresh vegetables.", verb: "chopped" },
+            { text: "Our energetic puppy chewed my favorite shoes.", verb: "chewed" },
+            { text: "The roaring river carved a deep canyon.", verb: "carved" },
+            { text: "A gentle breeze rustled the green leaves.", verb: "rustled" },
+            { text: "The excited children opened the large presents.", verb: "opened" },
+            { text: "My wise grandfather planted an oak tree.", verb: "planted" },
+            { text: "The spooky ghost frightened the trick-or-treaters.", verb: "frightened" },
+            { text: "A shiny spaceship landed in the cornfield.", verb: "landed" },
+            { text: "The heavy snow blanketed the quiet town.", verb: "blanketed" },
+            { text: "Our hungry cat scratched the wooden door.", verb: "scratched" },
+            { text: "The fast train crossed the steel bridge.", verb: "crossed" },
+            { text: "A skilled pilot navigated the large airplane.", verb: "navigated" }
+        ];
+
+        // Game State Variables
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let missedQuestions = [];
+        let hasFailedCurrent = false;
+        let isQuestionComplete = false;
+
+        // UI Elements
+        const screens = {
+            start: document.getElementById('start-screen'),
+            practice: document.getElementById('practice-screen'),
+            results: document.getElementById('results-screen')
+        };
+        const UI = {
+            sentenceContainer: document.getElementById('sentence-container'),
+            feedbackText: document.getElementById('feedback-text'),
+            nextBtn: document.getElementById('next-btn'),
+            questionCounter: document.getElementById('question-counter'),
+            scoreCounter: document.getElementById('score-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            finalScore: document.getElementById('final-score'),
+            finalPercentage: document.getElementById('final-percentage'),
+            reviewSection: document.getElementById('review-section'),
+            reviewList: document.getElementById('review-list')
+        };
+        const sounds = {
+            success: document.getElementById('success-sound'),
+            error: document.getElementById('error-sound')
+        };
+
+        // Utility: Fisher-Yates Shuffle
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        // Play Sound Safely
+        function playSound(type) {
+            const sound = sounds[type];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play prevented by browser settings."));
+            }
+        }
+
+        // Screen Navigation
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.add('hidden-screen'));
+            screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Start Game
+        function startGame() {
+            questions = shuffleArray([...sentenceBank]);
+            currentQuestionIndex = 0;
+            score = 0;
+            missedQuestions = [];
+            
+            updateTopStats();
+            loadQuestion();
+            showScreen('practice');
+        }
+
+        // Load Question
+        function loadQuestion() {
+            hasFailedCurrent = false;
+            isQuestionComplete = false;
+            UI.feedbackText.style.opacity = '0';
+            UI.nextBtn.classList.add('hidden');
+            UI.sentenceContainer.innerHTML = '';
+
+            const currentQ = questions[currentQuestionIndex];
+            const words = currentQ.text.split(' ');
+
+            words.forEach((word) => {
+                // Separate punctuation from word for the button text
+                const punctuationMatch = word.match(/[.,!?]+$/);
+                const punctuation = punctuationMatch ? punctuationMatch[0] : '';
+                const cleanWord = word.replace(/[.,!?]+$/, '');
+
+                const wordWrapper = document.createElement('div');
+                wordWrapper.className = 'flex items-end';
+
+                const btn = document.createElement('button');
+                btn.className = 'word-pill bg-white text-gray-700 font-bold py-2 px-4 rounded-xl border-2 border-gray-300 shadow-sm hover:border-blue-400 hover:bg-blue-50 focus:outline-none';
+                btn.textContent = cleanWord;
+                btn.onclick = () => handleWordClick(btn, cleanWord, currentQ.verb, wordWrapper);
+
+                wordWrapper.appendChild(btn);
+
+                if (punctuation) {
+                    const puncSpan = document.createElement('span');
+                    puncSpan.className = 'text-gray-700 font-bold ml-1 pb-2';
+                    puncSpan.textContent = punctuation;
+                    wordWrapper.appendChild(puncSpan);
+                }
+
+                UI.sentenceContainer.appendChild(wordWrapper);
+            });
+
+            updateTopStats();
+        }
+
+        // Handle Word Click
+        function handleWordClick(btn, clickedWord, correctVerb, wrapper) {
+            if (isQuestionComplete) return;
+
+            const isCorrect = clickedWord.toLowerCase() === correctVerb.toLowerCase();
+
+            if (isCorrect) {
+                isQuestionComplete = true;
+                playSound('success');
+                
+                // Style correct button
+                btn.className = 'word-pill bg-green-500 text-white font-bold py-2 px-4 rounded-xl shadow-md border-2 border-green-600 correct-anim transform scale-110';
+                
+                // Update score if it's the first try
+                if (!hasFailedCurrent) {
+                    score++;
+                } else {
+                    // Record missed question for review if it wasn't first try
+                    missedQuestions.push(questions[currentQuestionIndex]);
+                }
+                
+                updateTopStats();
+
+                // Show feedback
+                UI.feedbackText.textContent = `Great job! "${correctVerb}" is the action.`;
+                UI.feedbackText.className = 'text-2xl sm:text-3xl font-extrabold text-green-600 transition-opacity duration-300 opacity-100';
+                
+                // Disable all buttons
+                const allBtns = UI.sentenceContainer.querySelectorAll('button');
+                allBtns.forEach(b => {
+                    b.disabled = true;
+                    if(b !== btn) b.classList.add('opacity-50');
+                });
+
+                // Show next button
+                UI.nextBtn.classList.remove('hidden');
+
+            } else {
+                hasFailedCurrent = true;
+                playSound('error');
+                
+                // Style incorrect button
+                btn.className = 'word-pill bg-red-100 text-red-700 font-bold py-2 px-4 rounded-xl border-2 border-red-300 incorrect-anim opacity-50 cursor-not-allowed';
+                btn.disabled = true;
+
+                // Show hint feedback
+                UI.feedbackText.textContent = "Not quite! Look for the word that shows what the person or thing is doing.";
+                UI.feedbackText.className = 'text-xl sm:text-2xl font-bold text-orange-600 transition-opacity duration-300 opacity-100';
+            }
+        }
+
+        // Next Question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        // Update Progress & Score UI
+        function updateTopStats() {
+            UI.questionCounter.textContent = currentQuestionIndex + 1;
+            UI.scoreCounter.textContent = score;
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            UI.progressBar.style.width = `${progress}%`;
+        }
+
+        // End Game and Show Results
+        function endGame() {
+            UI.finalScore.textContent = `${score}/${questions.length}`;
+            const percentage = Math.round((score / questions.length) * 100);
+            UI.finalPercentage.textContent = `${percentage}%`;
+
+            if (missedQuestions.length > 0) {
+                UI.reviewSection.classList.remove('hidden');
+                UI.reviewList.innerHTML = '';
+                
+                // Create review list items highlighting the correct verb
+                missedQuestions.forEach(q => {
+                    const li = document.createElement('li');
+                    
+                    // Replace the verb with a highlighted version
+                    const regex = new RegExp(`\\b${q.verb}\\b`, 'gi');
+                    const highlightedText = q.text.replace(regex, `<span class="bg-green-200 text-green-900 font-bold px-1 rounded border border-green-400">${q.verb}</span>`);
+                    
+                    li.innerHTML = highlightedText;
+                    UI.reviewList.appendChild(li);
+                });
+            } else {
+                UI.reviewSection.classList.add('hidden');
+            }
+
+            showScreen('results');
+        }
+
+        // Reset Game from Results Screen
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
