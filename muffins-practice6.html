@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muffin Baker: Customer Orders</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fffbeb; /* Amber 50 */
+            background-image: 
+                radial-gradient(#fde68a 2px, transparent 2px),
+                radial-gradient(#fbcfe8 2px, transparent 2px);
+            background-size: 36px 36px;
+            background-position: 0 0, 18px 18px;
+            color: #4c1d95;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .fredoka {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .bakery-card {
+            background-color: #ffffff;
+            border: 4px solid #fcd34d; /* Amber 300 */
+            border-radius: 32px;
+            box-shadow: 0 20px 25px -5px rgba(245, 158, 11, 0.12), 0 8px 10px -6px rgba(245, 158, 11, 0.12), 0 0 0 6px #ffffff;
+        }
+
+        /* Customer Speech Bubble */
+        .speech-bubble {
+            position: relative;
+            background: #fdf2f8; /* Pink 50 */
+            border: 3px solid #f9a8d4; /* Pink 300 */
+            border-radius: 24px;
+            padding: 20px 24px;
+            box-shadow: 0 6px 0 #fbcfe8;
+        }
+
+        @media (min-width: 640px) {
+            .speech-bubble::before {
+                content: '';
+                position: absolute;
+                left: -18px;
+                top: 50%;
+                transform: translateY(-50%);
+                border-width: 12px 18px 12px 0;
+                border-style: solid;
+                border-color: transparent #f9a8d4 transparent transparent;
+            }
+            .speech-bubble::after {
+                content: '';
+                position: absolute;
+                left: -13px;
+                top: 50%;
+                transform: translateY(-50%);
+                border-width: 9px 14px 9px 0;
+                border-style: solid;
+                border-color: transparent #fdf2f8 transparent transparent;
+            }
+        }
+
+        /* Pre-made Frosting Chunks */
+        .frosting-chunk {
+            display: inline-block;
+            background: linear-gradient(180deg, #fce7f3 0%, #fbcfe8 100%);
+            color: #9d174d;
+            border: 2px solid #f472b6;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-weight: 800;
+            margin: 4px;
+            box-shadow: 0 3px 0 #f472b6;
+        }
+
+        /* Muffin Tin Input Box */
+        .muffin-input {
+            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px dashed #d97706;
+            border-radius: 16px;
+            color: #78350f;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            padding: 8px 16px;
+            margin: 4px;
+            min-width: 220px;
+            max-width: 100%;
+            text-align: center;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 2px 6px rgba(180, 83, 9, 0.15);
+        }
+
+        .muffin-input::placeholder {
+            color: #b45309;
+            opacity: 0.65;
+            font-size: 0.95rem;
+        }
+
+        .muffin-input:focus {
+            outline: none;
+            border-style: solid;
+            border-color: #b45309;
+            background: #fffbeb;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3), inset 0 2px 4px rgba(180, 83, 9, 0.1);
+            transform: scale(1.02);
+        }
+
+        /* Baked Muffin Result Display */
+        .baked-muffin-badge {
+            display: inline-block;
+            background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 100%);
+            color: #78350f;
+            border: 2px solid #b45309;
+            padding: 6px 16px;
+            border-radius: 14px;
+            font-weight: 800;
+            margin: 4px;
+            box-shadow: 0 3px 0 #b45309;
+        }
+
+        /* Animations */
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .pop-in {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Sound Effects -->
+    <audio id="sfx-ding" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfx-pop" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+    <main class="w-full max-w-4xl">
+        
+        <!-- Start Screen -->
+        <section id="start-screen" class="bakery-card p-8 sm:p-12 flex flex-col items-center text-center">
+            <div class="text-6xl mb-4">👩‍🍳🧁</div>
+            <h1 class="text-4xl sm:text-6xl font-black text-amber-600 mb-2 fredoka">
+                Muffin Baker
+            </h1>
+            <p class="text-xl text-pink-600 font-bold mb-6 fredoka tracking-wide uppercase">Customer Orders: Fill-in-the-Muffin</p>
+            
+            <div class="bg-amber-50 border-2 border-amber-200 p-6 rounded-3xl max-w-2xl text-left mb-8 shadow-inner">
+                <h2 class="text-2xl font-bold text-amber-800 mb-3 fredoka flex items-center gap-2">
+                    <span>📋</span> How to Fill Customer Orders:
+                </h2>
+                <p class="text-slate-700 text-lg font-semibold mb-4">
+                    Customers are walking into the bakery with pre-made <span class="bg-pink-100 text-pink-800 border border-pink-300 px-2 py-0.5 rounded-lg font-bold">Frosting Details</span>, and they need you to bake the missing <span class="bg-amber-200 text-amber-900 border border-amber-400 px-2 py-0.5 rounded-lg font-bold">Muffin Base</span> inside!
+                </p>
+
+                <!-- Example Box -->
+                <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 mb-4">
+                    <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">Example Order:</div>
+                    <div class="text-base sm:text-lg font-bold flex flex-wrap items-center gap-1 mb-3">
+                        <span class="bg-pink-100 text-pink-800 px-2.5 py-1 rounded-xl border border-pink-300">During the thunderstorm,</span>
+                        <span class="bg-amber-200 text-amber-900 px-3 py-1 rounded-xl border-2 border-dashed border-amber-500">the puppy hid</span>
+                        <span class="bg-pink-100 text-pink-800 px-2.5 py-1 rounded-xl border border-pink-300">under the bed.</span>
+                    </div>
+                    <div class="text-sm text-slate-600 font-semibold">
+                        ✅ Keep your muffin simple: just a <strong>Subject</strong> (who/what) + an <strong>Action Verb</strong> (what they did)!
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="fredoka bg-amber-500 hover:bg-amber-400 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-amber-700 shadow-lg hover:-translate-y-1 transition-all">
+                Take First Order!
+            </button>
+        </section>
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="hidden-screen bakery-card p-6 sm:p-10 flex flex-col min-h-[560px]">
+            
+            <!-- Top HUD -->
+            <header class="flex flex-col sm:flex-row justify-between items-center gap-4 pb-5 border-b-2 border-amber-100">
+                <div class="flex items-center gap-3 w-full sm:w-1/2">
+                    <span class="fredoka font-bold text-amber-700 text-lg whitespace-nowrap">Customer <span id="order-counter">1</span> of 15</span>
+                    <div class="w-full h-4 bg-amber-100 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-400 to-pink-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="bg-pink-100 border-2 border-pink-300 px-4 py-1.5 rounded-2xl flex items-center gap-2">
+                        <span class="text-xl">🧁</span>
+                        <span class="fredoka font-bold text-pink-800">Cupcakes Baked: <span id="score-counter" class="text-amber-600 text-xl">0</span></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Customer & Order Area -->
+            <div class="flex-grow flex flex-col justify-center py-6">
+                
+                <!-- Customer Row -->
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
+                    <!-- Customer Avatar Card -->
+                    <div class="flex flex-col items-center bg-amber-50 border-2 border-amber-200 rounded-3xl p-4 min-w-[130px] shadow-sm">
+                        <div id="customer-avatar" class="text-5xl mb-1 pop-in">🧑‍🚀</div>
+                        <div id="customer-name" class="fredoka font-bold text-amber-900 text-base text-center leading-tight">Astro Sam</div>
+                        <div id="frosting-clue-badge" class="mt-2 text-[11px] font-extrabold uppercase tracking-wider bg-pink-200 text-pink-900 px-2.5 py-0.5 rounded-full">
+                            When + Where
+                        </div>
+                    </div>
+
+                    <!-- Speech Bubble with Sentence Builder -->
+                    <div class="speech-bubble flex-grow w-full">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-pink-500 mb-2 flex items-center justify-between">
+                            <span>"Please bake a muffin inside my frosting!"</span>
+                            <button onclick="toggleSampleHint()" class="text-amber-700 hover:text-amber-900 underline text-xs font-bold cursor-pointer">
+                                💡 Need an idea?
+                            </button>
+                        </div>
+
+                        <!-- Interactive Cupcake Line -->
+                        <div id="sentence-workspace" class="text-lg sm:text-2xl flex flex-wrap items-center leading-relaxed">
+                            <span id="prefix-chunk" class="frosting-chunk">During the thunderstorm,</span>
+                            
+                            <input type="text" id="muffin-input" class="muffin-input" placeholder="type subject + verb..." autocomplete="off" spellcheck="true">
+                            
+                            <span id="suffix-chunk" class="frosting-chunk">under the bed.</span>
+                        </div>
+
+                        <!-- Optional Idea Hint Box -->
+                        <div id="idea-hint-box" class="hidden mt-3 bg-white/80 border border-amber-300 rounded-xl p-2.5 text-sm text-amber-900 font-semibold">
+                            <!-- Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Message -->
+                <div id="feedback-box" class="my-3 min-h-[44px] flex items-center justify-center text-center px-4">
+                    <p id="feedback-text" class="text-lg sm:text-xl font-bold fredoka text-slate-500">
+                        Type a simple Subject + Action Verb (2 to 4 words) and click Bake!
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap justify-center gap-4 mt-2">
+                    <button id="bake-btn" onclick="bakeMuffin()" class="fredoka bg-amber-500 hover:bg-amber-400 text-white text-2xl font-bold py-3.5 px-10 rounded-full border-b-4 border-amber-700 shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2">
+                        <span>🔥</span> Bake Cupcake!
+                    </button>
+
+                    <button id="next-btn" onclick="nextOrder()" class="hidden fredoka bg-pink-500 hover:bg-pink-400 text-white text-2xl font-bold py-3.5 px-10 rounded-full border-b-4 border-pink-700 shadow-lg hover:-translate-y-1 transition-all pop-in">
+                        Next Customer ➔
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Bakery Counter Display (Shows completed cupcakes!) -->
+            <div class="mt-4 pt-4 border-t-2 border-amber-100">
+                <div class="text-xs font-extrabold uppercase tracking-widest text-amber-700 mb-2 flex items-center gap-1.5">
+                    <span>🧁</span> Display Case (Your Completed Cupcakes):
+                </div>
+                <div id="display-case" class="bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-3 min-h-[54px] max-h-[110px] overflow-y-auto space-y-1.5 text-sm font-bold text-slate-700">
+                    <div id="empty-case-msg" class="text-slate-400 italic text-center py-1">Your freshly baked sentences will appear here!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen bakery-card p-8 sm:p-12 flex flex-col items-center text-center">
+            <div class="text-7xl mb-4 pop-in">🏆🧁</div>
+            <h2 class="text-4xl sm:text-6xl font-black text-amber-600 mb-2 fredoka">Master Muffin Baker!</h2>
+            <p class="text-xl text-slate-600 font-bold mb-6">Every customer left the bakery with a complete, delicious cupcake sentence!</p>
+            
+            <div class="w-full max-w-2xl bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 mb-8 text-left">
+                <h3 class="fredoka text-xl font-bold text-amber-800 mb-3 flex items-center gap-2">
+                    <span>📜</span> Today's Bakery Menu (Your Sentences):
+                </h3>
+                <ul id="final-menu-list" class="space-y-2 max-h-64 overflow-y-auto pr-2 text-base font-bold text-slate-700">
+                    <!-- Final sentences injected here -->
+                </ul>
+            </div>
+
+            <button onclick="resetGame()" class="fredoka bg-pink-500 hover:bg-pink-400 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-pink-700 shadow-lg hover:-translate-y-1 transition-all">
+                Open Bakery Again!
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 15 Customer Orders with Pre-made Frosting (Introductory + Ending Chunks)
+        const customerOrders = [
+            {
+                avatar: "🐶",
+                name: "Nervous Ned",
+                clueType: "When + Where",
+                prefix: "During the thunderstorm,",
+                suffix: "under the bed.",
+                capitalizeMuffin: false,
+                hint: "Who got scared during the storm, and what did they do? (Example: 'the puppy hid')"
+            },
+            {
+                avatar: "🧑‍🚀",
+                name: "Commander Zara",
+                clueType: "Where + How",
+                prefix: "Inside the space station,",
+                suffix: "in zero gravity.",
+                capitalizeMuffin: false,
+                hint: "Who is inside the space station, and how are they moving? (Example: 'the astronauts floated')"
+            },
+            {
+                avatar: "🕵️‍♀️",
+                name: "Detective Maya",
+                clueType: "How + Where",
+                prefix: "Without making a sound,",
+                suffix: "across the creaky floorboards.",
+                capitalizeMuffin: false,
+                hint: "Who is sneaking around quietly? (Example: 'the spy tiptoed' or 'the cat crept')"
+            },
+            {
+                avatar: "🦖",
+                name: "Dino Dan",
+                clueType: "When + How",
+                prefix: "Millions of years ago,",
+                suffix: "through the prehistoric jungle.",
+                capitalizeMuffin: false,
+                hint: "What prehistoric creature moved through the jungle? (Example: 'a giant T-Rex stomped')"
+            },
+            {
+                avatar: "👩‍🍳",
+                name: "Chef Pierre",
+                clueType: "Why + When",
+                prefix: "To finish the wedding cake,",
+                suffix: "before the guests arrived.",
+                capitalizeMuffin: false,
+                hint: "Who worked hard in the kitchen? (Example: 'the baker frosted' or 'we hurried')"
+            },
+            {
+                avatar: "🏄‍♂️",
+                name: "Surfer Kai",
+                clueType: "When + Where",
+                prefix: "At sunrise,",
+                suffix: "into the crashing ocean waves.",
+                capitalizeMuffin: false,
+                hint: "Who went into the ocean early in the morning? (Example: 'the surfers paddled' or 'dolphins leaped')"
+            },
+            {
+                avatar: "🧙‍♂️",
+                name: "Wizard Albus",
+                clueType: "Where + Why",
+                prefix: "In the secret tower,",
+                suffix: "to brew a glowing potion.",
+                capitalizeMuffin: false,
+                hint: "Who was working in the tower? (Example: 'the wizard stirred' or 'an owl watched')"
+            },
+            {
+                avatar: "⚽",
+                name: "Coach Leo",
+                clueType: "When + How",
+                prefix: "With three seconds left,",
+                suffix: "past the diving goalie.",
+                capitalizeMuffin: false,
+                hint: "What flew past the goalie at the end of the game? (Example: 'the soccer ball zoomed' or 'Maya kicked')"
+            },
+            {
+                avatar: "🐻",
+                name: "Ranger Sam",
+                clueType: "Where + When",
+                prefix: "Deep in the snowy woods,",
+                suffix: "until spring.",
+                capitalizeMuffin: false,
+                hint: "What forest animal sleeps all winter? (Example: 'a grizzly bear hibernated')"
+            },
+            {
+                avatar: "🎸",
+                name: "Rockstar Jax",
+                clueType: "When + How",
+                prefix: "After the curtains opened,",
+                suffix: "with incredible energy.",
+                capitalizeMuffin: false,
+                hint: "Who performed on stage? (Example: 'the band played' or 'the singer danced')"
+            },
+            {
+                avatar: "🧪",
+                name: "Dr. Nova",
+                clueType: "Why + Where",
+                prefix: "Because of the chemical reaction,",
+                suffix: "all over the science lab.",
+                capitalizeMuffin: false,
+                hint: "What happened in the science lab? (Example: 'green foam bubbled' or 'sparks flew')"
+            },
+            {
+                avatar: "🏴‍☠️",
+                name: "Captain Coral",
+                clueType: "Where + When",
+                prefix: "Beneath the turquoise waves,",
+                suffix: "for hundreds of years.",
+                capitalizeMuffin: false,
+                hint: "What sat at the bottom of the ocean? (Example: 'a pirate ship rested' or 'treasure waited')"
+            },
+            {
+                avatar: "❄️",
+                name: "Pilot Elena",
+                clueType: "How + Where",
+                prefix: "Through the blinding blizzard,",
+                suffix: "onto the icy runway.",
+                capitalizeMuffin: false,
+                hint: "Who or what landed on the runway? (Example: 'the cargo plane landed' or 'the pilot glided')"
+            },
+            {
+                avatar: "🦝",
+                name: "Night Owl",
+                clueType: "When + Where",
+                prefix: "At the stroke of midnight,",
+                suffix: "behind the cafeteria.",
+                capitalizeMuffin: false,
+                hint: "What sneaky animal comes out at midnight? (Example: 'a hungry raccoon dug' or 'two raccoons searched')"
+            },
+            {
+                avatar: "🏃‍♀️",
+                name: "Sprinter Chloe",
+                clueType: "When + How",
+                prefix: "When the starting gun fired,",
+                suffix: "down the track like lightning.",
+                capitalizeMuffin: false,
+                hint: "Who ran down the track? (Example: 'the runners sprinted' or 'Chloe dashed')"
+            }
+        ];
+
+        // Game State
+        let currentIdx = 0;
+        let completedSentences = [];
+        let isOrderBaked = false;
+
+        // UI References
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen')
+            },
+            orderCounter: document.getElementById('order-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            scoreCounter: document.getElementById('score-counter'),
+            customerAvatar: document.getElementById('customer-avatar'),
+            customerName: document.getElementById('customer-name'),
+            frostingClueBadge: document.getElementById('frosting-clue-badge'),
+            sentenceWorkspace: document.getElementById('sentence-workspace'),
+            prefixChunk: document.getElementById('prefix-chunk'),
+            suffixChunk: document.getElementById('suffix-chunk'),
+            muffinInput: document.getElementById('muffin-input'),
+            ideaHintBox: document.getElementById('idea-hint-box'),
+            feedbackText: document.getElementById('feedback-text'),
+            bakeBtn: document.getElementById('bake-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            displayCase: document.getElementById('display-case'),
+            emptyCaseMsg: document.getElementById('empty-case-msg'),
+            finalMenuList: document.getElementById('final-menu-list')
+        };
+
+        const sounds = {
+            ding: document.getElementById('sfx-ding'),
+            error: document.getElementById('sfx-error'),
+            pop: document.getElementById('sfx-pop')
+        };
+
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(s => s.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Allow pressing Enter inside input box to bake
+        UI.muffinInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!isOrderBaked) {
+                    bakeMuffin();
+                } else {
+                    nextOrder();
+                }
+            }
+        });
+
+        function startGame() {
+            currentIdx = 0;
+            completedSentences = [];
+            UI.scoreCounter.textContent = "0";
+            UI.displayCase.innerHTML = '<div id="empty-case-msg" class="text-slate-400 italic text-center py-1">Your freshly baked sentences will appear here!</div>';
+            loadOrder();
+            showScreen('game');
+        }
+
+        function loadOrder() {
+            const order = customerOrders[currentIdx];
+            isOrderBaked = false;
+
+            // Update HUD
+            UI.orderCounter.textContent = currentIdx + 1;
+            UI.progressBar.style.width = `${(currentIdx / customerOrders.length) * 100}%`;
+
+            // Update Customer Info
+            UI.customerAvatar.textContent = order.avatar;
+            UI.customerAvatar.classList.remove('pop-in');
+            void UI.customerAvatar.offsetWidth;
+            UI.customerAvatar.classList.add('pop-in');
+
+            UI.customerName.textContent = order.name;
+            UI.frostingClueBadge.textContent = order.clueType;
+
+            // Reset Hint
+            UI.ideaHintBox.classList.add('hidden');
+            UI.ideaHintBox.textContent = order.hint;
+
+            // Rebuild Workspace with Input
+            UI.sentenceWorkspace.innerHTML = `
+                <span class="frosting-chunk">${order.prefix}</span>
+                <input type="text" id="muffin-input" class="muffin-input" placeholder="type subject + verb..." autocomplete="off" spellcheck="true">
+                <span class="frosting-chunk">${order.suffix}</span>
+            `;
+
+            // Re-bind input element reference and Enter key listener
+            UI.muffinInput = document.getElementById('muffin-input');
+            UI.muffinInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!isOrderBaked) bakeMuffin();
+                    else nextOrder();
+                }
+            });
+
+            // Reset Buttons & Feedback
+            UI.bakeBtn.classList.remove('hidden');
+            UI.nextBtn.classList.add('hidden');
+            UI.feedbackText.textContent = "Type a simple Subject + Action Verb (2 to 4 words) and click Bake!";
+            UI.feedbackText.className = "text-lg sm:text-xl font-bold fredoka text-slate-500";
+
+            setTimeout(() => UI.muffinInput.focus(), 100);
+        }
+
+        function toggleSampleHint() {
+            playSound('pop');
+            UI.ideaHintBox.classList.toggle('hidden');
+        }
+
+        function bakeMuffin() {
+            if (isOrderBaked) return;
+
+            const order = customerOrders[currentIdx];
+            let rawText = UI.muffinInput.value.trim();
+
+            // 1. Check if empty
+            if (!rawText) {
+                triggerInputError("Your muffin tin is empty! Type a Subject + Action Verb first.");
+                return;
+            }
+
+            // 2. Check for end punctuation inside the middle of the sentence
+            if (/[.!?]$/.test(rawText)) {
+                triggerInputError("No period needed! Your muffin goes right in the middle of the sentence.");
+                return;
+            }
+
+            // Clean multiple spaces
+            rawText = rawText.replace(/\s+/g, ' ');
+            const words = rawText.split(' ');
+
+            // 3. Check minimum word count (needs at least Subject + Verb = 2 words)
+            if (words.length < 2) {
+                triggerInputError("A muffin needs at least 2 words: a Subject (who/what) AND a Verb (action)!");
+                return;
+            }
+
+            // 4. Check maximum word count (keep it a simple muffin, not extra frosting!)
+            if (words.length > 5) {
+                triggerInputError("Whoa, too much extra frosting! Keep your muffin short (2 to 4 words: just Subject + Verb).");
+                return;
+            }
+
+            // Lowercase the first word unless it's "I" or a likely proper noun (all-caps check or user intentionally capitalized a name)
+            // Actually, if the user typed "the puppy hid" or "The puppy hid", lowercasing "The/A/An/My/Our/Two/Three" fits smoothly after the comma!
+            const commonStarters = ["the", "a", "an", "my", "our", "his", "her", "their", "two", "three", "four", "some", "many", "several", "giant", "tiny", "brave", "hungry", "green", "red", "blue"];
+            const firstWordLower = words[0].toLowerCase();
+            if (commonStarters.includes(firstWordLower)) {
+                words[0] = firstWordLower;
+            }
+            const formattedMuffin = words.join(' ');
+
+            // SUCCESS! Bake the cupcake!
+            isOrderBaked = true;
+            playSound('ding');
+
+            // Transform workspace into finished Cupcake display
+            UI.sentenceWorkspace.innerHTML = `
+                <span class="frosting-chunk">${order.prefix}</span>
+                <span class="baked-muffin-badge pop-in">${escapeHTML(formattedMuffin)}</span>
+                <span class="frosting-chunk">${order.suffix}</span>
+            `;
+
+            const fullSentence = `${order.prefix} ${formattedMuffin} ${order.suffix}`;
+            completedSentences.push({
+                prefix: order.prefix,
+                muffin: formattedMuffin,
+                suffix: order.suffix,
+                full: fullSentence
+            });
+
+            // Update Score & Progress
+            UI.scoreCounter.textContent = completedSentences.length;
+            UI.progressBar.style.width = `${((currentIdx + 1) / customerOrders.length) * 100}%`;
+
+            // Add to Bakery Display Case
+            const emptyMsg = document.getElementById('empty-case-msg');
+            if (emptyMsg) emptyMsg.remove();
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = "bg-white px-3 py-1.5 rounded-xl border border-amber-200 shadow-xs pop-in";
+            itemDiv.innerHTML = `🧁 <span class="text-pink-700">${order.prefix}</span> <span class="bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-extrabold">${escapeHTML(formattedMuffin)}</span> <span class="text-pink-700">${order.suffix}</span>`;
+            UI.displayCase.prepend(itemDiv);
+
+            // Feedback & Next Button
+            UI.feedbackText.innerHTML = `🎉 Delicious! Look how your <strong>Muffin</strong> holds the whole cupcake together!`;
+            UI.feedbackText.className = "text-lg sm:text-xl font-bold fredoka text-emerald-600 pop-in";
+
+            UI.bakeBtn.classList.add('hidden');
+            UI.nextBtn.classList.remove('hidden');
+            UI.nextBtn.focus();
+        }
+
+        function triggerInputError(message) {
+            playSound('error');
+            UI.muffinInput.classList.remove('shake-error');
+            void UI.muffinInput.offsetWidth;
+            UI.muffinInput.classList.add('shake-error');
+            UI.muffinInput.focus();
+
+            UI.feedbackText.textContent = message;
+            UI.feedbackText.className = "text-lg sm:text-xl font-bold fredoka text-red-500";
+        }
+
+        function nextOrder() {
+            currentIdx++;
+            if (currentIdx < customerOrders.length) {
+                loadOrder();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            UI.finalMenuList.innerHTML = '';
+            completedSentences.forEach((item, idx) => {
+                const li = document.createElement('li');
+                li.className = "bg-white p-3 rounded-2xl border border-amber-200 shadow-xs";
+                li.innerHTML = `<span class="text-amber-500 font-black mr-2">#${idx + 1}</span> <span class="text-pink-700">${item.prefix}</span> <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-lg font-extrabold">${escapeHTML(item.muffin)}</span> <span class="text-pink-700">${item.suffix}</span>`;
+                UI.finalMenuList.appendChild(li);
+            });
+
+            showScreen('results');
+            playSound('ding');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+    </script>
+</body>
+</html>
