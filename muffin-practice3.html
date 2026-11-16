@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Matchmaker: Context & Vocabulary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fdf4ff; /* Fuchsia 50 */
+            background-image: radial-gradient(#f0abfc 2px, transparent 2px);
+            background-size: 30px 30px;
+            color: #334155;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .fredoka {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Friendly Panel */
+        .friendly-panel {
+            background-color: #ffffff;
+            border: 4px solid #fdf4ff;
+            border-radius: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 4px #e879f9;
+            position: relative;
+        }
+
+        /* Data Nodes (Buttons) */
+        .data-node {
+            background-color: #ffffff;
+            border: 3px solid #cbd5e1;
+            color: #475569;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 20;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            box-shadow: 0 4px 0px #cbd5e1;
+        }
+        
+        @media (min-width: 640px) {
+            .data-node {
+                font-size: 1.25rem;
+                padding: 16px 24px;
+            }
+        }
+
+        .data-node:hover:not(.locked) {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 0px #cbd5e1;
+        }
+        
+        .data-node:active:not(.locked) {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px #cbd5e1;
+        }
+
+        /* Subject Node States */
+        .data-node.subject.selected {
+            background-color: #3b82f6;
+            border-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 4px 0px #1d4ed8;
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        /* Verb Node States */
+        .data-node.verb.selected {
+            background-color: #d946ef;
+            border-color: #c026d3;
+            color: #ffffff;
+            box-shadow: 0 4px 0px #a21caf;
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        /* Locked/Solved State */
+        .data-node.locked {
+            background-color: #10b981;
+            border-color: #059669;
+            color: #ffffff;
+            cursor: default;
+            box-shadow: 0 2px 0px #047857;
+            transform: translateY(2px);
+        }
+
+        /* SVG Line Styling */
+        .connection-line {
+            stroke: #34d399; /* Emerald 400 */
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw-line 0.5s ease-out forwards;
+        }
+
+        @keyframes draw-line {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Animations */
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            border-color: #ef4444 !important;
+            background-color: #fca5a5 !important;
+            color: #7f1d1d !important;
+            box-shadow: 0 4px 0px #b91c1c !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .success-pop {
+            animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Sound Effects -->
+    <audio id="sfx-select" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="sfx-connect" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfx-level-up" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+
+    <main class="w-full max-w-5xl">
+        
+        <!-- Start Screen -->
+        <section id="start-screen" class="friendly-panel p-8 sm:p-16 flex flex-col items-center text-center">
+            
+            <div class="flex gap-4 mb-6">
+                <div class="bg-blue-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center shadow-[0_4px_0_#1d4ed8] transform -rotate-12">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+                <div class="bg-fuchsia-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center shadow-[0_4px_0_#a21caf] transform rotate-12">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+            </div>
+
+            <h1 class="text-5xl sm:text-7xl font-black text-fuchsia-600 mb-2 fredoka drop-shadow-sm">
+                The Matchmaker
+            </h1>
+            <p class="text-xl sm:text-2xl text-fuchsia-400 font-bold mb-10 fredoka">Logic & Vocabulary Game</p>
+            
+            <div class="bg-fuchsia-50 border-2 border-fuchsia-100 p-6 sm:p-8 rounded-3xl max-w-2xl text-left shadow-inner mb-10">
+                <h2 class="text-2xl font-bold text-fuchsia-700 mb-4 flex items-center gap-2 fredoka border-b-2 border-fuchsia-200 pb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    How to Play:
+                </h2>
+                <p class="text-lg text-slate-700 mb-4 font-semibold">
+                    Let's connect the dots! Can you find the action verb that makes the most sense for each subject? 
+                </p>
+                <ul class="space-y-3 text-lg font-bold text-slate-600">
+                    <li class="flex items-center gap-2"><span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg">1</span> Tap a Subject on the left.</li>
+                    <li class="flex items-center gap-2"><span class="bg-fuchsia-100 text-fuchsia-600 px-3 py-1 rounded-lg">2</span> Tap the Action Verb on the right that matches it.</li>
+                    <li class="flex items-center gap-2"><span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-lg">3</span> Match all 5 pairs to beat the level!</li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="fredoka bg-fuchsia-500 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-fuchsia-700 shadow-lg hover:bg-fuchsia-400 hover:-translate-y-1 transition-all tracking-wide">
+                Start Playing!
+            </button>
+        </section>
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="hidden-screen friendly-panel flex flex-col min-h-[600px] overflow-hidden">
+            
+            <!-- Top HUD -->
+            <header class="bg-white border-b-4 border-fuchsia-50 p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 z-30 relative rounded-t-3xl">
+                <div class="flex flex-col w-full sm:w-1/2">
+                    <span class="text-slate-500 font-bold fredoka mb-1">Level <span id="level-counter">1</span> of 5</span>
+                    <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-400 to-fuchsia-400 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-6 items-center">
+                    <div class="text-right">
+                        <div class="text-slate-500 font-bold fredoka">Pairs Found</div>
+                        <div class="text-2xl font-black text-emerald-500 fredoka"><span id="pairs-counter">0</span> / 5</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Play Area (Columns and Canvas Overlay) -->
+            <div class="flex-grow relative p-6 sm:p-10 flex flex-col justify-center bg-slate-50 rounded-b-3xl">
+                
+                <!-- Feedback / Status -->
+                <div id="status-bar" class="text-center h-8 mb-6 text-xl sm:text-2xl font-black fredoka text-slate-400 transition-colors z-30">
+                    Pick a word to start!
+                </div>
+
+                <!-- The Board -->
+                <div class="relative flex justify-between w-full max-w-4xl mx-auto" id="board-container">
+                    
+                    <!-- SVG Overlay for Lines -->
+                    <svg id="connection-lines" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+                    
+                    <!-- Left Column: Subjects -->
+                    <div id="subject-col" class="flex flex-col gap-4 w-5/12 z-20">
+                        <!-- Subjects injected via JS -->
+                    </div>
+
+                    <!-- Right Column: Verbs -->
+                    <div id="verb-col" class="flex flex-col gap-4 w-5/12 z-20">
+                        <!-- Verbs injected via JS -->
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Level Up Overlay -->
+            <div id="level-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-40 hidden flex-col items-center justify-center text-center p-8 rounded-3xl">
+                <svg class="w-24 h-24 text-emerald-400 mb-6 drop-shadow-sm success-pop" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 class="text-5xl sm:text-7xl font-black text-emerald-500 fredoka mb-4 success-pop">Awesome Job!</h2>
+                <p class="text-xl font-bold text-slate-500 mb-10">You matched all the pairs.</p>
+                <button onclick="nextLevel()" class="fredoka bg-emerald-500 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-emerald-700 shadow-lg hover:bg-emerald-400 hover:-translate-y-1 transition-all tracking-wide">
+                    Next Level ➔
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen friendly-panel p-8 sm:p-16 flex flex-col items-center text-center">
+            <svg class="w-32 h-32 text-fuchsia-500 mb-6 success-pop" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            <h2 class="text-5xl sm:text-7xl font-black text-fuchsia-600 fredoka mb-4">You Did It!</h2>
+            <p class="text-xl font-bold text-slate-500 mb-8">You are a vocabulary master.</p>
+            
+            <div class="bg-amber-100 border-4 border-amber-300 p-8 rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-inner mb-10">
+                <span class="text-5xl font-black text-amber-600 fredoka" id="final-score">25/25</span>
+                <span class="text-sm text-amber-700 font-bold uppercase mt-2 tracking-widest">Pairs Found</span>
+            </div>
+
+            <button onclick="resetGame()" class="fredoka bg-fuchsia-500 text-white text-2xl font-bold py-4 px-12 rounded-full border-b-4 border-fuchsia-700 shadow-lg hover:bg-fuchsia-400 hover:-translate-y-1 transition-all tracking-wide">
+                Play Again
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 5 Levels of 5 pairs (25 total)
+        // High level vocabulary suitable for 6th grade context clues
+        const gameLevels = [
+            [
+                { id: "L1-1", subject: "The tornado", verb: "obliterated" },
+                { id: "L1-2", subject: "The detective", verb: "interrogated" },
+                { id: "L1-3", subject: "The chef", verb: "sautéed" },
+                { id: "L1-4", subject: "The volcano", verb: "erupted" },
+                { id: "L1-5", subject: "The surgeon", verb: "operated" }
+            ],
+            [
+                { id: "L2-1", subject: "The archaeologist", verb: "excavated" },
+                { id: "L2-2", subject: "The astronomer", verb: "observed" },
+                { id: "L2-3", subject: "The maestro", verb: "conducted" },
+                { id: "L2-4", subject: "The panther", verb: "pounced" },
+                { id: "L2-5", subject: "The blizzard", verb: "froze" }
+            ],
+            [
+                { id: "L3-1", subject: "The hacker", verb: "decrypted" },
+                { id: "L3-2", subject: "The architect", verb: "designed" },
+                { id: "L3-3", subject: "The gladiator", verb: "battled" },
+                { id: "L3-4", subject: "The submarine", verb: "submerged" },
+                { id: "L3-5", subject: "The alchemist", verb: "brewed" }
+            ],
+            [
+                { id: "L4-1", subject: "The journalist", verb: "investigated" },
+                { id: "L4-2", subject: "The falcon", verb: "swooped" },
+                { id: "L4-3", subject: "The inventor", verb: "patented" },
+                { id: "L4-4", subject: "The earthquake", verb: "shook" },
+                { id: "L4-5", subject: "The lawyer", verb: "objected" }
+            ],
+            [
+                { id: "L5-1", subject: "The meteor", verb: "crashed" },
+                { id: "L5-2", subject: "The botanist", verb: "cultivated" },
+                { id: "L5-3", subject: "The blacksmith", verb: "forged" },
+                { id: "L5-4", subject: "The negotiator", verb: "compromised" },
+                { id: "L5-5", subject: "The vampire", verb: "lurked" }
+            ]
+        ];
+
+        // Game State Variables
+        let currentLevelIndex = 0;
+        let pairsFoundInLevel = 0;
+        let totalPairsFound = 0;
+        
+        // Selection State
+        let selectedNode = null; // Object: { element: DOMNode, type: 'subject'|'verb', pairId: string }
+        let solvedConnections = []; // Array to hold matched DOM element pairs to redraw lines on resize
+
+        // UI Elements
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen')
+            },
+            levelCounter: document.getElementById('level-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            pairsCounter: document.getElementById('pairs-counter'),
+            statusBar: document.getElementById('status-bar'),
+            subjectCol: document.getElementById('subject-col'),
+            verbCol: document.getElementById('verb-col'),
+            svgLines: document.getElementById('connection-lines'),
+            boardContainer: document.getElementById('board-container'),
+            levelOverlay: document.getElementById('level-overlay')
+        };
+
+        const sounds = {
+            select: document.getElementById('sfx-select'),
+            connect: document.getElementById('sfx-connect'),
+            error: document.getElementById('sfx-error'),
+            levelUp: document.getElementById('sfx-level-up')
+        };
+
+        // Utility: Fisher-Yates Shuffle
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(screen => screen.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Initialize Game
+        function startGame() {
+            currentLevelIndex = 0;
+            totalPairsFound = 0;
+            loadBoard();
+            showScreen('game');
+        }
+
+        // Load a specific board (level)
+        function loadBoard() {
+            const levelData = gameLevels[currentLevelIndex];
+            pairsFoundInLevel = 0;
+            selectedNode = null;
+            solvedConnections = [];
+            
+            // Update HUD
+            UI.levelCounter.textContent = currentLevelIndex + 1;
+            UI.pairsCounter.textContent = pairsFoundInLevel;
+            updateProgressBar();
+            
+            UI.levelOverlay.classList.add('hidden');
+            UI.levelOverlay.classList.remove('flex');
+            UI.svgLines.innerHTML = ''; // Clear old lines
+
+            setStatus("Pick a word to start!", "text-slate-400");
+
+            // Prepare shuffled arrays
+            const subjects = shuffleArray([...levelData]);
+            const verbs = shuffleArray([...levelData]);
+
+            // Render Subjects
+            UI.subjectCol.innerHTML = '';
+            subjects.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'data-node subject';
+                btn.textContent = item.subject;
+                btn.dataset.pairId = item.id;
+                btn.dataset.type = 'subject';
+                btn.onclick = () => handleNodeClick(btn);
+                UI.subjectCol.appendChild(btn);
+            });
+
+            // Render Verbs
+            UI.verbCol.innerHTML = '';
+            verbs.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'data-node verb';
+                btn.textContent = item.verb;
+                btn.dataset.pairId = item.id;
+                btn.dataset.type = 'verb';
+                btn.onclick = () => handleNodeClick(btn);
+                UI.verbCol.appendChild(btn);
+            });
+        }
+
+        // Handle clicking a node (Subject or Verb)
+        function handleNodeClick(clickedElement) {
+            // Ignore if already locked
+            if (clickedElement.classList.contains('locked')) return;
+
+            const clickedType = clickedElement.dataset.type;
+            const clickedId = clickedElement.dataset.pairId;
+
+            // If nothing is selected yet, or if they clicked a node of the SAME type
+            if (!selectedNode || selectedNode.type === clickedType) {
+                
+                playSound('select');
+                
+                // Deselect previous if exists
+                if (selectedNode) {
+                    selectedNode.element.classList.remove('selected');
+                }
+                
+                // Select new
+                clickedElement.classList.add('selected');
+                selectedNode = {
+                    element: clickedElement,
+                    type: clickedType,
+                    pairId: clickedId
+                };
+
+                const typeName = clickedType === 'subject' ? 'Subject' : 'Verb';
+                setStatus(`${typeName} selected. Find its match!`, clickedType === 'subject' ? 'text-blue-500' : 'text-fuchsia-500');
+                
+            } else {
+                // They clicked a DIFFERENT type node. Check for match!
+                checkMatch(clickedElement);
+            }
+        }
+
+        // Evaluate Match Logic
+        function checkMatch(secondElement) {
+            const firstElement = selectedNode.element;
+            
+            if (selectedNode.pairId === secondElement.dataset.pairId) {
+                // IT'S A MATCH
+                playSound('connect');
+                
+                // Lock them
+                firstElement.classList.remove('selected');
+                firstElement.classList.add('locked', 'success-pop');
+                secondElement.classList.add('locked', 'success-pop');
+
+                // Draw line between them
+                drawLine(firstElement, secondElement);
+                
+                // Store connection so it can be redrawn if window resizes
+                solvedConnections.push({ el1: firstElement, el2: secondElement });
+
+                pairsFoundInLevel++;
+                totalPairsFound++;
+                UI.pairsCounter.textContent = pairsFoundInLevel;
+
+                setStatus("It's a Match!", "text-emerald-500");
+                
+                selectedNode = null; // Reset selection
+
+                // Check board clear
+                if (pairsFoundInLevel === 5) {
+                    setTimeout(handleBoardClear, 800);
+                }
+
+            } else {
+                // MISMATCH
+                playSound('error');
+                
+                firstElement.classList.remove('selected');
+                
+                // Shake both briefly
+                firstElement.classList.add('shake-error');
+                secondElement.classList.add('shake-error');
+                
+                setStatus("Oops! Not quite a match.", "text-red-500");
+
+                setTimeout(() => {
+                    firstElement.classList.remove('shake-error');
+                    secondElement.classList.remove('shake-error');
+                    setStatus("Try again!", "text-slate-400");
+                }, 800);
+
+                selectedNode = null; // Reset selection
+            }
+        }
+
+        // Draw an SVG Line between two DOM elements
+        function drawLine(el1, el2) {
+            const svgRect = UI.svgLines.getBoundingClientRect();
+            const rect1 = el1.getBoundingClientRect();
+            const rect2 = el2.getBoundingClientRect();
+
+            // Calculate center points relative to the SVG container
+            const x1 = rect1.left - svgRect.left + (rect1.width / 2);
+            const y1 = rect1.top - svgRect.top + (rect1.height / 2);
+            const x2 = rect2.left - svgRect.left + (rect2.width / 2);
+            const y2 = rect2.top - svgRect.top + (rect2.height / 2);
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('class', 'connection-line');
+
+            UI.svgLines.appendChild(line);
+        }
+
+        // Redraw all lines (used when window resizes)
+        function redrawAllLines() {
+            UI.svgLines.innerHTML = '';
+            solvedConnections.forEach(pair => {
+                drawLine(pair.el1, pair.el2);
+            });
+        }
+
+        // Window resize listener to keep lines anchored to buttons
+        window.addEventListener('resize', redrawAllLines);
+
+        function setStatus(text, colorClass) {
+            UI.statusBar.textContent = text;
+            UI.statusBar.className = `text-center h-8 mb-6 text-xl sm:text-2xl font-black tracking-wide fredoka transition-colors z-30 ${colorClass}`;
+        }
+
+        function updateProgressBar() {
+            const totalLevels = gameLevels.length;
+            const progress = (currentLevelIndex / totalLevels) * 100;
+            UI.progressBar.style.width = `${progress}%`;
+        }
+
+        function handleBoardClear() {
+            playSound('levelUp');
+            currentLevelIndex++;
+            updateProgressBar();
+
+            if (currentLevelIndex < gameLevels.length) {
+                // Show Level Overlay
+                UI.levelOverlay.classList.remove('hidden');
+                UI.levelOverlay.classList.add('flex');
+            } else {
+                // Game Beat
+                endGame();
+            }
+        }
+
+        function nextLevel() {
+            loadBoard();
+        }
+
+        function endGame() {
+            showScreen('results');
+            playSound('levelUp'); // Reusing success sound for win screen
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
