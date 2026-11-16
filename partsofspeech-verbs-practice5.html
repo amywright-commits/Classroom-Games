@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sentence Surgeon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Special+Elite&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #e0f2fe; /* Light blue hospital scrub color */
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+        }
+
+        .typewriter {
+            font-family: 'Special Elite', cursive;
+        }
+
+        /* Medical Chart / Clipboard Styling */
+        .clipboard {
+            background-color: #fdfbf7;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            border-top: 40px solid #cbd5e1; /* The clip part */
+        }
+        
+        .clipboard::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 20px;
+            background-color: #94a3b8;
+            border-radius: 10px;
+            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Wound (Weak Verb) Styling */
+        .wound {
+            color: #ef4444; /* Red */
+            font-weight: 900;
+            padding: 4px 12px;
+            border-bottom: 3px dashed #ef4444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        .wound:hover, .wound.drag-over {
+            background-color: #fee2e2;
+            border-radius: 4px;
+        }
+
+        .wound.healed {
+            color: #10b981; /* Emerald Green */
+            border-bottom: 3px solid #10b981;
+            background-color: #d1fae5;
+            border-radius: 4px;
+            animation: heal-pulse 0.8s ease-out;
+        }
+
+        /* Bandage (Strong Verb) Styling */
+        .bandage {
+            background-color: #f5d0b5; /* Bandage beige */
+            color: #78350f; /* Dark brown text */
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 999px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 0 0 2px rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            position: relative;
+            background-image: radial-gradient(#d4a373 1px, transparent 1px);
+            background-size: 6px 6px;
+        }
+
+        .bandage span {
+            background-color: #f5d0b5; /* Mask the dots behind the text */
+            padding: 0 8px;
+            border-radius: 4px;
+        }
+
+        .bandage:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.15);
+        }
+
+        .bandage:active {
+            transform: scale(0.95);
+        }
+
+        .bandage.dragging {
+            opacity: 0.6;
+            transform: scale(1.05) rotate(5deg);
+        }
+
+        .bandage.selected {
+            ring: 4px solid #3b82f6;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 4px #93c5fd, 0 8px 12px -3px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Metal Tray Styling */
+        .surgical-tray {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border: 4px solid #94a3b8;
+            border-radius: 20px;
+            box-shadow: inset 0 10px 20px rgba(255,255,255,0.5), inset 0 -10px 20px rgba(0,0,0,0.1), 0 10px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes heal-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .shake-anim {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Sound Effects -->
+    <audio id="sfx-success" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfx-velcro" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+    <main class="w-full max-w-5xl relative">
+        
+        <!-- Start Screen -->
+        <section id="start-screen" class="bg-white rounded-3xl shadow-2xl p-8 sm:p-16 flex flex-col items-center text-center border-4 border-sky-100">
+            <div class="bg-red-500 text-white rounded-full w-24 h-24 flex items-center justify-center mb-6 shadow-lg">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+            </div>
+            <h1 class="text-5xl sm:text-7xl font-black text-sky-800 mb-4 tracking-tight">Sentence Surgeon</h1>
+            <p class="text-xl sm:text-2xl font-bold text-sky-600 mb-8 uppercase tracking-widest">Strong Verb Unit</p>
+            
+            <div class="bg-sky-50 p-6 sm:p-8 rounded-2xl max-w-2xl text-left shadow-inner mb-10 border border-sky-100">
+                <h2 class="text-2xl font-bold text-sky-800 mb-4 border-b-2 border-sky-200 pb-2">Doctor's Orders:</h2>
+                <p class="text-lg text-gray-700 mb-4 leading-relaxed">
+                    Welcome to the ER (English Room), Doctor. We have patients suffering from severe cases of <strong>Weak Verb Syndrome</strong>. Sentences are boring, tired, and lack energy.
+                </p>
+                <ul class="list-disc list-inside text-gray-700 space-y-2 text-lg font-semibold">
+                    <li>Read the patient's chart (the sentence).</li>
+                    <li>Find the "wound" (the weak verb).</li>
+                    <li>Select the best <strong>Strong Verb Bandage</strong> from your tray to heal the sentence.</li>
+                    <li><span class="text-sky-600">Drag & Drop</span> or <span class="text-sky-600">Click to Apply</span> the bandage.</li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="bg-red-500 hover:bg-red-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-[0_10px_0_#b91c1c] hover:shadow-[0_5px_0_#b91c1c] hover:translate-y-1 transition-all">
+                Scrub In!
+            </button>
+        </section>
+
+        <!-- Operation Screen -->
+        <section id="game-screen" class="hidden-screen flex flex-col gap-6">
+            
+            <!-- HUD -->
+            <div class="bg-white rounded-2xl p-4 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 border-2 border-sky-100">
+                <div class="flex items-center gap-4 w-full sm:w-1/2">
+                    <span class="font-bold text-sky-800 whitespace-nowrap">Patient <span id="patient-counter">1</span>/30</span>
+                    <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-red-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="flex gap-6 font-black text-xl">
+                    <div class="text-emerald-600">Healed: <span id="score-counter">0</span></div>
+                </div>
+            </div>
+
+            <!-- Patient Chart (The Sentence) -->
+            <div class="clipboard p-8 sm:p-12 min-h-[250px] flex flex-col justify-center items-center">
+                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest w-full text-left mb-6 border-b-2 border-gray-100 pb-2">Patient Chart #<span id="chart-id">8274</span></p>
+                
+                <div id="sentence-container" class="typewriter text-2xl sm:text-4xl text-gray-800 leading-relaxed text-center w-full max-w-3xl">
+                    <!-- Sentence injected here -->
+                </div>
+
+                <div id="feedback-message" class="mt-8 text-xl font-bold opacity-0 transition-opacity duration-300 h-8">
+                    <!-- Feedback injected here -->
+                </div>
+
+                <button id="next-btn" onclick="nextPatient()" class="hidden mt-6 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:-translate-y-1">
+                    Next Patient ➔
+                </button>
+            </div>
+
+            <!-- Surgical Tray (The Bandages) -->
+            <div class="surgical-tray p-6 sm:p-10 text-center">
+                <h3 class="text-slate-600 font-bold uppercase tracking-widest text-sm mb-6 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Sterile Bandage Tray
+                </h3>
+                
+                <div id="tray-container" class="flex flex-wrap justify-center gap-4 sm:gap-6 min-h-[80px]">
+                    <!-- Bandages injected here -->
+                </div>
+                
+                <p class="text-slate-500 text-xs mt-6 font-semibold italic">Drag a bandage to the wound, or tap the bandage then tap the wound.</p>
+            </div>
+
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen bg-white rounded-3xl shadow-2xl p-8 sm:p-16 flex flex-col items-center text-center border-4 border-emerald-100">
+            <h2 class="text-4xl sm:text-6xl font-black text-emerald-600 mb-4">Shift Complete!</h2>
+            <p class="text-xl text-gray-600 font-bold mb-8 uppercase tracking-widest">Excellent Surgery</p>
+            
+            <div class="bg-emerald-50 border-4 border-emerald-200 rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-inner mb-8">
+                <span class="text-5xl font-black text-emerald-800" id="final-score">0/30</span>
+                <span class="text-lg font-bold text-emerald-600 mt-2">Patients Healed</span>
+            </div>
+
+            <div id="rating-text" class="text-2xl font-bold text-gray-800 mb-10 max-w-xl">
+                <!-- Rating text injected via JS -->
+            </div>
+
+            <button onclick="resetGame()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-[0_10px_0_#059669] hover:shadow-[0_5px_0_#059669] hover:translate-y-1 transition-all">
+                Start Next Shift
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 30 Patients (Sentences)
+        const patientBank = [
+            { start: "The exhausted student", weak: "walked", end: "home in the pouring rain.", strong: "trudged", distractors: ["ran", "jumped", "skipped"] },
+            { start: "The hungry lion", weak: "ate", end: "its meal in seconds.", strong: "devoured", distractors: ["nibbled", "tasted", "chewed"] },
+            { start: "\"Watch out!\" the teacher", weak: "said", end: "to the students.", strong: "exclaimed", distractors: ["whispered", "mumbled", "thought"] },
+            { start: "The tiny mouse", weak: "went", end: "under the floorboards to hide.", strong: "scurried", distractors: ["marched", "strolled", "wandered"] },
+            { start: "The hot summer sun", weak: "shone", end: "down on the dry desert.", strong: "blazed", distractors: ["sparkled", "glimmered", "twinkled"] },
+            { start: "The angry customer", weak: "looked", end: "at the store manager.", strong: "glared", distractors: ["glanced", "peeked", "squinted"] },
+            { start: "The gentle autumn breeze", weak: "moved", end: "the dry leaves.", strong: "rustled", distractors: ["broke", "smashed", "pushed"] },
+            { start: "The frightened child", weak: "held", end: "her mother's hand tightly.", strong: "clutched", distractors: ["touched", "patted", "dropped"] },
+            { start: "The Olympic swimmer", weak: "jumped", end: "into the deep pool.", strong: "dove", distractors: ["fell", "stepped", "hopped"] },
+            { start: "The heavy boulder", weak: "fell", end: "into the deep canyon.", strong: "plummeted", distractors: ["floated", "slid", "rolled"] },
+            { start: "The sly thief", weak: "took", end: "the diamond necklace from the case.", strong: "snatched", distractors: ["borrowed", "held", "carried"] },
+            { start: "The enthusiastic audience", weak: "clapped", end: "for the rock band.", strong: "cheered", distractors: ["waited", "listened", "stood"] },
+            { start: "The old wooden stairs", weak: "sounded", end: "under my heavy boots.", strong: "creaked", distractors: ["sang", "played", "echoed"] },
+            { start: "The bright fireworks", weak: "went off", end: "in the dark night sky.", strong: "exploded", distractors: ["popped", "started", "faded"] },
+            { start: "The lost little puppy", weak: "cried", end: "outside the front door.", strong: "whimpered", distractors: ["laughed", "shouted", "spoke"] },
+            { start: "The massive earthquake", weak: "broke", end: "the city streets.", strong: "shattered", distractors: ["bent", "folded", "scratched"] },
+            { start: "The sneaky ninja", weak: "hid", end: "in the dark shadows of the alley.", strong: "lurked", distractors: ["slept", "rested", "sat"] },
+            { start: "The beautiful diamond", weak: "shone", end: "in the bright light.", strong: "sparkled", distractors: ["burned", "glowed", "warmed"] },
+            { start: "The furious hurricane", weak: "hit", end: "the small coastal town.", strong: "battered", distractors: ["touched", "visited", "passed"] },
+            { start: "The smart detective", weak: "thought about", end: "the strange clues.", strong: "analyzed", distractors: ["forgot", "ignored", "guessed"] },
+            
+            // 10 Harder Sentences (Advanced Vocabulary)
+            { start: "The exhausted marathon runner", weak: "walked", end: "across the finish line.", strong: "staggered", distractors: ["stepped", "moved", "went"] },
+            { start: "The valiant knight", weak: "beat", end: "the terrifying dragon.", strong: "vanquished", distractors: ["hit", "fought", "hurt"] },
+            { start: "The ancient stone temple", weak: "broke", end: "during the massive earthquake.", strong: "crumbled", distractors: ["fell", "dropped", "cracked"] },
+            { start: "The tyrannical emperor", weak: "took", end: "the farmer's precious land.", strong: "confiscated", distractors: ["grabbed", "held", "claimed"] },
+            { start: "The brilliant chemist", weak: "made", end: "a completely new element in the lab.", strong: "synthesized", distractors: ["built", "created", "formed"] },
+            { start: "The meticulous detective", weak: "looked at", end: "the ransom note for hidden clues.", strong: "scrutinized", distractors: ["checked", "read", "viewed"] },
+            { start: "The ferocious category-five hurricane", weak: "ruined", end: "the coastal harbor.", strong: "obliterated", distractors: ["wrecked", "broke", "damaged"] },
+            { start: "The frightened islanders", weak: "left", end: "their homes before the eruption.", strong: "evacuated", distractors: ["fled", "departed", "went"] },
+            { start: "The experienced politician", weak: "said", end: "her arguments with perfect clarity.", strong: "articulated", distractors: ["spoke", "voiced", "stated"] },
+            { start: "The wealthy philanthropist", weak: "gave", end: "a large fortune to the local hospital.", strong: "bestowed", distractors: ["handed", "offered", "passed"] }
+        ];
+
+        // State Variables
+        let patients = [];
+        let currentIndex = 0;
+        let score = 0;
+        let failedCurrent = false;
+        let isHealed = false;
+        
+        // Drag/Click State
+        let draggedBandageText = null;
+        let selectedBandageElement = null;
+
+        // UI Elements
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen')
+            },
+            patientCounter: document.getElementById('patient-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            scoreCounter: document.getElementById('score-counter'),
+            chartId: document.getElementById('chart-id'),
+            sentenceContainer: document.getElementById('sentence-container'),
+            trayContainer: document.getElementById('tray-container'),
+            feedbackMsg: document.getElementById('feedback-message'),
+            nextBtn: document.getElementById('next-btn'),
+            finalScore: document.getElementById('final-score'),
+            ratingText: document.getElementById('rating-text')
+        };
+
+        const sounds = {
+            success: document.getElementById('sfx-success'),
+            error: document.getElementById('sfx-error'),
+            velcro: document.getElementById('sfx-velcro') // optional drag/click sound
+        };
+
+        // Utility
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(screen => screen.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Initialize
+        function startGame() {
+            // Shuffle the first 20 and the last 10 independently so the new ones remain at the end
+            const firstPart = shuffleArray(patientBank.slice(0, 20));
+            const secondPart = shuffleArray(patientBank.slice(20, 30));
+            patients = [...firstPart, ...secondPart];
+            
+            currentIndex = 20; // Jump straight to the 10 new difficult patients
+            score = 20; // Give credit for the first 20 patients
+            
+            updateHUD();
+            loadPatient();
+            showScreen('game');
+        }
+
+        function loadPatient() {
+            failedCurrent = false;
+            isHealed = false;
+            draggedBandageText = null;
+            selectedBandageElement = null;
+            
+            const patient = patients[currentIndex];
+            
+            // Reset UI
+            UI.feedbackMsg.style.opacity = '0';
+            UI.nextBtn.classList.add('hidden');
+            UI.chartId.textContent = Math.floor(Math.random() * 90000) + 10000;
+
+            // Build Sentence with Wound
+            UI.sentenceContainer.innerHTML = `
+                ${patient.start} 
+                <span id="wound" class="wound" data-weak="${patient.weak}">${patient.weak}</span> 
+                ${patient.end}
+            `;
+
+            const woundEl = document.getElementById('wound');
+            
+            // Event Listeners for Wound (Drop & Click)
+            woundEl.addEventListener('dragover', handleDragOver);
+            woundEl.addEventListener('dragleave', handleDragLeave);
+            woundEl.addEventListener('drop', handleDrop);
+            woundEl.addEventListener('click', handleWoundClick);
+
+            // Build Tray (Bandages)
+            UI.trayContainer.innerHTML = '';
+            const allOptions = shuffleArray([patient.strong, ...patient.distractors]);
+
+            allOptions.forEach(word => {
+                const bandage = document.createElement('div');
+                bandage.className = 'bandage';
+                bandage.innerHTML = `<span>${word}</span>`;
+                bandage.draggable = true;
+                bandage.dataset.word = word;
+
+                // Event Listeners for Bandages (Drag & Click)
+                bandage.addEventListener('dragstart', handleDragStart);
+                bandage.addEventListener('dragend', handleDragEnd);
+                bandage.addEventListener('click', () => handleBandageClick(bandage));
+
+                UI.trayContainer.appendChild(bandage);
+            });
+
+            updateHUD();
+        }
+
+        // --- Interaction: Click to Apply (Mobile Friendly) ---
+        function handleBandageClick(bandageEl) {
+            if (isHealed) return;
+            
+            playSound('velcro');
+            
+            // Deselect previous
+            if (selectedBandageElement) {
+                selectedBandageElement.classList.remove('selected', 'ring-4', 'ring-blue-500');
+            }
+
+            // Select new
+            selectedBandageElement = bandageEl;
+            draggedBandageText = bandageEl.dataset.word;
+            bandageEl.classList.add('selected', 'ring-4', 'ring-blue-500');
+            
+            // Highlight wound to show it's ready for click
+            const woundEl = document.getElementById('wound');
+            woundEl.classList.add('drag-over');
+            setTimeout(() => {
+                if(!isHealed) woundEl.classList.remove('drag-over');
+            }, 800);
+        }
+
+        function handleWoundClick() {
+            if (isHealed || !draggedBandageText) return;
+            
+            // Process the "drop" via click
+            processHealing(draggedBandageText);
+            
+            if (selectedBandageElement) {
+                selectedBandageElement.classList.remove('selected', 'ring-4', 'ring-blue-500');
+                selectedBandageElement = null;
+            }
+        }
+
+        // --- Interaction: Drag and Drop ---
+        function handleDragStart(e) {
+            if (isHealed) {
+                e.preventDefault();
+                return;
+            }
+            draggedBandageText = e.target.dataset.word;
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+            playSound('velcro');
+            
+            // Clear click selection if dragging
+            if (selectedBandageElement) {
+                selectedBandageElement.classList.remove('selected', 'ring-4', 'ring-blue-500');
+                selectedBandageElement = null;
+            }
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); // Allows drop
+            if (!isHealed) e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (draggedBandageText && !isHealed) {
+                processHealing(draggedBandageText);
+            }
+        }
+
+        // --- Core Game Logic ---
+        function processHealing(appliedWord) {
+            const patient = patients[currentIndex];
+            const woundEl = document.getElementById('wound');
+
+            if (appliedWord === patient.strong) {
+                // SUCCESS
+                isHealed = true;
+                playSound('success');
+                
+                if (!failedCurrent) score++;
+                updateHUD();
+
+                // Transform Wound
+                woundEl.textContent = appliedWord;
+                woundEl.className = 'wound healed';
+
+                // Disable tray
+                const bandages = UI.trayContainer.querySelectorAll('.bandage');
+                bandages.forEach(b => {
+                    b.draggable = false;
+                    b.style.cursor = 'default';
+                    b.classList.add('opacity-50');
+                });
+
+                // Feedback
+                UI.feedbackMsg.textContent = `Excellent! "${appliedWord}" makes the sentence much stronger.`;
+                UI.feedbackMsg.className = 'mt-8 text-xl sm:text-2xl font-black text-emerald-600 opacity-100 transition-opacity duration-300';
+                
+                UI.nextBtn.classList.remove('hidden');
+
+            } else {
+                // FAILURE
+                failedCurrent = true;
+                playSound('error');
+                
+                // Shake Wound
+                woundEl.classList.remove('shake-anim');
+                void woundEl.offsetWidth; // Reflow
+                woundEl.classList.add('shake-anim');
+
+                // Feedback
+                UI.feedbackMsg.textContent = `"${appliedWord}" doesn't quite fit. Try finding a stronger verb!`;
+                UI.feedbackMsg.className = 'mt-8 text-xl font-bold text-red-500 opacity-100 transition-opacity duration-300';
+                
+                // Reset dragged text so they have to click/drag again
+                draggedBandageText = null;
+            }
+        }
+
+        function nextPatient() {
+            currentIndex++;
+            if (currentIndex < patients.length) {
+                loadPatient();
+            } else {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            UI.patientCounter.textContent = Math.min(currentIndex + 1, patients.length);
+            UI.scoreCounter.textContent = score;
+            const progress = (currentIndex / patients.length) * 100;
+            UI.progressBar.style.width = `${progress}%`;
+        }
+
+        function endGame() {
+            UI.finalScore.textContent = `${score}/${patients.length}`;
+            
+            let rating = "";
+            if (score >= 27) rating = "Chief of Surgery! You have an incredible vocabulary.";
+            else if (score >= 21) rating = "Great job, Doctor! Your writing will be much stronger.";
+            else rating = "Good effort, Resident! Keep practicing those strong verbs.";
+            
+            UI.ratingText.textContent = rating;
+            showScreen('results');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
