@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Highlighter: Story Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #020617; /* Slate 950 */
+            background-image: 
+                linear-gradient(rgba(15, 23, 42, 0.8) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.8) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Sci-Fi Terminal Container */
+        .terminal-container {
+            background-color: #0f172a; /* Slate 900 */
+            border: 2px solid #1e293b;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .terminal-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Highlighter Tools */
+        .highlighter-tool {
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlighter-tool.active-s {
+            background-color: rgba(6, 182, 212, 0.2); /* Cyan 500 */
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.5), inset 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .highlighter-tool.active-v {
+            background-color: rgba(217, 70, 239, 0.2); /* Fuchsia 500 */
+            border-color: #d946ef;
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.5), inset 0 0 10px rgba(217, 70, 239, 0.3);
+        }
+
+        /* Story Text Interactions */
+        .story-word {
+            display: inline-block;
+            padding: 0 4px;
+            margin: 2px 1px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        /* Hover states based on selected tool */
+        .tool-s-active .story-word:not(.found):hover {
+            background-color: rgba(6, 182, 212, 0.3);
+            border-color: #06b6d4;
+            text-shadow: 0 0 8px #06b6d4;
+        }
+        
+        .tool-v-active .story-word:not(.found):hover {
+            background-color: rgba(217, 70, 239, 0.3);
+            border-color: #d946ef;
+            text-shadow: 0 0 8px #d946ef;
+        }
+
+        /* Found States */
+        .story-word.found-s {
+            background-color: rgba(6, 182, 212, 0.8);
+            color: #020617;
+            font-weight: 700;
+            border-color: #06b6d4;
+            box-shadow: 0 0 10px #06b6d4;
+            cursor: default;
+            animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .story-word.found-v {
+            background-color: rgba(217, 70, 239, 0.8);
+            color: #020617;
+            font-weight: 700;
+            border-color: #d946ef;
+            box-shadow: 0 0 10px #d946ef;
+            cursor: default;
+            animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Animations */
+        @keyframes pop-in {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            background-color: rgba(239, 68, 68, 0.5) !important; /* Red 500 */
+            border-color: #ef4444 !important;
+            color: white;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .glitch {
+            animation: glitch-anim 1.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 2px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(-2px, -2px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(2px, 2px); }
+            100% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, -2px); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6">
+
+    <!-- Sound Effects -->
+    <audio id="sfx-beep" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+    <audio id="sfx-success" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfx-unlock" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+
+    <main class="w-full max-w-5xl">
+        
+        <!-- Start Screen -->
+        <section id="start-screen" class="terminal-container rounded-2xl p-8 sm:p-16 flex flex-col items-center text-center">
+            <h1 class="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500 mb-2 orbitron tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                NEON HIGHLIGHTER
+            </h1>
+            <p class="text-xl sm:text-2xl text-slate-400 font-bold mb-10 orbitron tracking-widest uppercase">System Log Decryption</p>
+            
+            <div class="bg-slate-950/80 border border-slate-700 p-6 sm:p-8 rounded-xl max-w-3xl text-left shadow-inner mb-10">
+                <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center gap-2 orbitron border-b border-slate-700 pb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Mission Objective:
+                </h2>
+                <p class="text-lg text-slate-300 mb-4">
+                    The central mainframe is locked. To decrypt the final password, you must scan the security log and identify all core components in each sentence.
+                </p>
+                <ul class="space-y-4 text-lg font-semibold">
+                    <li class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
+                        <span class="text-slate-200">Equip the <span class="text-cyan-400">Blue Highlighter</span> to tag the <strong>Simple Subjects</strong> (who or what the sentence is about).</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="w-4 h-4 rounded-full bg-fuchsia-400 shadow-[0_0_8px_#d946ef]"></span>
+                        <span class="text-slate-200">Equip the <span class="text-fuchsia-400">Pink Highlighter</span> to tag the <strong>Action Verbs</strong> (what the subject is doing).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="orbitron bg-transparent text-cyan-400 text-2xl font-bold py-4 px-12 rounded border-2 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-400 hover:text-slate-950 transition-all uppercase tracking-widest">
+                Initialize Scan
+            </button>
+        </section>
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="hidden-screen terminal-container rounded-2xl flex flex-col min-h-[600px] overflow-hidden">
+            
+            <!-- Top HUD -->
+            <header class="bg-slate-950 border-b-2 border-slate-800 p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 z-20">
+                <div class="flex flex-col">
+                    <span class="text-slate-500 text-sm orbitron tracking-widest uppercase mb-1">Log <span id="log-counter">1</span>/3 Progress</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <span class="text-white font-bold orbitron"><span id="pairs-found">0</span> / 6 Pairs</span>
+                    </div>
+                </div>
+
+                <!-- Highlighter Tools -->
+                <div class="flex gap-4">
+                    <button id="tool-subject" onclick="selectTool('subject')" class="highlighter-tool border-2 border-slate-700 text-slate-400 hover:text-cyan-400 px-4 py-2 rounded flex items-center gap-2 font-bold uppercase tracking-wide">
+                        <div class="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_5px_#06b6d4]"></div>
+                        Subject
+                    </button>
+                    <button id="tool-verb" onclick="selectTool('verb')" class="highlighter-tool border-2 border-slate-700 text-slate-400 hover:text-fuchsia-400 px-4 py-2 rounded flex items-center gap-2 font-bold uppercase tracking-wide">
+                        <div class="w-3 h-3 rounded-full bg-fuchsia-400 shadow-[0_0_5px_#d946ef]"></div>
+                        Verb
+                    </button>
+                </div>
+            </header>
+
+            <!-- Story / Interaction Area -->
+            <div class="p-6 sm:p-10 flex-grow relative z-20">
+                
+                <!-- Feedback / Status -->
+                <div id="status-bar" class="text-center h-8 mb-6 text-xl font-bold tracking-wider orbitron text-slate-500 transition-colors">
+                    SELECT A HIGHLIGHTER TO BEGIN
+                </div>
+
+                <!-- Text Paragraph -->
+                <div id="story-container" class="text-2xl sm:text-4xl leading-loose sm:leading-loose text-slate-300 font-medium max-w-4xl mx-auto">
+                    <!-- Words injected via JS -->
+                </div>
+                
+            </div>
+
+            <!-- Lock / Decryption Screen (Overlay) -->
+            <div id="decryption-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-30 hidden flex-col items-center justify-center text-center p-8">
+                <svg class="w-24 h-24 text-green-400 mb-6 drop-shadow-[0_0_15px_rgba(74,222,128,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 id="overlay-title" class="text-4xl sm:text-6xl font-black text-white orbitron tracking-widest mb-4">SYSTEM UNLOCKED</h2>
+                <p id="overlay-subtitle" class="text-xl text-slate-300 mb-8 uppercase tracking-widest">Master Password Revealed:</p>
+                
+                <div class="bg-black border-2 border-green-500 p-6 rounded-lg shadow-[0_0_30px_rgba(74,222,128,0.3)] mb-10">
+                    <span class="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-600 glitch" id="password-display">NEBULA-9</span>
+                </div>
+
+                <button id="next-log-btn" onclick="nextStory()" class="orbitron bg-transparent text-green-400 text-xl font-bold py-3 px-10 rounded border-2 border-green-400 shadow-[0_0_10px_rgba(74,222,128,0.4)] hover:bg-green-400 hover:text-slate-950 transition-all uppercase tracking-widest hidden">
+                    Access Next Log
+                </button>
+
+                <button id="close-terminal-btn" onclick="resetGame()" class="orbitron bg-transparent text-green-400 text-xl font-bold py-3 px-10 rounded border-2 border-green-400 shadow-[0_0_10px_rgba(74,222,128,0.4)] hover:bg-green-400 hover:text-slate-950 transition-all uppercase tracking-widest">
+                    Close Terminal
+                </button>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // Story Data and Configuration
+        const storyBank = [
+            {
+                text: "A massive asteroid suddenly struck the outer hull. Blinking red sirens immediately wailed in the dark corridors. The brave commander quickly sprinted toward the damaged control room. Sparks flew from the shattered navigation console. A strange digital virus silently corrupted the central mainframe. The panicked crew finally entered the emergency override code.",
+                subjects: [2, 10, 19, 27, 37, 45],
+                verbs: [4, 12, 21, 28, 39, 47],
+                password: "NEBULA-9"
+            },
+            {
+                text: "The scouting rover slowly approached the ancient alien ruins. Glowing blue energy pulsed from the central spire. The lead archaeologist carefully dusted the strange metallic symbols. A hidden holographic map suddenly projected into the air. The excited team quickly recorded the new coordinates. The mysterious artifact hummed with immense power.",
+                subjects: [2, 11, 19, 29, 37, 45],
+                verbs: [4, 12, 21, 31, 39, 46],
+                password: "CHRONOS-7"
+            },
+            {
+                text: "The rogue android smoothly bypassed the outer security lasers. Heavy blast doors slammed shut behind him. The clever hacker successfully disabled the camera network. A loud alarm echoed through the empty facility. The pursuit drones hovered above the exit gate. The determined fugitives finally escaped into the neon city.",
+                subjects: [2, 11, 18, 26, 34, 42],
+                verbs: [4, 12, 20, 27, 35, 44],
+                password: "MATRIX-X"
+            }
+        ];
+        
+        let currentStoryIndex = 0;
+        let storyWordsArray = [];
+        let targetSubjects = [];
+        let targetVerbs = [];
+        let TOTAL_PAIRS = 0;
+
+        // Game State
+        let activeTool = null; // 'subject' | 'verb' | null
+        let foundSubjects = [];
+        let foundVerbs = [];
+
+        // UI Elements
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen')
+            },
+            storyContainer: document.getElementById('story-container'),
+            tools: {
+                subject: document.getElementById('tool-subject'),
+                verb: document.getElementById('tool-verb')
+            },
+            statusBar: document.getElementById('status-bar'),
+            pairsFoundCounter: document.getElementById('pairs-found'),
+            progressBar: document.getElementById('progress-bar'),
+            overlay: document.getElementById('decryption-overlay'),
+            logCounter: document.getElementById('log-counter'),
+            overlayTitle: document.getElementById('overlay-title'),
+            overlaySubtitle: document.getElementById('overlay-subtitle'),
+            passwordDisplay: document.getElementById('password-display'),
+            nextLogBtn: document.getElementById('next-log-btn'),
+            closeTerminalBtn: document.getElementById('close-terminal-btn')
+        };
+
+        const sounds = {
+            beep: document.getElementById('sfx-beep'),
+            success: document.getElementById('sfx-success'),
+            error: document.getElementById('sfx-error'),
+            unlock: document.getElementById('sfx-unlock')
+        };
+
+        // Audio Helper
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        // Screen Switch
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(screen => screen.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Initialize Game
+        function startGame() {
+            playSound('beep');
+            currentStoryIndex = 0;
+            loadStory();
+            showScreen('game');
+        }
+
+        function loadStory() {
+            const currentStory = storyBank[currentStoryIndex];
+            storyWordsArray = currentStory.text.split(" ");
+            targetSubjects = currentStory.subjects;
+            targetVerbs = currentStory.verbs;
+            TOTAL_PAIRS = targetSubjects.length;
+
+            foundSubjects = [];
+            foundVerbs = [];
+            activeTool = null;
+            
+            // Reset UI
+            UI.overlay.classList.add('hidden');
+            UI.overlay.classList.remove('flex');
+            UI.storyContainer.className = 'text-2xl sm:text-4xl leading-loose sm:leading-loose text-slate-300 font-medium max-w-4xl mx-auto';
+            UI.tools.subject.classList.remove('active-s', 'text-cyan-400');
+            UI.tools.verb.classList.remove('active-v', 'text-fuchsia-400');
+            UI.statusBar.textContent = "SELECT A HIGHLIGHTER TO BEGIN";
+            UI.statusBar.className = "text-center h-8 mb-6 text-xl font-bold tracking-wider orbitron text-slate-500 transition-colors";
+            UI.logCounter.textContent = currentStoryIndex + 1;
+            
+            updateProgress();
+            renderStory();
+        }
+
+        function nextStory() {
+            playSound('beep');
+            currentStoryIndex++;
+            loadStory();
+        }
+
+        // Render Paragraph
+        function renderStory() {
+            UI.storyContainer.innerHTML = '';
+            
+            storyWordsArray.forEach((wordWithPunct, index) => {
+                // Separate word from trailing punctuation for cleaner highlight bounding
+                const match = wordWithPunct.match(/^([\w-]+)(.*)$/);
+                let cleanWord = wordWithPunct;
+                let punct = "";
+                
+                if (match) {
+                    cleanWord = match[1];
+                    punct = match[2];
+                }
+
+                // Create wrapper so punctuation sits next to the highlighted span
+                const wordWrapper = document.createElement('span');
+                
+                const span = document.createElement('span');
+                span.className = 'story-word';
+                span.textContent = cleanWord;
+                span.dataset.index = index;
+                span.onclick = () => handleWordClick(span, index);
+
+                wordWrapper.appendChild(span);
+                
+                if (punct) {
+                    const punctNode = document.createTextNode(punct);
+                    wordWrapper.appendChild(punctNode);
+                }
+
+                // Add space after
+                const spaceNode = document.createTextNode(" ");
+                wordWrapper.appendChild(spaceNode);
+
+                UI.storyContainer.appendChild(wordWrapper);
+            });
+        }
+
+        // Select Highlighter Tool
+        function selectTool(toolType) {
+            playSound('beep');
+            activeTool = toolType;
+
+            // Reset classes
+            UI.tools.subject.classList.remove('active-s');
+            UI.tools.subject.classList.add('text-slate-400');
+            UI.tools.verb.classList.remove('active-v');
+            UI.tools.verb.classList.add('text-slate-400');
+            UI.storyContainer.classList.remove('tool-s-active', 'tool-v-active');
+
+            if (toolType === 'subject') {
+                UI.tools.subject.classList.add('active-s');
+                UI.tools.subject.classList.remove('text-slate-400');
+                UI.storyContainer.classList.add('tool-s-active');
+                
+                UI.statusBar.textContent = "SCANNING FOR: SIMPLE SUBJECTS";
+                UI.statusBar.className = "text-center h-8 mb-6 text-xl font-bold tracking-wider orbitron text-cyan-400 transition-colors drop-shadow-[0_0_5px_rgba(6,182,212,0.5)]";
+            } else if (toolType === 'verb') {
+                UI.tools.verb.classList.add('active-v');
+                UI.tools.verb.classList.remove('text-slate-400');
+                UI.storyContainer.classList.add('tool-v-active');
+                
+                UI.statusBar.textContent = "SCANNING FOR: ACTION VERBS";
+                UI.statusBar.className = "text-center h-8 mb-6 text-xl font-bold tracking-wider orbitron text-fuchsia-400 transition-colors drop-shadow-[0_0_5px_rgba(217,70,239,0.5)]";
+            }
+        }
+
+        // Handle Clicking a Word in the Story
+        function handleWordClick(spanElement, index) {
+            // Check if already found
+            if (foundSubjects.includes(index) || foundVerbs.includes(index)) {
+                return; // Already highlighted
+            }
+
+            if (!activeTool) {
+                UI.statusBar.textContent = "WARNING: SELECT HIGHLIGHTER TOOL FIRST";
+                UI.statusBar.classList.add('text-red-500');
+                setTimeout(() => UI.statusBar.classList.remove('text-red-500'), 1000);
+                return;
+            }
+
+            // Logic Check
+            if (activeTool === 'subject') {
+                if (targetSubjects.includes(index)) {
+                    // Correct Subject
+                    playSound('success');
+                    foundSubjects.push(index);
+                    spanElement.classList.add('found', 'found-s');
+                    checkWinCondition();
+                } else {
+                    // Wrong
+                    triggerError(spanElement);
+                }
+            } else if (activeTool === 'verb') {
+                if (targetVerbs.includes(index)) {
+                    // Correct Verb
+                    playSound('success');
+                    foundVerbs.push(index);
+                    spanElement.classList.add('found', 'found-v');
+                    checkWinCondition();
+                } else {
+                    // Wrong
+                    triggerError(spanElement);
+                }
+            }
+        }
+
+        function triggerError(spanElement) {
+            playSound('error');
+            spanElement.classList.add('shake-error');
+            
+            // Temporary status warning
+            const oldText = UI.statusBar.textContent;
+            const oldClass = UI.statusBar.className;
+            
+            UI.statusBar.textContent = "ERROR: INCORRECT SYNTAX COMPONENT";
+            UI.statusBar.className = "text-center h-8 mb-6 text-xl font-bold tracking-wider orbitron text-red-500 transition-colors";
+
+            setTimeout(() => {
+                spanElement.classList.remove('shake-error');
+                UI.statusBar.textContent = oldText;
+                UI.statusBar.className = oldClass;
+            }, 500);
+        }
+
+        function checkWinCondition() {
+            updateProgress();
+
+            if (foundSubjects.length === TOTAL_PAIRS && foundVerbs.length === TOTAL_PAIRS) {
+                setTimeout(() => {
+                    playSound('unlock');
+                    
+                    const currentStory = storyBank[currentStoryIndex];
+                    UI.passwordDisplay.textContent = currentStory.password;
+
+                    if (currentStoryIndex < storyBank.length - 1) {
+                        // Not the last level
+                        UI.overlayTitle.textContent = "LOG DECRYPTED";
+                        UI.overlaySubtitle.textContent = "Partial Password Fragment:";
+                        UI.nextLogBtn.classList.remove('hidden');
+                        UI.closeTerminalBtn.classList.add('hidden');
+                    } else {
+                        // Final level
+                        UI.overlayTitle.textContent = "SYSTEM UNLOCKED";
+                        UI.overlaySubtitle.textContent = "Master Password Revealed:";
+                        UI.nextLogBtn.classList.add('hidden');
+                        UI.closeTerminalBtn.classList.remove('hidden');
+                    }
+
+                    UI.overlay.classList.remove('hidden');
+                    UI.overlay.classList.add('flex');
+                }, 800); // Wait a moment for final animation to finish
+            }
+        }
+
+        function updateProgress() {
+            // Count full pairs found (a pair means both the subject and verb for a sentence are found)
+            // Since index alignment implies S[i] belongs to V[i], we can count full sentences completed.
+            let fullPairsFound = 0;
+            for (let i = 0; i < TOTAL_PAIRS; i++) {
+                if (foundSubjects.includes(targetSubjects[i]) && foundVerbs.includes(targetVerbs[i])) {
+                    fullPairsFound++;
+                }
+            }
+
+            UI.pairsFoundCounter.textContent = fullPairsFound;
+            const percentage = (fullPairsFound / TOTAL_PAIRS) * 100;
+            UI.progressBar.style.width = `${percentage}%`;
+        }
+
+        function resetGame() {
+            showScreen('start');
+        }
+    </script>
+</body>
+</html>
