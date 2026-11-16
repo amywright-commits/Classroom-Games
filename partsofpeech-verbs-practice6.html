@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verb Tense Detectives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Open+Sans:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f8fafc;
+            background-image: linear-gradient(135deg, #f1f5f9 25%, transparent 25%), 
+                              linear-gradient(225deg, #f1f5f9 25%, transparent 25%), 
+                              linear-gradient(45deg, #f1f5f9 25%, transparent 25%), 
+                              linear-gradient(315deg, #f1f5f9 25%, #f8fafc 25%);
+            background-position: 10px 0, 10px 0, 0 0, 0 0;
+            background-size: 20px 20px;
+            background-repeat: repeat;
+            min-height: 100vh;
+            color: #334155;
+        }
+
+        h1, h2, h3, .serif-font {
+            font-family: 'Merriweather', serif;
+        }
+
+        .detective-card {
+            background-color: #ffffff;
+            border: 4px solid #1e293b; /* Slate 800 */
+            border-radius: 16px;
+            box-shadow: 8px 8px 0px #1e293b;
+        }
+
+        .choice-btn {
+            transition: all 0.2s ease;
+            position: relative;
+            top: 0;
+            left: 0;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            top: -2px;
+            left: -2px;
+            box-shadow: 4px 4px 0px rgba(30, 41, 59, 0.2);
+        }
+
+        .choice-btn:active:not(:disabled) {
+            top: 2px;
+            left: 2px;
+            box-shadow: 0px 0px 0px rgba(30, 41, 59, 0.2);
+        }
+
+        .correct-anim {
+            animation: success-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes success-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .incorrect-anim {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+
+        /* Highlight styling for the blank */
+        .sentence-blank {
+            display: inline-block;
+            min-width: 100px;
+            border-bottom: 3px solid #1e293b;
+            text-align: center;
+            font-weight: 700;
+            color: #0ea5e9; /* Sky 500 */
+            padding: 0 8px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Sound Effects -->
+    <audio id="sfx-success" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sfx-error" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+
+    <main class="w-full max-w-4xl relative">
+        
+        <!-- Start Screen -->
+        <section id="start-screen" class="detective-card p-8 sm:p-12 flex flex-col items-center">
+            <div class="bg-amber-400 text-slate-900 rounded-full w-20 h-20 flex items-center justify-center mb-6 border-4 border-slate-900 shadow-[4px_4px_0px_#1e293b]">
+                <!-- Magnifying Glass Icon -->
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            
+            <h1 class="text-4xl sm:text-6xl font-black text-slate-800 mb-2 serif-font text-center">Verb Tense Detectives</h1>
+            <p class="text-xl text-slate-500 font-bold mb-8 uppercase tracking-widest text-center">Clock Clues Training</p>
+            
+            <div class="w-full bg-slate-50 border-2 border-slate-200 p-6 rounded-xl mb-10">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Verb Tense Field Guide
+                </h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <!-- Past -->
+                    <div class="bg-red-50 p-4 rounded border-l-4 border-red-500">
+                        <h3 class="text-lg font-bold text-red-800 mb-1">Past Tense</h3>
+                        <p class="text-sm text-slate-700 mb-2">The action already happened.</p>
+                        <p class="text-xs font-bold text-red-600 mb-1">Clock Clues:</p>
+                        <p class="text-sm text-slate-600 italic mb-2">yesterday, last year, previously, ago</p>
+                        <p class="text-sm bg-white p-2 rounded border border-red-100">Yesterday, we <strong>walked</strong>.</p>
+                    </div>
+                    
+                    <!-- Present -->
+                    <div class="bg-emerald-50 p-4 rounded border-l-4 border-emerald-500">
+                        <h3 class="text-lg font-bold text-emerald-800 mb-1">Present Tense</h3>
+                        <p class="text-sm text-slate-700 mb-2">The action is happening now, or happens regularly.</p>
+                        <p class="text-xs font-bold text-emerald-600 mb-1">Clock Clues:</p>
+                        <p class="text-sm text-slate-600 italic mb-2">currently, every day, right now, usually</p>
+                        <p class="text-sm bg-white p-2 rounded border border-emerald-100">Every day, we <strong>walk</strong>.</p>
+                    </div>
+
+                    <!-- Future -->
+                    <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500">
+                        <h3 class="text-lg font-bold text-blue-800 mb-1">Future Tense</h3>
+                        <p class="text-sm text-slate-700 mb-2">The action will happen later.</p>
+                        <p class="text-xs font-bold text-blue-600 mb-1">Clock Clues:</p>
+                        <p class="text-sm text-slate-600 italic mb-2">tomorrow, next week, soon, later</p>
+                        <p class="text-sm bg-white p-2 rounded border border-blue-100">Tomorrow, we <strong>will walk</strong>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="bg-amber-400 hover:bg-amber-500 text-slate-900 text-2xl font-black py-4 px-12 rounded-xl border-4 border-slate-900 shadow-[6px_6px_0px_#1e293b] hover:shadow-[2px_2px_0px_#1e293b] hover:translate-y-1 hover:translate-x-1 transition-all uppercase tracking-wide">
+                Start Investigation
+            </button>
+        </section>
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="hidden-screen flex flex-col gap-6">
+            
+            <!-- Header HUD -->
+            <div class="detective-card p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4 w-full sm:w-1/2">
+                    <span class="font-bold text-slate-700 whitespace-nowrap uppercase tracking-widest text-sm">Case <span id="case-counter">1</span>/25</span>
+                    <div class="w-full h-4 bg-slate-200 rounded-full overflow-hidden border-2 border-slate-300">
+                        <div id="progress-bar" class="bg-amber-400 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="flex gap-2 text-lg font-black text-slate-800 items-center">
+                    <svg class="w-6 h-6 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    Score: <span id="score-counter">0</span>
+                </div>
+            </div>
+
+            <!-- Main Question Area -->
+            <div class="detective-card p-8 sm:p-12 min-h-[400px] flex flex-col">
+                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 border-b-2 border-slate-100 pb-2">Read the sentence and find the clock clue.</p>
+                
+                <div class="text-2xl sm:text-3xl text-slate-800 leading-relaxed mb-10 serif-font" id="sentence-display">
+                    <!-- Sentence injected here -->
+                </div>
+
+                <!-- Multiple Choice Options -->
+                <div id="options-container" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    <!-- Buttons injected here -->
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="feedback-container" class="min-h-[80px] bg-slate-50 border-2 border-transparent rounded-xl p-4 flex items-center justify-between opacity-0 transition-opacity duration-300">
+                    <p id="feedback-text" class="text-lg font-bold w-full"></p>
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg ml-4 transition-colors">
+                        Next Case ➔
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="hidden-screen detective-card p-8 sm:p-16 flex flex-col items-center text-center">
+            <h2 class="text-4xl sm:text-6xl font-black text-slate-800 mb-4 serif-font">Investigation Closed!</h2>
+            <p class="text-xl text-slate-500 font-bold mb-10 uppercase tracking-widest">Great Detective Work</p>
+            
+            <div class="bg-amber-100 border-4 border-amber-400 rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-[4px_4px_0px_#f59e0b] mb-10 relative">
+                <span class="text-5xl font-black text-amber-600" id="final-score">0/25</span>
+                <span class="text-lg font-bold text-amber-500 mt-2">Cases Solved</span>
+            </div>
+
+            <div id="rating-text" class="text-2xl font-bold text-slate-700 mb-10 max-w-xl">
+                <!-- Rating text injected via JS -->
+            </div>
+
+            <button onclick="resetGame()" class="bg-slate-800 hover:bg-slate-700 text-white text-2xl font-black py-4 px-12 rounded-xl border-4 border-slate-900 shadow-[6px_6px_0px_#1e293b] hover:shadow-[2px_2px_0px_#1e293b] hover:translate-y-1 hover:translate-x-1 transition-all uppercase tracking-wide">
+                Take New Cases
+            </button>
+        </section>
+
+    </main>
+
+    <script>
+        // 25 Sentences for 6th Grade focusing on Clock Clues mixed throughout
+        const questionBank = [
+            {
+                start: "Explorers",
+                blank: "_______",
+                end: "the hidden ruins deep within the jungle last century.",
+                options: ["discover", "discovered", "will discover"],
+                correct: "discovered",
+                clueWord: "last century",
+                tense: "past"
+            },
+            {
+                start: "The marine biologist currently",
+                blank: "_______",
+                end: "the delicate ecosystem of the coral reef.",
+                options: ["observes", "observed", "will observe"],
+                correct: "observes",
+                clueWord: "currently",
+                tense: "present"
+            },
+            {
+                start: "Next decade, astronauts",
+                blank: "_______",
+                end: "a permanent research base on Mars.",
+                options: ["establish", "established", "will establish"],
+                correct: "will establish",
+                clueWord: "Next decade",
+                tense: "future"
+            },
+            {
+                start: "The debate team",
+                blank: "_______",
+                end: "their main point with great passion yesterday afternoon.",
+                options: ["argues", "argued", "will argue"],
+                correct: "argued",
+                clueWord: "yesterday afternoon",
+                tense: "past"
+            },
+            {
+                start: "Every morning, the master baker",
+                blank: "_______",
+                end: "fresh dough for the artisanal bread.",
+                options: ["kneads", "kneaded", "will knead"],
+                correct: "kneads",
+                clueWord: "Every morning",
+                tense: "present"
+            },
+            {
+                start: "The vibrant butterfly soon",
+                blank: "_______",
+                end: "from its protective chrysalis.",
+                options: ["emerges", "emerged", "will emerge"],
+                correct: "will emerge",
+                clueWord: "soon",
+                tense: "future"
+            },
+            {
+                start: "Ancient civilizations",
+                blank: "_______",
+                end: "enormous pyramids using simple tools thousands of years ago.",
+                options: ["build", "built", "will build"],
+                correct: "built",
+                clueWord: "thousands of years ago",
+                tense: "past"
+            },
+            {
+                start: "Right now, the weather satellite",
+                blank: "_______",
+                end: "vital climate data back to Earth.",
+                options: ["transmits", "transmitted", "will transmit"],
+                correct: "transmits",
+                clueWord: "Right now",
+                tense: "present"
+            },
+            {
+                start: "The orchestra",
+                blank: "_______",
+                end: "a brand new symphony for the mayor tomorrow evening.",
+                options: ["performs", "performed", "will perform"],
+                correct: "will perform",
+                clueWord: "tomorrow evening",
+                tense: "future"
+            },
+            {
+                start: "My family",
+                blank: "_______",
+                end: "across the entire country in an RV last summer.",
+                options: ["travels", "traveled", "will travel"],
+                correct: "traveled",
+                clueWord: "last summer",
+                tense: "past"
+            },
+            {
+                start: "The school bus usually",
+                blank: "_______",
+                end: "at exactly 7:15 AM on weekdays.",
+                options: ["arrives", "arrived", "will arrive"],
+                correct: "arrives",
+                clueWord: "usually",
+                tense: "present"
+            },
+            {
+                start: "People in the distant future",
+                blank: "_______",
+                end: "flying cars to get to work.",
+                options: ["drive", "drove", "will drive"],
+                correct: "will drive",
+                clueWord: "in the distant future",
+                tense: "future"
+            },
+            {
+                start: "Massive dinosaurs",
+                blank: "_______",
+                end: "the dense, tropical forests during the Jurassic period.",
+                options: ["roam", "roamed", "will roam"],
+                correct: "roamed",
+                clueWord: "during the Jurassic period",
+                tense: "past"
+            },
+            {
+                start: "The head chef",
+                blank: "_______",
+                end: "the bubbling vegetable soup at this exact moment.",
+                options: ["tastes", "tasted", "will taste"],
+                correct: "tastes",
+                clueWord: "at this exact moment",
+                tense: "present"
+            },
+            {
+                start: "Next week, the city council",
+                blank: "_______",
+                end: "on the new environmental proposal.",
+                options: ["votes", "voted", "will vote"],
+                correct: "will vote",
+                clueWord: "Next week",
+                tense: "future"
+            },
+            {
+                start: "The loud thunder",
+                blank: "_______",
+                end: "the sleeping dog on the porch a few minutes ago.",
+                options: ["startles", "startled", "will startle"],
+                correct: "startled",
+                clueWord: "a few minutes ago",
+                tense: "past"
+            },
+            {
+                start: "Nowadays, many middle school students",
+                blank: "_______",
+                end: "tablets to complete their homework.",
+                options: ["use", "used", "will use"],
+                correct: "use",
+                clueWord: "Nowadays",
+                tense: "present"
+            },
+            {
+                start: "The science teacher",
+                blank: "_______",
+                end: "all of the volcano projects by next Friday.",
+                options: ["grades", "graded", "will grade"],
+                correct: "will grade",
+                clueWord: "by next Friday",
+                tense: "future"
+            },
+            {
+                start: "The old brick factory previously",
+                blank: "_______",
+                end: "textiles and clothing for the town.",
+                options: ["produces", "produced", "will produce"],
+                correct: "produced",
+                clueWord: "previously",
+                tense: "past"
+            },
+            {
+                start: "The majestic bald eagle frequently",
+                blank: "_______",
+                end: "high above the snowy mountain peaks.",
+                options: ["soars", "soared", "will soar"],
+                correct: "soars",
+                clueWord: "frequently",
+                tense: "present"
+            },
+            {
+                start: "Researchers in the year 2050",
+                blank: "_______",
+                end: "new forms of clean, renewable energy.",
+                options: ["discover", "discovered", "will discover"],
+                correct: "will discover",
+                clueWord: "in the year 2050",
+                tense: "future"
+            },
+            {
+                start: "The fierce wind storm",
+                blank: "_______",
+                end: "several large oak trees yesterday evening.",
+                options: ["uproots", "uprooted", "will uproot"],
+                correct: "uprooted",
+                clueWord: "yesterday evening",
+                tense: "past"
+            },
+            {
+                start: "At present, the software engineer",
+                blank: "_______",
+                end: "a complex new mobile application.",
+                options: ["codes", "coded", "will code"],
+                correct: "codes",
+                clueWord: "At present",
+                tense: "present"
+            },
+            {
+                start: "The astronomical society",
+                blank: "_______",
+                end: "a public stargazing event later tonight.",
+                options: ["hosts", "hosted", "will host"],
+                correct: "will host",
+                clueWord: "later tonight",
+                tense: "future"
+            },
+            {
+                start: "I",
+                blank: "_______",
+                end: "everywhere instead of walking when I was a toddler.",
+                options: ["crawl", "crawled", "will crawl"],
+                correct: "crawled",
+                clueWord: "when I was a toddler",
+                tense: "past"
+            }
+        ];
+
+        // Game State Variables
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let failedCurrent = false;
+
+        // UI Elements
+        const UI = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                results: document.getElementById('results-screen')
+            },
+            caseCounter: document.getElementById('case-counter'),
+            progressBar: document.getElementById('progress-bar'),
+            scoreCounter: document.getElementById('score-counter'),
+            sentenceDisplay: document.getElementById('sentence-display'),
+            optionsContainer: document.getElementById('options-container'),
+            feedbackContainer: document.getElementById('feedback-container'),
+            feedbackText: document.getElementById('feedback-text'),
+            nextBtn: document.getElementById('next-btn'),
+            finalScore: document.getElementById('final-score'),
+            ratingText: document.getElementById('rating-text')
+        };
+
+        const sounds = {
+            success: document.getElementById('sfx-success'),
+            error: document.getElementById('sfx-error')
+        };
+
+        // Utility
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function playSound(type) {
+            if (sounds[type]) {
+                sounds[type].currentTime = 0;
+                sounds[type].play().catch(() => {});
+            }
+        }
+
+        function showScreen(screenName) {
+            Object.values(UI.screens).forEach(screen => screen.classList.add('hidden-screen'));
+            UI.screens[screenName].classList.remove('hidden-screen');
+        }
+
+        // Initialize Game
+        function startGame() {
+            questions = shuffleArray([...questionBank]);
+            currentIndex = 0;
+            score = 0;
+            updateHUD();
+            loadQuestion();
+            showScreen('game');
+        }
+
+        // Load Question
+        function loadQuestion() {
+            failedCurrent = false;
+            const q = questions[currentIndex];
+            
+            // Reset UI
+            UI.feedbackContainer.style.opacity = '0';
+            UI.feedbackContainer.className = 'min-h-[80px] bg-slate-50 border-2 border-transparent rounded-xl p-4 flex items-center justify-between opacity-0 transition-opacity duration-300';
+            UI.nextBtn.classList.add('hidden');
+
+            // Set Sentence
+            UI.sentenceDisplay.innerHTML = `${q.start} <span id="blank-space" class="sentence-blank"></span> ${q.end}`;
+
+            // Build Options
+            UI.optionsContainer.innerHTML = '';
+            // Make sure the order is past, present, future based on standard conjugations if we want them static, 
+            // but shuffling the options is better for practice.
+            const shuffledOptions = shuffleArray([...q.options]);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn bg-white border-2 border-slate-300 hover:border-slate-800 text-slate-700 font-bold py-4 px-4 rounded-xl text-lg w-full';
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(opt, btn, q);
+                UI.optionsContainer.appendChild(btn);
+            });
+
+            updateHUD();
+        }
+
+        // Check Answer
+        function checkAnswer(selectedOption, btnElement, questionData) {
+            const isCorrect = selectedOption === questionData.correct;
+            const blankSpace = document.getElementById('blank-space');
+
+            if (isCorrect) {
+                playSound('success');
+                if (!failedCurrent) score++;
+                
+                // Style correct button
+                btnElement.classList.replace('border-slate-300', 'border-emerald-500');
+                btnElement.classList.replace('hover:border-slate-800', 'border-emerald-500');
+                btnElement.classList.replace('text-slate-700', 'text-emerald-700');
+                btnElement.classList.add('bg-emerald-50', 'correct-anim');
+                
+                // Fill blank
+                blankSpace.textContent = selectedOption;
+                blankSpace.classList.replace('border-slate-800', 'border-emerald-500');
+                blankSpace.classList.replace('text-sky-500', 'text-emerald-600');
+
+                // Feedback
+                UI.feedbackContainer.classList.replace('bg-slate-50', 'bg-emerald-50');
+                UI.feedbackContainer.classList.replace('border-transparent', 'border-emerald-200');
+                
+                if (!failedCurrent) {
+                    UI.feedbackText.innerHTML = `<span class="text-emerald-700">Spot on!</span> The clock clue <strong>"${questionData.clueWord}"</strong> shows this is in the <strong>${questionData.tense}</strong> tense.`;
+                } else {
+                    UI.feedbackText.innerHTML = `<span class="text-emerald-700">Correct!</span> The verb is <strong>${selectedOption}</strong>.`;
+                }
+                
+                UI.feedbackText.className = 'text-lg font-bold w-full text-slate-700';
+                UI.feedbackContainer.style.opacity = '1';
+
+                // Disable buttons
+                const allBtns = UI.optionsContainer.querySelectorAll('button');
+                allBtns.forEach(b => {
+                    b.disabled = true;
+                    b.classList.remove('hover:border-slate-800');
+                    if (b !== btnElement) b.classList.add('opacity-50');
+                });
+
+                UI.nextBtn.classList.remove('hidden');
+                updateHUD();
+
+            } else {
+                failedCurrent = true;
+                playSound('error');
+                
+                // Style incorrect button
+                btnElement.classList.replace('border-slate-300', 'border-red-400');
+                btnElement.classList.replace('text-slate-700', 'text-red-500');
+                btnElement.classList.add('bg-red-50', 'incorrect-anim');
+                btnElement.disabled = true;
+                
+                setTimeout(() => btnElement.classList.remove('incorrect-anim'), 400);
+
+                // Feedback with Hint
+                UI.feedbackContainer.classList.replace('bg-slate-50', 'bg-red-50');
+                UI.feedbackContainer.classList.replace('border-transparent', 'border-red-200');
+                
+                UI.feedbackText.innerHTML = `<span class="text-red-600">Not quite.</span> Look at the clock clue <strong>"${questionData.clueWord}"</strong>. This tells us the action is in the <strong>${questionData.tense}</strong> tense.`;
+                UI.feedbackText.className = 'text-lg font-bold w-full text-slate-700';
+                UI.feedbackContainer.style.opacity = '1';
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < questions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            UI.caseCounter.textContent = Math.min(currentIndex + 1, questions.length);
+            UI.scoreCounter.textContent = score;
+            const progress = (currentIndex / questions.length) * 100;
+            UI.progressBar.style.width = `${progress}%`;
+        }
+
+        function endGame() {
+            UI.finalScore.textContent = `${score}/${questions.length}`;
+            
+            let rating = "";
+            if (score >= 23) rating = "Master Detective! Your grammar skills are sharp.";
+            else if (score >= 18) rating = "Great Job! You solved most of the cases.";
+            else rating = "Good effort! Keep searching for those clock clues.";
+            
+            UI.ratingText.textContent = rating;
+            showScreen('results');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+    </script>
+</body>
+</html>
