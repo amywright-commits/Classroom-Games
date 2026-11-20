@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shades of Meaning: Adjectives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-gradient: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            
+            /* Swatch Colors (Red gradient) */
+            --swatch-1: #ffebee;
+            --swatch-2: #ff8a80;
+            --swatch-3: #e53935;
+            --swatch-4: #b71c1c;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-poppins {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Start Screen --- */
+        .instruction-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .instruction-list li {
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            display: flex;
+            align-items: flex-start;
+        }
+        .instruction-list li::before {
+            content: "•";
+            color: var(--text-light);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* --- Game Screen --- */
+        .game-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        @media(min-width: 768px) {
+            .game-layout {
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Left Side: Swatch Panel */
+        .swatch-panel {
+            display: flex;
+            align-items: stretch;
+            gap: 15px;
+        }
+
+        .intensity-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            padding: 20px 0;
+        }
+        
+        .intensity-label-top {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            margin-bottom: auto;
+        }
+        .intensity-label-bottom {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            margin-top: auto;
+        }
+
+        .paint-card {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .paint-card-footer {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            padding-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* Drop Slots */
+        .color-slot {
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .color-slot.slot-1 { background-color: var(--swatch-1); }
+        .color-slot.slot-2 { background-color: var(--swatch-2); }
+        .color-slot.slot-3 { background-color: var(--swatch-3); }
+        .color-slot.slot-4 { background-color: var(--swatch-4); }
+
+        .color-slot.drag-over {
+            transform: scale(1.05);
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.8);
+        }
+
+        /* Right Side: Word Bank & Controls */
+        .interactive-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .word-bank-container {
+            border: 2px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 30px 20px;
+            width: 100%;
+            min-height: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-start;
+            gap: 15px;
+            background: white;
+            transition: background 0.3s;
+        }
+        
+        .word-bank-container.drag-over {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        /* Word Pills */
+        .word-pill {
+            background: white;
+            color: var(--text-dark);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.1s, box-shadow 0.1s;
+            border: 1px solid #f1f5f9;
+        }
+        .word-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        .word-pill:active {
+            cursor: grabbing;
+        }
+        /* When pill is inside a swatch, adjust text color based on background */
+        .slot-3 .word-pill, .slot-4 .word-pill {
+            background: transparent;
+            box-shadow: none;
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+        }
+        .slot-1 .word-pill, .slot-2 .word-pill {
+            background: transparent;
+            box-shadow: none;
+            color: var(--text-dark);
+            border: none;
+            font-size: 1.2rem;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+        }
+
+        /* Buttons */
+        .btn {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            padding: 14px 32px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        /* Animations */
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Overlay/Modal */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+        .overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background: #ffd300;
+            opacity: 0;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- START SCREEN -->
+    <div id="startScreen" class="screen active">
+        <div class="text-center mb-10">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-gradient mb-4">Shades of Meaning</h1>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-600">An Adjective Intensity Gradient Activity</h2>
+        </div>
+
+        <div class="instruction-card">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-2xl">📋</span>
+                <h3 class="text-2xl font-bold text-slate-800">How to Play:</h3>
+            </div>
+            <ul class="instruction-list">
+                <li>You will see a "paint swatch" card with 4 color slots.</li>
+                <li>Sort the adjectives based on their <strong>intensity</strong>.</li>
+                <li>Place the <strong>least intense</strong> adjective at the top (lightest color).</li>
+                <li>Place the <strong>most intense</strong> adjective at the bottom (darkest color).</li>
+                <li>Click a word to move it, or drag and drop it into a slot!</li>
+                <li>Watch out! The words get harder as you progress.</li>
+            </ul>
+        </div>
+
+        <div class="text-center mt-10">
+            <button class="btn btn-primary text-xl px-10 py-4" onclick="startGame()">Start Sorting</button>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="gameScreen" class="screen">
+        <div class="header-bar">
+            <div class="font-poppins font-bold text-slate-500">Problem <span id="problemNum">1</span> / 30</div>
+        </div>
+
+        <div class="game-layout">
+            
+            <!-- Left: Swatch Panel -->
+            <div class="swatch-panel" id="swatchPanel">
+                <div class="intensity-labels">
+                    <span class="intensity-label-top">LEAST INTENSE</span>
+                    <span class="intensity-label-bottom">MOST INTENSE</span>
+                </div>
+                
+                <div class="paint-card">
+                    <div class="color-slot slot-1 drop-zone" data-slot="0"></div>
+                    <div class="color-slot slot-2 drop-zone" data-slot="1"></div>
+                    <div class="color-slot slot-3 drop-zone" data-slot="2"></div>
+                    <div class="color-slot slot-4 drop-zone" data-slot="3"></div>
+                    <div class="paint-card-footer">SHADES OF MEANING</div>
+                </div>
+            </div>
+
+            <!-- Right: Word Bank & Controls -->
+            <div class="interactive-area">
+                <h3 class="font-poppins font-bold text-xl text-slate-700 mb-1">Word Bank</h3>
+                <p class="text-slate-500 text-sm mb-4">(Click or Drag to place)</p>
+                
+                <div class="word-bank-container drop-zone" id="wordBank">
+                    <!-- Words injected here -->
+                </div>
+
+                <div class="flex flex-col gap-3 mt-6 w-full max-w-sm">
+                    <div class="flex gap-4 w-full">
+                        <button class="btn btn-secondary flex-1" onclick="clearBoard()">Clear</button>
+                        <button class="btn btn-primary flex-1" onclick="checkOrder()">Check Order</button>
+                    </div>
+                    <button class="btn btn-secondary w-full" style="background: #e0e7ff; color: #4338ca;" onclick="showHint()">💡 Get a Hint</button>
+                    <p id="hintText" class="text-sm text-indigo-600 font-bold text-center hidden"></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SUCCESS OVERLAY -->
+    <div id="successOverlay" class="overlay">
+        <h2 id="overlayTitle" class="text-5xl font-extrabold text-gradient mb-4">Great Job!</h2>
+        <p id="overlayMessage" class="text-xl font-bold text-slate-600 mb-8">You found the perfect shades of meaning.</p>
+        <button id="nextBtn" class="btn btn-primary text-xl px-10 py-3" onclick="nextProblem()">Next Problem</button>
+    </div>
+
+    <script>
+        // --- GAME DATA ---
+        // 30 Problems of increasing difficulty
+        const gameData = [
+            // Level 1
+            { words: ["good", "excellent", "okay", "great"], answer: ["okay", "good", "great", "excellent"] },
+            { words: ["awful", "bad", "terrible", "poor"], answer: ["poor", "bad", "awful", "terrible"] },
+            { words: ["happy", "glad", "ecstatic", "joyful"], answer: ["glad", "happy", "joyful", "ecstatic"] },
+            { words: ["sad", "devastated", "down", "depressed"], answer: ["down", "sad", "depressed", "devastated"] },
+            { words: ["tiny", "microscopic", "small", "little"], answer: ["little", "small", "tiny", "microscopic"] },
+            { words: ["big", "huge", "large", "gigantic"], answer: ["large", "big", "huge", "gigantic"] },
+            { words: ["hot", "boiling", "warm", "scorching"], answer: ["warm", "hot", "boiling", "scorching"] },
+            { words: ["cold", "frigid", "freezing", "cool"], answer: ["cool", "cold", "freezing", "frigid"] },
+            { words: ["angry", "annoyed", "furious", "mad"], answer: ["annoyed", "mad", "angry", "furious"] },
+            { words: ["exhausted", "tired", "sleepy", "dead"], answer: ["sleepy", "tired", "exhausted", "dead"] },
+            { words: ["smart", "brilliant", "bright", "clever"], answer: ["bright", "smart", "clever", "brilliant"] },
+            { words: ["hilarious", "funny", "silly", "hysterical"], answer: ["silly", "funny", "hilarious", "hysterical"] },
+            { words: ["terrified", "nervous", "uneasy", "scared"], answer: ["uneasy", "nervous", "scared", "terrified"] },
+            { words: ["starving", "hungry", "peckish", "famished"], answer: ["peckish", "hungry", "starving", "famished"] },
+            { words: ["beautiful", "cute", "gorgeous", "pretty"], answer: ["cute", "pretty", "beautiful", "gorgeous"] },
+            
+            // Level 2
+            { words: ["old", "ancient", "elderly", "aged"], answer: ["aged", "old", "elderly", "ancient"] },
+            { words: ["filthy", "messy", "squalid", "dirty"], answer: ["messy", "dirty", "filthy", "squalid"] },
+            { words: ["spotless", "neat", "clean", "immaculate"], answer: ["neat", "clean", "spotless", "immaculate"] },
+            { words: ["surprised", "startled", "astounded", "shocked"], answer: ["startled", "surprised", "shocked", "astounded"] },
+            { words: ["precious", "useful", "priceless", "valuable"], answer: ["useful", "valuable", "precious", "priceless"] },
+            { words: ["drenched", "damp", "soaked", "wet"], answer: ["damp", "wet", "soaked", "drenched"] },
+            { words: ["dark", "dim", "pitch-black", "shadowy"], answer: ["dim", "shadowy", "dark", "pitch-black"] },
+            { words: ["silent", "quiet", "mute", "soft"], answer: ["soft", "quiet", "silent", "mute"] },
+            { words: ["fast", "brisk", "instantaneous", "rapid"], answer: ["brisk", "fast", "rapid", "instantaneous"] },
+            { words: ["hard", "tricky", "impossible", "difficult"], answer: ["tricky", "hard", "difficult", "impossible"] },
+            { words: ["brave", "bold", "fearless", "courageous"], answer: ["bold", "brave", "courageous", "fearless"] },
+            { words: ["weak", "feeble", "powerless", "frail"], answer: ["frail", "weak", "feeble", "powerless"] },
+            { words: ["mean", "malicious", "unkind", "cruel"], answer: ["unkind", "mean", "cruel", "malicious"] },
+            { words: ["shy", "reserved", "cowardly", "timid"], answer: ["reserved", "shy", "timid", "cowardly"] },
+            { words: ["dry", "parched", "desiccated", "arid"], answer: ["dry", "arid", "parched", "desiccated"] }
+        ];
+
+        let currentIndex = 0;
+        let draggedItem = null;
+
+        // DOM Elements
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const wordBank = document.getElementById('wordBank');
+        const slots = document.querySelectorAll('.color-slot');
+        const overlay = document.getElementById('successOverlay');
+        const problemNumDisplay = document.getElementById('problemNum');
+
+        function startGame() {
+            startScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+            currentIndex = 0;
+            loadProblem();
+            setupDropZones();
+        }
+
+        function loadProblem() {
+            // Reset board
+            wordBank.innerHTML = '';
+            slots.forEach(slot => slot.innerHTML = '');
+            
+            // Reset hint
+            const hintDisplay = document.getElementById('hintText');
+            hintDisplay.classList.add('hidden');
+            hintDisplay.innerText = '';
+            
+            const currentData = gameData[currentIndex];
+            problemNumDisplay.innerText = currentIndex + 1;
+
+            // Shuffle words for display
+            let shuffledWords = [...currentData.words].sort(() => Math.random() - 0.5);
+
+            shuffledWords.forEach(word => {
+                const pill = document.createElement('div');
+                pill.className = 'word-pill';
+                pill.innerText = word;
+                pill.setAttribute('draggable', 'true');
+                pill.dataset.word = word;
+                
+                // Add event listeners for Drag and Drop
+                pill.addEventListener('dragstart', handleDragStart);
+                pill.addEventListener('dragend', handleDragEnd);
+                
+                // Add event listener for Click-to-Move
+                pill.addEventListener('click', handlePillClick);
+
+                wordBank.appendChild(pill);
+            });
+        }
+
+        // --- INTERACTION LOGIC (Click & Drag) ---
+
+        function handlePillClick(e) {
+            const pill = e.target;
+            const parent = pill.parentElement;
+
+            if (parent.id === 'wordBank') {
+                // Find first empty slot
+                for (let slot of slots) {
+                    if (slot.children.length === 0) {
+                        slot.appendChild(pill);
+                        return;
+                    }
+                }
+            } else {
+                // Move back to word bank
+                wordBank.appendChild(pill);
+            }
+        }
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            setTimeout(() => this.style.opacity = '0', 0); // Hide visual duplicate during drag
+        }
+
+        function handleDragEnd(e) {
+            setTimeout(() => {
+                this.style.opacity = '1';
+                draggedItem = null;
+            }, 0);
+        }
+
+        function setupDropZones() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                });
+                
+                zone.addEventListener('dragleave', function(e) {
+                    this.classList.remove('drag-over');
+                });
+                
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    if (draggedItem) {
+                        if (this.classList.contains('color-slot')) {
+                            // If slot is occupied, send existing item back to bank
+                            if (this.children.length > 0) {
+                                wordBank.appendChild(this.children[0]);
+                            }
+                            this.appendChild(draggedItem);
+                        } else if (this.id === 'wordBank') {
+                            this.appendChild(draggedItem);
+                        }
+                    }
+                });
+            });
+        }
+
+        function showHint() {
+            const currentAnswer = gameData[currentIndex].answer;
+            const hintDisplay = document.getElementById('hintText');
+            
+            // Check if the first slot is already correctly filled
+            const slot1OccupiedCorrectly = slots[0].children.length > 0 && slots[0].children[0].dataset.word === currentAnswer[0];
+            
+            if (!slot1OccupiedCorrectly) {
+                hintDisplay.innerText = `💡 Hint: "${currentAnswer[0]}" is the least intense (top slot).`;
+            } else {
+                hintDisplay.innerText = `💡 Hint: "${currentAnswer[3]}" is the most intense (bottom slot).`;
+            }
+            
+            hintDisplay.classList.remove('hidden');
+        }
+
+        function checkOrder() {
+            const currentAnswer = gameData[currentIndex].answer;
+            let userOrder = [];
+            let allFilled = true;
+
+            slots.forEach(slot => {
+                if (slot.children.length === 0) {
+                    allFilled = false;
+                } else {
+                    userOrder.push(slot.children[0].dataset.word);
+                }
+            });
+
+            const swatchPanel = document.getElementById('swatchPanel');
+
+            if (!allFilled) {
+                // Not completely filled
+                swatchPanel.classList.remove('shake');
+                void swatchPanel.offsetWidth; // trigger reflow
+                swatchPanel.classList.add('shake');
+                return;
+            }
+
+            // Check array equality
+            let isCorrect = userOrder.every((val, index) => val === currentAnswer[index]);
+
+            if (isCorrect) {
+                showSuccess();
+            } else {
+                swatchPanel.classList.remove('shake');
+                void swatchPanel.offsetWidth; 
+                swatchPanel.classList.add('shake');
+            }
+        }
+
+        function showSuccess() {
+            overlay.classList.add('show');
+            if (currentIndex === gameData.length - 1) {
+                document.getElementById('overlayTitle').innerText = "Game Completed! 🏆";
+                document.getElementById('overlayMessage').innerText = "You are a master of adjectives.";
+                document.getElementById('nextBtn').innerText = "Play Again";
+            } else {
+                document.getElementById('overlayTitle').innerText = "Perfect! ✨";
+                document.getElementById('overlayMessage').innerText = "You nailed the shades of meaning.";
+                document.getElementById('nextBtn').innerText = "Next Problem";
+            }
+        }
+
+        function nextProblem() {
+            overlay.classList.remove('show');
+            if (currentIndex === gameData.length - 1) {
+                currentIndex = 0; // Restart
+                startGame();
+            } else {
+                currentIndex++;
+                loadProblem();
+            }
+        }
+    </script>
+</body>
+</html>
