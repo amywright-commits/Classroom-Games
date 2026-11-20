@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adjective Story Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f3e5f5; /* Light Purple */
+            --card-bg: #ffffff;
+            --primary: #9c27b0;
+            --secondary: #ff9800;
+            --text-main: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(156, 39, 176, 0.15);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            color: var(--primary);
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 5px;
+            font-weight: 400;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            border: 2px solid #e1bee7;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-family: 'Nunito', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.5rem;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 25px;
+            box-shadow: 0 6px 0 #e65100;
+            transition: all 0.1s ease;
+        }
+
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+
+        .btn:hover {
+            background-color: #ffb74d;
+        }
+
+        #storyContainer {
+            display: none;
+            background-color: #fff3e0;
+            border: 3px dashed var(--secondary);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        .adjective-highlight {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-color: var(--secondary);
+            text-decoration-thickness: 3px;
+        }
+
+        .reset-btn {
+            background-color: #9e9e9e;
+            box-shadow: 0 6px 0 #616161;
+            margin-top: 20px;
+        }
+        
+        .reset-btn:hover {
+            background-color: #bdbdbd;
+        }
+
+        /* Fun decorative elements */
+        .decoration {
+            position: absolute;
+            opacity: 0.1;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .form-content {
+            position: relative;
+            z-index: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Decorative SVG -->
+        <svg class="decoration" style="top: -20px; left: -20px;" width="100" height="100" viewBox="0 0 24 24" fill="var(--primary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+
+        <div class="form-content">
+            <h1>Silly Story Builder!</h1>
+            <p class="subtitle">Level up your vocabulary! Instead of using boring words like "good" or "big", try to think of the most creative adjectives you can!</p>
+            
+            <div id="inputArea">
+                <div id="formFields">
+                    <!-- Dynamic form fields will be injected here -->
+                </div>
+
+                <button class="btn" id="generateBtn" onclick="generateStory()">Create My Story!</button>
+            </div>
+
+            <div id="storyContainer">
+                <!-- Story will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stories = [
+            {
+                // Story 1: Alien Encounter
+                prompts: [
+                    { label: "An adjective describing a TEXTURE", hint: "Example: slimy, prickly, smooth, bumpy", fallback: "fuzzy" },
+                    { label: "An adjective describing a COLOR or PATTERN", hint: "Example: neon-green, polka-dotted, glowing", fallback: "purple" },
+                    { label: "An adjective describing an EMOTION", hint: "Example: terrified, ecstatic, grumpy", fallback: "happy" },
+                    { label: "An adjective describing a SIZE", hint: "Example: microscopic, gigantic, humongous", fallback: "tiny" },
+                    { label: "An adjective describing a SOUND", hint: "Example: deafening, squeaky, booming", fallback: "loud" }
+                ],
+                generate: (words) => `
+                    <p>Yesterday, I was walking to school when I suddenly tripped over a 
+                    <span class="adjective-highlight">${words[0]}</span> rock. 
+                    I looked down and realized it wasn't a rock at all, but a 
+                    <span class="adjective-highlight">${words[1]}</span> alien spacecraft!</p>
+                    <br>
+                    <p>A door opened, and a <span class="adjective-highlight">${words[3]}</span> creature stepped out. 
+                    It looked incredibly <span class="adjective-highlight">${words[2]}</span> to see me. 
+                    Before I could run away, it let out a 
+                    <span class="adjective-highlight">${words[4]}</span> burp, handed me a piece of space-candy, and flew away!</p>
+                `
+            },
+            {
+                // Story 2: The Wizard's Potion
+                prompts: [
+                    { label: "An adjective describing a SMELL", hint: "Example: stinky, floral, rotten, fresh", fallback: "stinky" },
+                    { label: "An adjective describing a COLOR", hint: "Example: glowing, pitch-black, sparkling", fallback: "glowing" },
+                    { label: "An adjective describing an EMOTION", hint: "Example: nervous, courageous, curious", fallback: "brave" },
+                    { label: "An adjective describing a TEMPERATURE", hint: "Example: freezing, boiling, lukewarm", fallback: "freezing" },
+                    { label: "An adjective describing a TASTE", hint: "Example: sour, sweet, spicy, bitter", fallback: "spicy" }
+                ],
+                generate: (words) => `
+                    <p>Deep inside the wizard's tower, I found a bubbling potion that smelled exactly like 
+                    <span class="adjective-highlight">${words[0]}</span> socks. 
+                    It was radiating a <span class="adjective-highlight">${words[1]}</span> light.</p>
+                    <br>
+                    <p>I felt extremely <span class="adjective-highlight">${words[2]}</span>, but I decided to take a tiny sip anyway. 
+                    The liquid was completely <span class="adjective-highlight">${words[3]}</span>! 
+                    Suddenly, I shrank to the size of a mouse and realized the potion tasted just like 
+                    <span class="adjective-highlight">${words[4]}</span> broccoli!</p>
+                `
+            },
+            {
+                // Story 3: Jungle Safari
+                prompts: [
+                    { label: "An adjective describing a SIZE", hint: "Example: massive, puny, enormous", fallback: "huge" },
+                    { label: "An adjective describing a TEXTURE", hint: "Example: fluffy, rough, scaly", fallback: "fluffy" },
+                    { label: "An adjective describing a SPEED", hint: "Example: sluggish, lightning-fast, brisk", fallback: "fast" },
+                    { label: "An adjective describing a SOUND", hint: "Example: howling, whispering, roaring", fallback: "roaring" },
+                    { label: "An adjective describing an EMOTION", hint: "Example: shocked, bored, furious", fallback: "shocked" }
+                ],
+                generate: (words) => `
+                    <p>While exploring deep in the jungle, we spotted a 
+                    <span class="adjective-highlight">${words[0]}</span> monkey covered in 
+                    <span class="adjective-highlight">${words[1]}</span> fur.</p>
+                    <br>
+                    <p>It swung through the canopy at a <span class="adjective-highlight">${words[2]}</span> pace, 
+                    making a <span class="adjective-highlight">${words[3]}</span> noise that echoed through the trees. 
+                    Our tour guide was totally <span class="adjective-highlight">${words[4]}</span> and dropped his camera in the mud!</p>
+                `
+            },
+            {
+                // Story 4: Haunted Mansion
+                prompts: [
+                    { label: "An adjective describing AGE", hint: "Example: ancient, brand-new, prehistoric", fallback: "ancient" },
+                    { label: "An adjective describing WEATHER", hint: "Example: gloomy, stormy, sunshiny", fallback: "stormy" },
+                    { label: "An adjective describing a SOUND", hint: "Example: creaky, booming, silent", fallback: "creaky" },
+                    { label: "An adjective describing a TEXTURE", hint: "Example: dusty, sticky, damp", fallback: "dusty" },
+                    { label: "An adjective describing an EMOTION", hint: "Example: petrified, relieved, brave", fallback: "petrified" }
+                ],
+                generate: (words) => `
+                    <p>My friends dared me to enter the <span class="adjective-highlight">${words[0]}</span> mansion on the hill. 
+                    It was a particularly <span class="adjective-highlight">${words[1]}</span> night, which made it even spookier.</p>
+                    <br>
+                    <p>As I pushed the front door open, it made a <span class="adjective-highlight">${words[2]}</span> sound. 
+                    I reached out and accidentally touched a <span class="adjective-highlight">${words[3]}</span> cobweb. 
+                    I felt absolutely <span class="adjective-highlight">${words[4]}</span> and ran all the way home without looking back!</p>
+                `
+            },
+            {
+                // Story 5: The Crazy Chef
+                prompts: [
+                    { label: "An adjective describing a SHAPE", hint: "Example: triangular, crooked, perfectly-round", fallback: "square" },
+                    { label: "An adjective describing a COLOR", hint: "Example: rainbow, moldy-green, golden", fallback: "rainbow" },
+                    { label: "An adjective describing a TASTE", hint: "Example: disgusting, delicious, salty", fallback: "salty" },
+                    { label: "An adjective describing a TEXTURE", hint: "Example: crispy, soggy, chewy", fallback: "crispy" },
+                    { label: "An adjective describing an EMOTION", hint: "Example: furious, overjoyed, proud", fallback: "proud" }
+                ],
+                generate: (words) => `
+                    <p>The world-famous chef presented his new masterpiece: a 
+                    <span class="adjective-highlight">${words[0]}</span> pizza covered in 
+                    <span class="adjective-highlight">${words[1]}</span> cheese.</p>
+                    <br>
+                    <p>I bravely took a bite. It had a surprisingly <span class="adjective-highlight">${words[2]}</span> flavor 
+                    and a remarkably <span class="adjective-highlight">${words[3]}</span> crust. 
+                    The chef looked extremely <span class="adjective-highlight">${words[4]}</span> as I immediately asked for a large glass of water.</p>
+                `
+            }
+        ];
+
+        let currentStory = null;
+
+        // Load a random story when the page loads
+        window.onload = loadRandomStory;
+
+        function loadRandomStory() {
+            // Pick a random story
+            const randomIndex = Math.floor(Math.random() * stories.length);
+            currentStory = stories[randomIndex];
+
+            const formFieldsContainer = document.getElementById('formFields');
+            formFieldsContainer.innerHTML = ''; // Clear previous fields
+
+            // Generate inputs based on the chosen story's prompts
+            currentStory.prompts.forEach((prompt, index) => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                formGroup.innerHTML = `
+                    <label for="adj${index + 1}">${index + 1}. ${prompt.label}</label>
+                    <span class="hint">${prompt.hint}</span>
+                    <input type="text" id="adj${index + 1}" autocomplete="off" placeholder="Type a word...">
+                `;
+                
+                formFieldsContainer.appendChild(formGroup);
+            });
+        }
+
+        function generateStory() {
+            if (!currentStory) return;
+
+            // Grab the values and use fallbacks if they left it blank
+            const userWords = currentStory.prompts.map((prompt, index) => {
+                const inputElement = document.getElementById(`adj${index + 1}`);
+                const userInput = inputElement.value.trim();
+                return userInput !== '' ? userInput : prompt.fallback;
+            });
+
+            // Generate the HTML using the story's template function
+            const storyHTML = currentStory.generate(userWords) + `
+                <button class="btn reset-btn" onclick="resetGame()">Play Again</button>
+            `;
+
+            // Hide form, show story
+            document.getElementById('inputArea').style.display = 'none';
+            const storyContainer = document.getElementById('storyContainer');
+            storyContainer.innerHTML = storyHTML;
+            storyContainer.style.display = 'block';
+        }
+
+        function resetGame() {
+            // Hide story, show form
+            document.getElementById('storyContainer').style.display = 'none';
+            document.getElementById('inputArea').style.display = 'block';
+            
+            // Load a new random story and reset fields
+            loadRandomStory();
+        }
+    </script>
+</body>
+</html>
